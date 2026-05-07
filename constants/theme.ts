@@ -1,53 +1,155 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    primary: '#006d36',
+    'on-primary': '#ffffff',
+    'primary-container': '#0fa958',
+    'on-primary-container': '#003416',
+    'primary-fixed': '#79fca0',
+    'primary-fixed-dim': '#5bdf87',
+    'on-primary-fixed': '#00210c',
+    'on-primary-fixed-variant': '#005227',
+    secondary: '#785900',
+    'on-secondary': '#ffffff',
+    'secondary-container': '#fdc003',
+    'on-secondary-container': '#6c5000',
+    'secondary-fixed': '#ffdf9e',
+    'secondary-fixed-dim': '#fabd00',
+    'on-secondary-fixed': '#261a00',
+    'on-secondary-fixed-variant': '#5b4300',
+    tertiary: '#a93249',
+    'on-tertiary': '#ffffff',
+    'tertiary-container': '#ee667b',
+    'on-tertiary-container': '#5f001c',
+    'tertiary-fixed': '#ffd9dc',
+    'tertiary-fixed-dim': '#ffb2b9',
+    'on-tertiary-fixed': '#400010',
+    'on-tertiary-fixed-variant': '#891933',
+    error: '#ba1a1a',
+    'on-error': '#ffffff',
+    'error-container': '#ffdad6',
+    'on-error-container': '#93000a',
+    background: '#fcf9f8',
+    'on-background': '#1c1b1b',
+    surface: '#fcf9f8',
+    'on-surface': '#1c1b1b',
+    'surface-dim': '#dcd9d9',
+    'surface-bright': '#fcf9f8',
+    'surface-container-lowest': '#ffffff',
+    'surface-container-low': '#f6f3f2',
+    'surface-container': '#f0eded',
+    'surface-container-high': '#eae7e7',
+    'surface-container-highest': '#e5e2e1',
+    'surface-variant': '#e5e2e1',
+    'on-surface-variant': '#3d4a3e',
+    outline: '#6d7b6d',
+    'outline-variant': '#bccabb',
+    'inverse-surface': '#313030',
+    'inverse-on-surface': '#f3f0ef',
+    'inverse-primary': '#5bdf87',
+    'surface-tint': '#006d36',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    primary: '#5bdf87',
+    'on-primary': '#003816',
+    'primary-container': '#005227',
+    'on-primary-container': '#79fca0',
+    'primary-fixed': '#79fca0',
+    'primary-fixed-dim': '#5bdf87',
+    'on-primary-fixed': '#00210c',
+    'on-primary-fixed-variant': '#005227',
+    secondary: '#fabd00',
+    'on-secondary': '#3e2e00',
+    'secondary-container': '#5b4300',
+    'on-secondary-container': '#ffdf9e',
+    'secondary-fixed': '#ffdf9e',
+    'secondary-fixed-dim': '#fabd00',
+    'on-secondary-fixed': '#261a00',
+    'on-secondary-fixed-variant': '#5b4300',
+    tertiary: '#ffb2b9',
+    'on-tertiary': '#5e0020',
+    'tertiary-container': '#891933',
+    'on-tertiary-container': '#ffd9dc',
+    'tertiary-fixed': '#ffd9dc',
+    'tertiary-fixed-dim': '#ffb2b9',
+    'on-tertiary-fixed': '#400010',
+    'on-tertiary-fixed-variant': '#891933',
+    error: '#ffb4ab',
+    'on-error': '#690005',
+    'error-container': '#93000a',
+    'on-error-container': '#ffdad6',
+    background: '#141313',
+    'on-background': '#e4e2e1',
+    surface: '#141313',
+    'on-surface': '#e4e2e1',
+    'surface-dim': '#141313',
+    'surface-bright': '#3a3939',
+    'surface-container-lowest': '#0e0e0e',
+    'surface-container-low': '#1c1b1b',
+    'surface-container': '#201f1f',
+    'surface-container-high': '#2b2a2a',
+    'surface-container-highest': '#363535',
+    'surface-variant': '#3d4a3e',
+    'on-surface-variant': '#bccabb',
+    outline: '#869486',
+    'outline-variant': '#3d4a3e',
+    'inverse-surface': '#e4e2e1',
+    'inverse-on-surface': '#313030',
+    'inverse-primary': '#006d36',
+    'surface-tint': '#5bdf87',
   },
-};
+} as const;
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+export const Typography = {
+  display: { fontSize: 32, lineHeight: 38.4, fontWeight: '700' as const },
+  h1: { fontSize: 24, lineHeight: 31.2, fontWeight: '700' as const },
+  h2: { fontSize: 20, lineHeight: 26, fontWeight: '600' as const },
+  'body-lg': { fontSize: 18, lineHeight: 27, fontWeight: '400' as const },
+  'body-md': { fontSize: 16, lineHeight: 24, fontWeight: '400' as const },
+  'body-sm': { fontSize: 14, lineHeight: 19.6, fontWeight: '400' as const },
+  'label-md': { fontSize: 14, lineHeight: 16.8, fontWeight: '600' as const, letterSpacing: 0.28 },
+  'label-sm': { fontSize: 12, lineHeight: 14.4, fontWeight: '500' as const },
+} as const;
+
+export const Spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  'container-padding': 20,
+} as const;
+
+export const BorderRadius = {
+  sm: 8,
+  md: 12,
+  lg: 14,
+  xl: 18,
+  full: 9999,
+} as const;
+
+export const Shadows = {
+  sm: {
+    shadowColor: '#0fa958',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
+  md: {
+    shadowColor: '#0fa958',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
   },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+  lg: {
+    shadowColor: '#0fa958',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 8,
   },
-});
+} as const;
+
+export type ThemeColor = keyof typeof Colors.light;
+export type TypographyVariant = keyof typeof Typography;

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#eae7e7",
+                    "tertiary": "#a93249",
+                    "on-primary-fixed-variant": "#005227",
+                    "background": "#fcf9f8",
+                    "on-background": "#1c1b1b",
+                    "on-surface": "#1c1b1b",
+                    "secondary-container": "#fdc003",
+                    "primary": "#006d36",
+                    "secondary-fixed": "#ffdf9e",
+                    "on-secondary": "#ffffff",
+                    "surface-bright": "#fcf9f8",
+                    "on-secondary-fixed-variant": "#5b4300",
+                    "on-primary-fixed": "#00210c",
+                    "surface-container-low": "#f6f3f2",
+                    "on-primary": "#ffffff",
+                    "inverse-on-surface": "#f3f0ef",
+                    "on-error": "#ffffff",
+                    "on-tertiary-fixed-variant": "#891933",
+                    "tertiary-container": "#ee667b",
+                    "inverse-surface": "#313030",
+                    "surface": "#fcf9f8",
+                    "surface-variant": "#e5e2e1",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#6d7b6d",
+                    "primary-container": "#0fa958",
+                    "secondary-fixed-dim": "#fabd00",
+                    "on-secondary-fixed": "#261a00",
+                    "tertiary-fixed-dim": "#ffb2b9",
+                    "on-primary-container": "#003416",
+                    "surface-container": "#f0eded",
+                    "on-tertiary-container": "#5f001c",
+                    "error-container": "#ffdad6",
+                    "surface-container-highest": "#e5e2e1",
+                    "error": "#ba1a1a",
+                    "surface-tint": "#006d36",
+                    "on-surface-variant": "#3d4a3e",
+                    "on-secondary-container": "#6c5000",
+                    "tertiary-fixed": "#ffd9dc",
+                    "primary-fixed": "#79fca0",
+                    "on-tertiary-fixed": "#400010",
+                    "secondary": "#785900",
+                    "on-error-container": "#93000a",
+                    "surface-dim": "#dcd9d9",
+                    "on-tertiary": "#ffffff",
+                    "outline-variant": "#bccabb",
+                    "primary-fixed-dim": "#5bdf87",
+                    "inverse-primary": "#5bdf87"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px",
+                    "custom": "18px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "container-padding": "20px",
+                    "xl": "32px",
+                    "sm": "8px",
+                    "md": "16px",
+                    "xs": "4px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "h2": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "display": ["Plus Jakarta Sans"],
+                    "body-sm": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "h1": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "h2": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "display": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "h1": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-card-shadow {
+            box-shadow: 0 4px 20px -2px rgba(15, 169, 88, 0.08);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-40">
+<!-- Top App Bar (Shared Component Logic - Suppressed BottomNav for Transactional) -->
+<header class="flex items-center justify-between px-container-padding py-md sticky top-0 z-50 w-full bg-surface shadow-sm">
+<div class="flex items-center gap-md">
+<button class="active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="font-h1 text-h1 text-on-surface">Checkout</h1>
+</div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary">help_outline</span>
+</div>
+</header>
+<main class="px-container-padding py-lg space-y-lg max-w-2xl mx-auto">
+<!-- Delivery Address Section -->
+<section class="space-y-md">
+<h2 class="font-h2 text-h2 text-on-surface">Delivery Address</h2>
+<div class="bg-surface-container-lowest p-md rounded-custom bg-card-shadow space-y-md border border-surface-variant">
+<div class="flex gap-md">
+<div class="h-24 w-24 rounded-xl overflow-hidden shrink-0 border border-surface-variant">
+<img class="h-full w-full object-cover" data-alt="A clean, high-contrast overhead map view of a modern urban neighborhood in Dar es Salaam. The map uses a minimalist aesthetic with soft greens for parks, pale grays for streets, and a vibrant primary green pin indicating a specific location. The lighting is bright and clear, reflecting a premium digital interface style." data-location="Dar es Salaam" src="https://lh3.googleusercontent.com/aida-public/AB6AXuALWrCHf3U4PXCcOgXjelLx2zq_yuhCLhz1qjbD3z-mPAMJzPZd1tRj5hOvOu7MtEcB0_vjdKumfImMX8r3v12efDQqI69Zh7VbV7Y_3k6hXlVLhw4za4cijBy-YNekr5zcvbr_COr49-6TxQiQ9UOZleYstXenq02gXNk8k5HSvCjFKY4XOXTij9dNA1r3p8rFsNdVKYYtKGOM9BSN3G3hIKJBz0nxplnKbF_bLc7R6xvxw2xXOHKiDi_-fVkTfPop7R_kGbgDPlg"/>
+</div>
+<div class="flex flex-col justify-center space-y-xs">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary text-[18px]" style="font-variation-settings: 'FILL' 1;">location_on</span>
+<span class="font-label-md text-label-md text-on-surface">Home</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Masaki, Chole Road, Plot 142</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Dar es Salaam, Tanzania</p>
+<button class="text-primary font-label-md text-label-md mt-sm self-start">Edit Address</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Payment Methods Section -->
+<section class="space-y-md">
+<h2 class="font-h2 text-h2 text-on-surface">Payment Method</h2>
+<div class="grid grid-cols-1 gap-md">
+<!-- Mobile Money Group -->
+<div class="bg-surface-container-lowest rounded-custom bg-card-shadow border border-surface-variant divide-y divide-surface-variant">
+<label class="flex items-center justify-between p-md cursor-pointer hover:bg-surface-container-low transition-colors rounded-t-custom">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-[#E60000] flex items-center justify-center">
+<span class="font-bold text-white text-[10px]">M-PESA</span>
+</div>
+<span class="font-label-md text-label-md">Vodacom M-Pesa</span>
+</div>
+<input checked="" class="w-5 h-5 text-primary border-outline focus:ring-primary" name="payment" type="radio"/>
+</label>
+<label class="flex items-center justify-between p-md cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-[#0066B3] flex items-center justify-center">
+<span class="font-bold text-white text-[10px]">Tigo</span>
+</div>
+<span class="font-label-md text-label-md">Tigo Pesa</span>
+</div>
+<input class="w-5 h-5 text-primary border-outline focus:ring-primary" name="payment" type="radio"/>
+</label>
+<label class="flex items-center justify-between p-md cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-[#FF0000] flex items-center justify-center">
+<span class="font-bold text-white text-[10px]">Airtel</span>
+</div>
+<span class="font-label-md text-label-md">Airtel Money</span>
+</div>
+<input class="w-5 h-5 text-primary border-outline focus:ring-primary" name="payment" type="radio"/>
+</label>
+<label class="flex items-center justify-between p-md cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-on-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[20px]">credit_card</span>
+</div>
+<span class="font-label-md text-label-md">Visa / Mastercard</span>
+</div>
+<input class="w-5 h-5 text-primary border-outline focus:ring-primary" name="payment" type="radio"/>
+</label>
+<label class="flex items-center justify-between p-md cursor-pointer hover:bg-surface-container-low transition-colors rounded-b-custom">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container text-[20px]">payments</span>
+</div>
+<span class="font-label-md text-label-md">Cash on Delivery</span>
+</div>
+<input class="w-5 h-5 text-primary border-outline focus:ring-primary" name="payment" type="radio"/>
+</label>
+</div>
+</div>
+</section>
+<!-- Order Summary Section -->
+<section class="space-y-md">
+<h2 class="font-h2 text-h2 text-on-surface">Order Summary</h2>
+<div class="bg-surface-container-lowest p-md rounded-custom bg-card-shadow border border-surface-variant space-y-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-md">
+<div class="h-12 w-12 rounded-xl overflow-hidden">
+<img class="h-full w-full object-cover" data-alt="A delicious close-up of authentic Swahili Pilau rice with succulent beef chunks, served in a ceramic bowl. The lighting is warm and inviting, highlighting the steam rising from the dish and the rich textures of the spices. The background is a clean, minimalist kitchen setting that fits a premium food delivery app aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLOmZOfKNOm4lVn0uOdYUClaaU5ONhi_6PeHiKYTNf-5Ix4bTkvd0RXNPcHD5YiQHqGn0tmoAkl627pM3LOyPUwvg_Ckk9ypsWV1kJ8UmvB19cOp7nN4YcHZQxKFALbQMt_yP-QNrsSi4MfcvO396FHrVC9pCP2IsMd2Cu79170hUFH500nL37tjl0GX3j4d1VGgi-hjymrqJG5Nxh4BKsABYl7qXnO_2rGDOLy8ikfvQpX9F5H0raHQSYcZN7gRazq6wtwNfTMXk"/>
+</div>
+<div>
+<p class="font-label-md text-label-md">Beef Pilau x1</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Extra Kachumbari</p>
+</div>
+</div>
+<span class="font-label-md text-label-md">12,500 TSh</span>
+</div>
+<hr class="border-surface-variant"/>
+<div class="space-y-sm">
+<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>Subtotal</span>
+<span>12,500 TSh</span>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>Delivery Fee</span>
+<span>2,500 TSh</span>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>Service Fee</span>
+<span>500 TSh</span>
+</div>
+<div class="flex justify-between font-h2 text-h2 text-on-surface pt-sm">
+<span>Total</span>
+<span class="text-primary">15,500 TSh</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Action Bar -->
+<div class="fixed bottom-0 left-0 w-full z-50 bg-surface border-t border-surface-variant p-container-padding flex flex-col gap-md shadow-[0_-4px_24px_rgba(0,0,0,0.05)]">
+<div class="flex items-center justify-between">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Total Payment</p>
+<p class="font-h1 text-h1 text-primary">15,500 TSh</p>
+</div>
+<button class="bg-primary hover:bg-primary-container text-white px-xl py-md rounded-custom font-label-md text-label-md active:scale-95 transition-all shadow-lg flex items-center gap-sm">
+                Place Order
+                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<div class="pb-safe"></div>
+</div>
+</body></html>

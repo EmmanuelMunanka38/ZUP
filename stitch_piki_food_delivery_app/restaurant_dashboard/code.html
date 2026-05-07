@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Piki Food - Restaurant Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .glass-effect {
+      backdrop-filter: blur(15px);
+      background: rgba(252, 249, 248, 0.8);
+    }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "surface-container-high": "#eae7e7",
+                  "tertiary": "#a93249",
+                  "on-primary-fixed-variant": "#005227",
+                  "background": "#fcf9f8",
+                  "on-background": "#1c1b1b",
+                  "on-surface": "#1c1b1b",
+                  "secondary-container": "#fdc003",
+                  "primary": "#006d36",
+                  "secondary-fixed": "#ffdf9e",
+                  "on-secondary": "#ffffff",
+                  "surface-bright": "#fcf9f8",
+                  "on-secondary-fixed-variant": "#5b4300",
+                  "on-primary-fixed": "#00210c",
+                  "surface-container-low": "#f6f3f2",
+                  "on-primary": "#ffffff",
+                  "inverse-on-surface": "#f3f0ef",
+                  "on-error": "#ffffff",
+                  "on-tertiary-fixed-variant": "#891933",
+                  "tertiary-container": "#ee667b",
+                  "inverse-surface": "#313030",
+                  "surface": "#fcf9f8",
+                  "surface-variant": "#e5e2e1",
+                  "surface-container-lowest": "#ffffff",
+                  "outline": "#6d7b6d",
+                  "primary-container": "#0fa958",
+                  "secondary-fixed-dim": "#fabd00",
+                  "on-secondary-fixed": "#261a00",
+                  "tertiary-fixed-dim": "#ffb2b9",
+                  "on-primary-container": "#003416",
+                  "surface-container": "#f0eded",
+                  "on-tertiary-container": "#5f001c",
+                  "error-container": "#ffdad6",
+                  "surface-container-highest": "#e5e2e1",
+                  "error": "#ba1a1a",
+                  "surface-tint": "#006d36",
+                  "on-surface-variant": "#3d4a3e",
+                  "on-secondary-container": "#6c5000",
+                  "tertiary-fixed": "#ffd9dc",
+                  "primary-fixed": "#79fca0",
+                  "on-tertiary-fixed": "#400010",
+                  "secondary": "#785900",
+                  "on-error-container": "#93000a",
+                  "surface-dim": "#dcd9d9",
+                  "on-tertiary": "#ffffff",
+                  "outline-variant": "#bccabb",
+                  "primary-fixed-dim": "#5bdf87",
+                  "inverse-primary": "#5bdf87"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.25rem",
+                  "lg": "0.5rem",
+                  "xl": "18px",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "base": "8px",
+                  "container-padding": "20px",
+                  "xl": "32px",
+                  "sm": "8px",
+                  "md": "16px",
+                  "xs": "4px",
+                  "lg": "24px"
+          },
+          "fontFamily": {
+                  "h2": ["Plus Jakarta Sans"],
+                  "label-sm": ["Plus Jakarta Sans"],
+                  "body-md": ["Plus Jakarta Sans"],
+                  "display": ["Plus Jakarta Sans"],
+                  "body-sm": ["Plus Jakarta Sans"],
+                  "label-md": ["Plus Jakarta Sans"],
+                  "h1": ["Plus Jakarta Sans"],
+                  "body-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+                  "h2": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                  "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                  "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                  "display": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                  "body-sm": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                  "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                  "h1": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                  "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- TopAppBar -->
+<header class="flex items-center justify-between px-container-padding py-md sticky top-0 z-50 w-full bg-surface dark:bg-surface-dim shadow-sm">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-xl overflow-hidden shadow-sm">
+<img alt="Restaurant Logo" class="w-full h-full object-cover" data-alt="A professional, vibrant close-up of a modern restaurant logo featured on a sleek wooden background. The lighting is warm and cinematic, reflecting a high-end dining establishment in Tanzania. The composition is clean and focused, using a shallow depth of field to emphasize quality and premium branding." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJ3-SXCJF0ogndLxYD8Dl1PAA5ETpm15ALqvlQAGbPHvkpK-JYQzSY_V1Sc7C4GWqlHibxW89EAMR0dHfE53Vz6X9x5sb5ffqEdbygfE08A32haR5wkW9nUG7kZLoq9uSWuoShHf3dEmdeanSAulmwO0Z-mAmQhiLHEbJPavuDFf_Wt4eRQp3E3tr-NpPsu9p-1xHorXnbpLuGsdACkaCbESvB5flZpXq3LNnLSWPA5IKMwwy0EpQlnuJ8QkvII3KPeMur0at_sV0"/>
+</div>
+<div>
+<h1 class="font-display text-h2 text-primary dark:text-primary-fixed leading-tight">Mama Africa Cuisine</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">location_on</span>
+          Dar es Salaam, Masaki
+        </p>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<!-- Status Toggle -->
+<div class="flex items-center bg-surface-container-low rounded-full px-sm py-xs gap-sm border border-outline-variant">
+<span class="font-label-md text-label-md text-primary px-md py-1 bg-primary-container/20 rounded-full flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+          Active
+        </span>
+<button class="font-label-md text-label-md text-on-surface-variant px-md py-1 hover:bg-surface-container transition-colors rounded-full">
+          Busy
+        </button>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors relative">
+<span class="material-symbols-outlined text-primary">shopping_basket</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-container-padding py-lg pb-32">
+<!-- Overview Stats Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-md mb-xl">
+<div class="md:col-span-1 bg-surface-container-lowest p-lg rounded-xl shadow-[0_4px_12px_rgba(15,169,88,0.04)] border border-surface-variant">
+<div class="flex justify-between items-start mb-md">
+<div class="p-sm bg-primary-container/10 rounded-lg">
+<span class="material-symbols-outlined text-primary">receipt_long</span>
+</div>
+<span class="text-primary font-bold text-label-sm">+12%</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface-variant">Today's Orders</h3>
+<p class="font-display text-display text-primary mt-xs">42</p>
+</div>
+<div class="md:col-span-1 bg-surface-container-lowest p-lg rounded-xl shadow-[0_4px_12px_rgba(15,169,88,0.04)] border border-surface-variant">
+<div class="flex justify-between items-start mb-md">
+<div class="p-sm bg-secondary-container/20 rounded-lg">
+<span class="material-symbols-outlined text-secondary">payments</span>
+</div>
+<span class="text-secondary font-bold text-label-sm">+8%</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface-variant">Daily Revenue</h3>
+<p class="font-display text-display text-on-surface mt-xs">TZS 840k</p>
+</div>
+<div class="md:col-span-1 bg-primary text-on-primary p-lg rounded-xl shadow-lg relative overflow-hidden">
+<div class="relative z-10">
+<h3 class="font-label-md text-label-md opacity-80">Rider Status</h3>
+<p class="font-h1 text-h1 mt-xs">6 Riders Active</p>
+<div class="flex mt-md -space-x-2">
+<img alt="Rider" class="w-8 h-8 rounded-full border-2 border-primary" data-alt="Professional portrait of a Tanzanian delivery professional wearing a branded green helmet and safety vest, looking confident against a clean urban backdrop with warm morning light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAO-egwJLhTsn_zdBMIcyuN139-zxvpF_rjfOBDOb1jMLx3JkuYNxHlrF__OXrTd5Go4s9z2621H8o98xuN2683dQ5FTJmx-azDwvUb44ICqetP4mgFfL5d9HmYehcVXQdo_CLnHgMi20ESP46_C52WZRPoYhFoiyz6GVoUbip_gbKPdxTVWuxZpVMUPGgvR0niY5q-3_krkRwazwiW3BvpSQ-fD_IrxJUvfXLdyrnirMbN_hCergGGxJSAXY46h1mYpGp39rqPE2U"/>
+<img alt="Rider" class="w-8 h-8 rounded-full border-2 border-primary" data-alt="Close up portrait of a friendly delivery rider in Dar es Salaam, wearing a high-visibility uniform under the bright afternoon sun, suggesting speed and reliable service." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_gFNGvFk_86MmE2i-QwOJhpaCZroxB2nkX2TC30CRrcahwC5HZ-48vEj3Gm1_T2D5vWKtRv1bGlKGBDQ3_5aGzNON4FeLFiNcz48LoU5dyDcOmdSSGBCmzzl4CoNsdlxCSIA4otKYYwzleYp7Y_ofYUS2tT7rBWdNLY-iEY-o0JEfbWTohmlzhPZBTIQz24tJMQ84c_quivW5P-irttHHf4yzmTK4rFIb5bTJm8vLHwj9ICiWjryAvsSS_n6TuPUe5rYESUxiigA"/>
+<img alt="Rider" class="w-8 h-8 rounded-full border-2 border-primary" data-alt="A focused young man in a modern delivery courier uniform, standing in a brightly lit urban setting, reflecting the energetic and corporate food delivery service standards." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1_Sl8kPY-4epCtp4HkJJDfBuOqf-r2JrVHqKwQSPvctnOZGtWVBbHesXC7SuatFB4rw6Nf2Oai13wbw89JMQWJDYL7kzM24dkgMDdeB1JyKXbMIzyUPOM9JdVOfs6nzi8cyuRv8IqB6aziiZi-DJLXJ4Aw9DN0QxfpGhzxoD-wmEaXk5Itjhm8-QBPiFIZU4Qjr1d9JOQYs4bX6N8_SKIkuetE2wYEvb1TV_Kw-F0ffz1EP-Z3ABqQUzqFCYYihdiStQsTWhyXHQ"/>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-[120px]">delivery_dining</span>
+</div>
+</div>
+</section>
+<!-- New Orders Section -->
+<section>
+<div class="flex items-center justify-between mb-md">
+<h2 class="font-h1 text-h1 text-on-surface">New Orders</h2>
+<div class="flex items-center gap-xs text-primary font-bold">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span class="text-label-md">Past 30 mins</span>
+</div>
+</div>
+<div class="space-y-md">
+<!-- Order Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-lg shadow-[0_4px_12px_rgba(15,169,88,0.04)] border border-surface-variant flex flex-col md:flex-row gap-lg">
+<div class="flex-1">
+<div class="flex items-center gap-md mb-md">
+<span class="px-md py-1 bg-error-container text-on-error-container rounded-full text-label-sm font-bold flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">timer</span>
+                04:32
+              </span>
+<span class="text-on-surface-variant font-label-md text-label-md">Order #PK-9281</span>
+</div>
+<h4 class="font-h2 text-h2 mb-sm">2x Swahili Pilau Mixed, 1x Fresh Juice</h4>
+<div class="flex items-center gap-xl">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">person</span>
+<span class="text-body-sm">David M.</span>
+</div>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+<span class="text-body-sm font-bold text-on-surface">TZS 28,500</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="flex-1 md:flex-none px-xl py-md bg-surface-container-low text-primary font-bold rounded-xl border border-primary/20 hover:bg-surface-container transition-all active:scale-95">
+              View Details
+            </button>
+<button class="flex-1 md:flex-none px-xl py-md bg-primary text-on-primary font-bold rounded-xl shadow-lg hover:bg-primary-container transition-all active:scale-95">
+              Accept Order
+            </button>
+</div>
+</div>
+<!-- Order Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-lg shadow-[0_4px_12px_rgba(15,169,88,0.04)] border border-surface-variant flex flex-col md:flex-row gap-lg">
+<div class="flex-1">
+<div class="flex items-center gap-md mb-md">
+<span class="px-md py-1 bg-secondary-container/20 text-on-secondary-container rounded-full text-label-sm font-bold flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">timer</span>
+                08:15
+              </span>
+<span class="text-on-surface-variant font-label-md text-label-md">Order #PK-9285</span>
+</div>
+<h4 class="font-h2 text-h2 mb-sm">1x Grilled Tilapia (Large), 2x Ugali Extra</h4>
+<div class="flex items-center gap-xl">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">person</span>
+<span class="text-body-sm">Sarah J.</span>
+</div>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+<span class="text-body-sm font-bold text-on-surface">TZS 45,000</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="flex-1 md:flex-none px-xl py-md bg-surface-container-low text-primary font-bold rounded-xl border border-primary/20 hover:bg-surface-container transition-all active:scale-95">
+              View Details
+            </button>
+<button class="flex-1 md:flex-none px-xl py-md bg-primary text-on-primary font-bold rounded-xl shadow-lg hover:bg-primary-container transition-all active:scale-95">
+              Accept Order
+            </button>
+</div>
+</div>
+<!-- Order Card 3 (Scheduled) -->
+<div class="bg-surface-container-lowest rounded-xl p-lg shadow-[0_4px_12px_rgba(15,169,88,0.04)] border border-surface-variant flex flex-col md:flex-row gap-lg opacity-80">
+<div class="flex-1">
+<div class="flex items-center gap-md mb-md">
+<span class="px-md py-1 bg-surface-container-high text-on-surface-variant rounded-full text-label-sm font-bold flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                Scheduled: 12:45 PM
+              </span>
+<span class="text-on-surface-variant font-label-md text-label-md">Order #PK-9290</span>
+</div>
+<h4 class="font-h2 text-h2 mb-sm">4x Beef Mishkaki Skewers, 2x Chips Mayai</h4>
+<div class="flex items-center gap-xl">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">person</span>
+<span class="text-body-sm">Kelvin L.</span>
+</div>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+<span class="text-body-sm font-bold text-on-surface">TZS 32,000</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="flex-1 md:flex-none px-xl py-md bg-surface-container-low text-primary font-bold rounded-xl border border-primary/20 hover:bg-surface-container transition-all active:scale-95">
+              View Details
+            </button>
+<button class="flex-1 md:flex-none px-xl py-md bg-primary text-on-primary font-bold rounded-xl shadow-lg hover:bg-primary-container transition-all active:scale-95">
+              Accept Order
+            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Popular Items Section (Bento Grid Style) -->
+<section class="mt-xl">
+<h2 class="font-h1 text-h1 text-on-surface mb-md">Trending Items</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-md">
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-surface-variant">
+<div class="h-32 w-full">
+<img alt="Pilau" class="w-full h-full object-cover" data-alt="A lush, high-definition photo of authentic Swahili Pilau rice with tender chunks of beef, served with a side of fresh kachumbari salad. The lighting is soft and natural, emphasizing the vibrant spices and textures. The food is plated on artisanal earthenware, conveying a premium and authentic Tanzanian culinary experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuBgsx1f4Dgy5dadZgaO3hS4ZQG6Y3_zQFfqRG1pmXpuvo38WS6pWRHEax9FQU09uSZCpvKFopFgCjRWKT6LaKMpqXd1tfyIWqtZxCoe7otsVN7Gk8dTJGAjhOaWJ4pQePWn3hixQKew0Yva_4dvGUCkY3YoZ0kOy2_h1RlkOjjHMQ9EG3OhsqPRETRK8XQPtODWS4CwRs8BMfU1FZqNPV2nJDS5jnLDHee-JRPR6NT7IF4wlnnvNcs1In-6kFAOHS56_zfE1_IAk"/>
+</div>
+<div class="p-md">
+<h5 class="font-label-md text-label-md">Swahili Pilau</h5>
+<p class="text-primary font-bold text-body-sm">12 sold today</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-surface-variant">
+<div class="h-32 w-full">
+<img alt="Tilapia" class="w-full h-full object-cover" data-alt="Golden-brown grilled Tilapia fish seasoned with local herbs, garnished with lemon slices and parsley. The shot is a professional top-down food photography style with warm, soft-box lighting. The overall aesthetic is clean, modern, and high-end, highlighting the freshness of the seafood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLbRFA1B7c78GhogkrF26i8mYE7A6RFJJJQ3W1YTwTlRynPM6Fk0J0DEhpieCDc1TTHK8-d5dTD7Z5y0IF51LgmQnlezKjn6wzwP5ap5ExsMQBmgy5CfA7b7m9szb_LAzsSV2dUNngk6-fDy_rVyNVylTwDIprNmRCR0uElmP9mPpug5Q1jAQasaeyNjDEkd6LrDlBvhvDp4nicp-WawmRTQ6mvl94hdkctNNUdpaIanaWNpi_R3mNky9ACSArexxvQgi2NmewJyU"/>
+</div>
+<div class="p-md">
+<h5 class="font-label-md text-label-md">Grilled Tilapia</h5>
+<p class="text-primary font-bold text-body-sm">8 sold today</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-surface-variant">
+<div class="h-32 w-full">
+<img alt="Mishkaki" class="w-full h-full object-cover" data-alt="Succulent beef mishkaki skewers grilled to perfection with visible char marks, served on a modern dark slate plate. The background is a blurred high-end restaurant kitchen with warm ambient lighting. The photo captures the juicy texture and professional presentation of modern Tanzanian street food elevated for a premium dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAg2i_pn7RLqmioqw6iAUCtje9ICp2weltgKz6uvoBX94JaNNomVsJRFm2MM9er55fCvJ6HOWRI_XfCZ2L4z3QrgEJg412ICQYyG1YG3dv01vdV1pBGngjThojlYvE-hlMBhzoQoDkqJjcwoErfzqBchcdfy3Z9-Nkopm0V9-hhCLj6EH4bnCvAp5bockB_22HE8kmdyGZIbUW_P3o78LCicE4UYJfpxN_EZDeTfcEPoZu5x4LmOZyVyg_EuuEw8wfIF_h7aeWy2a0"/>
+</div>
+<div class="p-md">
+<h5 class="font-label-md text-label-md">Beef Mishkaki</h5>
+<p class="text-primary font-bold text-body-sm">15 sold today</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-surface-variant">
+<div class="h-32 w-full">
+<img alt="Juice" class="w-full h-full object-cover" data-alt="A tall glass of vibrant, freshly squeezed passion fruit juice with ice cubes and mint garnish. The lighting is bright and summery, creating a refreshing and energetic mood. The image is crisp and professional, using a shallow depth of field to make the colors pop against a clean, minimal background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBR9ldzypdkZkw2FfKqZ0UGlr5H1ob5x-jvu7_L7Qb_-moKiRAKEHM2NHnSAoEAG5yNnwTxgWE88-ORlo7ExRgv50FcCa9gGGdUZ_ftulgy_pS7EKQzA_62-8Ne5tRiryama8HtfN6ywqi_yDcYRrY5z44qGFiiyG3jMgTJgb9CRtkLtIvIcAXyw2fbjik0lsSG970-pVFgNPn6kifCYDl-6L6mOgOiwPa7eLzVP6eXNP7urllnXkWcELtBXM32eQC_s5v0_uVbVs"/>
+</div>
+<div class="p-md">
+<h5 class="font-label-md text-label-md">Fresh Passion Juice</h5>
+<p class="text-primary font-bold text-body-sm">22 sold today</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-surface dark:bg-surface-container-highest shadow-[0_-4px_12px_rgba(15,169,88,0.04)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold scale-110 transition-all" href="#">
+<span class="material-symbols-outlined" data-weight="fill">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="font-label-sm text-label-sm">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-sm text-label-sm">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+<!-- Floating Action Button (Suppressed on dashboard as per rules unless context matches) -->
+<button class="fixed right-container-padding bottom-24 bg-primary text-on-primary w-14 h-14 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-all z-40">
+<span class="material-symbols-outlined">add</span>
+</button>
+</body></html>

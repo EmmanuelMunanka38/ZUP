@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cart - Piki Food</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#eae7e7",
+                        "tertiary": "#a93249",
+                        "on-primary-fixed-variant": "#005227",
+                        "background": "#fcf9f8",
+                        "on-background": "#1c1b1b",
+                        "on-surface": "#1c1b1b",
+                        "secondary-container": "#fdc003",
+                        "primary": "#006d36",
+                        "secondary-fixed": "#ffdf9e",
+                        "on-secondary": "#ffffff",
+                        "surface-bright": "#fcf9f8",
+                        "on-secondary-fixed-variant": "#5b4300",
+                        "on-primary-fixed": "#00210c",
+                        "surface-container-low": "#f6f3f2",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#f3f0ef",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#891933",
+                        "tertiary-container": "#ee667b",
+                        "inverse-surface": "#313030",
+                        "surface": "#fcf9f8",
+                        "surface-variant": "#e5e2e1",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#6d7b6d",
+                        "primary-container": "#0fa958",
+                        "secondary-fixed-dim": "#fabd00",
+                        "on-secondary-fixed": "#261a00",
+                        "tertiary-fixed-dim": "#ffb2b9",
+                        "on-primary-container": "#003416",
+                        "surface-container": "#f0eded",
+                        "on-tertiary-container": "#5f001c",
+                        "error-container": "#ffdad6",
+                        "surface-container-highest": "#e5e2e1",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#006d36",
+                        "on-surface-variant": "#3d4a3e",
+                        "on-secondary-container": "#6c5000",
+                        "tertiary-fixed": "#ffd9dc",
+                        "primary-fixed": "#79fca0",
+                        "on-tertiary-fixed": "#400010",
+                        "secondary": "#785900",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#dcd9d9",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#bccabb",
+                        "primary-fixed-dim": "#5bdf87",
+                        "inverse-primary": "#5bdf87"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "container-padding": "20px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "lg": "24px"
+                    },
+                    "fontFamily": {
+                        "h2": ["Plus Jakarta Sans"],
+                        "label-sm": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "display": ["Plus Jakarta Sans"],
+                        "body-sm": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "h1": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "h2": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "display": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                        "h1": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-40">
+<!-- Top Navigation -->
+<nav class="bg-surface dark:bg-surface-dim shadow-sm flex items-center justify-between px-container-padding py-md sticky top-0 z-50 w-full">
+<div class="flex items-center gap-md">
+<button class="active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Review Order</span>
+<span class="font-h2 text-h2 text-primary">The Terrace Swahili Bistro</span>
+</div>
+</div>
+<button class="active:scale-95 transition-transform hover:bg-surface-container-low p-sm rounded-full">
+<span class="material-symbols-outlined text-primary">shopping_basket</span>
+</button>
+</nav>
+<main class="max-w-3xl mx-auto px-container-padding py-lg">
+<!-- Cart Items Section -->
+<section class="space-y-md">
+<div class="flex items-center justify-between mb-sm">
+<h2 class="font-h2 text-h2">Your Basket</h2>
+<span class="text-primary font-label-md">3 Items</span>
+</div>
+<!-- Item 1 -->
+<div class="bg-surface-container-lowest p-md rounded-[18px] shadow-[0_4px_12px_rgba(15,169,88,0.04)] flex items-center gap-md border border-surface-variant/20">
+<div class="relative h-20 w-20 rounded-xl overflow-hidden flex-shrink-0">
+<img class="h-full w-full object-cover" data-alt="A high-end, professionally photographed bowl of traditional Tanzanian Pilau rice topped with tender beef and garnished with fresh cilantro. The lighting is soft and natural, emphasizing the vibrant textures and warm browns of the dish. The overall aesthetic is clean and modern, following a bright light-mode design language with subtle shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqX1wUR3zX1n2kOmxXzyifW9Z3OLDRz3Swi3engZpIeK6u7CJ292z98h5nZ3-msxGPsf2pyMB9R3rlaIwzeFvp5vSBEuzIj2Zj99NGd_4uLq7w6r2JwjVGBauw9KmjasSbhVgb5uH0xbVifKM974R3eA4Jc9viteB2or8lbJKi1deZledMsZxynKM9npQMIycjmCjyDC7Qw3G0Lm9fXF5cL_EyHVYr1sX1r6_3avXbEQa4aGy_11PPDo6YmUWGVZC1_BmRYbc-2m4"/>
+</div>
+<div class="flex-grow">
+<h3 class="font-label-md text-label-md">Traditional Beef Pilau</h3>
+<p class="text-on-surface-variant text-body-sm line-clamp-1">Served with Kachumbari and chili</p>
+<div class="flex items-center justify-between mt-xs">
+<span class="font-h2 text-h2 text-primary">TSh 18,500</span>
+<div class="flex items-center bg-surface-container-low rounded-full px-xs py-xs gap-sm border border-surface-variant">
+<button class="h-8 w-8 flex items-center justify-center bg-white rounded-full shadow-sm text-primary active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<span class="font-label-md w-4 text-center">1</span>
+<button class="h-8 w-8 flex items-center justify-center bg-primary text-on-primary rounded-full shadow-sm active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="bg-surface-container-lowest p-md rounded-[18px] shadow-[0_4px_12px_rgba(15,169,88,0.04)] flex items-center gap-md border border-surface-variant/20">
+<div class="relative h-20 w-20 rounded-xl overflow-hidden flex-shrink-0">
+<img class="h-full w-full object-cover" data-alt="Gourmet Grilled Chicken Skewers, known as Mishkaki, seasoned with local spices and served on a minimalist white ceramic platter. The image features high-contrast lighting that makes the charred textures pop against a bright, airy background. Part of a premium Tanzanian food delivery app interface with a focus on fresh ingredients." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAe-c7eDCiaQ2LL7rxgXxtOm0MyYWcmv1hIWSMFFGCY6VIVTIqZ0cvyTlIvghQ_RxXuopwx0emLG6ucV_UNBzswKogOz09C0OVHjIvNNiPr6xPlWY6BZ8RJ5jOutmTgA55bHzvITFmO0DFX9czpFIYlXDL2CtGYDiHDlhU7qrMAqcud96efVVkdYbJJamAht655tP8VQnSi_FOfg8xUCOzUzo0x94fRzCj5pX3LbpcNBnQml0rEL7p2wRqAafTrHXZZFwPupYHXvw0"/>
+</div>
+<div class="flex-grow">
+<h3 class="font-label-md text-label-md">Zanzibar Mishkaki (3pcs)</h3>
+<p class="text-on-surface-variant text-body-sm line-clamp-1">Spicy grilled beef skewers</p>
+<div class="flex items-center justify-between mt-xs">
+<span class="font-h2 text-h2 text-primary">TSh 12,000</span>
+<div class="flex items-center bg-surface-container-low rounded-full px-xs py-xs gap-sm border border-surface-variant">
+<button class="h-8 w-8 flex items-center justify-center bg-white rounded-full shadow-sm text-primary active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<span class="font-label-md w-4 text-center">2</span>
+<button class="h-8 w-8 flex items-center justify-center bg-primary text-on-primary rounded-full shadow-sm active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="bg-surface-container-lowest p-md rounded-[18px] shadow-[0_4px_12px_rgba(15,169,88,0.04)] flex items-center gap-md border border-surface-variant/20">
+<div class="relative h-20 w-20 rounded-xl overflow-hidden flex-shrink-0">
+<img class="h-full w-full object-cover" data-alt="A refreshing glass of fresh passion fruit juice with ice cubes and mint garnish. The drink is vibrant orange, set against a bright, clean, sun-drenched background that evokes a tropical, high-end bistro atmosphere in Dar es Salaam. The photography is sharp and professional with realistic condensation on the glass." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBeLMyHsp3VKCShWbSlmZVFPAptUbmb0oNTqko-OfrBfUIXrMEQSGy7ymcJrkieTD7FJYk2LqFstKhiS4HzsPx-eEKm3SoQxE5tnV3keC9EGpjo4PovRpMOBkx2Jnhv-4CYBzf4djzGJiqqKefd9kCPHRPFx0Yyv8EU_fk0Z77y8lHi4RUqwdD1h03yxssdNrV_5LY68aFc2J8LH8ejhmpQZDXSA01N8CKk91w4cBRxqvY74Zq8PcRPfX_ZdrJso5tvxEf7cwWBcew"/>
+</div>
+<div class="flex-grow">
+<h3 class="font-label-md text-label-md">Fresh Passion Juice</h3>
+<p class="text-on-surface-variant text-body-sm line-clamp-1">Chilled seasonal fruit juice</p>
+<div class="flex items-center justify-between mt-xs">
+<span class="font-h2 text-h2 text-primary">TSh 5,000</span>
+<div class="flex items-center bg-surface-container-low rounded-full px-xs py-xs gap-sm border border-surface-variant">
+<button class="h-8 w-8 flex items-center justify-center bg-white rounded-full shadow-sm text-primary active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<span class="font-label-md w-4 text-center">1</span>
+<button class="h-8 w-8 flex items-center justify-center bg-primary text-on-primary rounded-full shadow-sm active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Promo Code Section -->
+<section class="mt-xl">
+<div class="bg-surface-container-low p-md rounded-[18px] flex items-center gap-md border-2 border-dashed border-outline-variant">
+<span class="material-symbols-outlined text-secondary">confirmation_number</span>
+<input class="bg-transparent border-none focus:ring-0 flex-grow font-body-md text-on-surface placeholder:text-outline" placeholder="Enter Promo Code" type="text"/>
+<button class="text-primary font-label-md px-md py-xs bg-white rounded-full shadow-sm active:scale-95 transition-all">Apply</button>
+</div>
+</section>
+<!-- Summary Section -->
+<section class="mt-xl bg-surface-container-highest p-lg rounded-[18px] space-y-md">
+<h3 class="font-label-md text-label-md text-on-surface uppercase tracking-wider">Order Summary</h3>
+<div class="space-y-sm">
+<div class="flex justify-between text-body-md text-on-surface-variant">
+<span>Subtotal</span>
+<span>TSh 47,500</span>
+</div>
+<div class="flex justify-between text-body-md text-on-surface-variant">
+<span>Delivery Fee</span>
+<span>TSh 3,500</span>
+</div>
+<div class="flex justify-between text-body-md text-on-surface-variant">
+<span>Service Fee</span>
+<span>TSh 1,200</span>
+</div>
+<div class="pt-sm border-t border-outline-variant/30 flex justify-between">
+<span class="font-h2 text-h2 text-on-surface">Total</span>
+<span class="font-h1 text-h1 text-primary">TSh 52,200</span>
+</div>
+</div>
+</section>
+<!-- Upsell Suggestions (Asymmetric Layout) -->
+<section class="mt-xl">
+<h3 class="font-h2 text-h2 mb-md">Often ordered with</h3>
+<div class="grid grid-cols-2 gap-md">
+<div class="bg-white p-sm rounded-[18px] shadow-sm flex flex-col gap-sm">
+<div class="aspect-square rounded-xl overflow-hidden">
+<img class="h-full w-full object-cover" data-alt="A side dish of freshly cooked chapati, a traditional Tanzanian flatbread, stacked neatly on a rustic plate. The lighting is warm and golden, highlighting the soft layers and charred spots. The background is a clean, bright kitchen environment with modern green accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9xUE0tVnEpt8yUnIxi1Pa0BeRnFCmWVV1F10SA3PDCYjzuTiGCOxfWtB_EZmka0MOpd2L07oVahiFH6DBMmbUK1jidDzXQxexec1VeY18-WnjkuErKl2Hs8L7n07FakWB_cXQErnsXe_k2UkWTIPTyIbZr-jsH3juDy8R0mrsX1NYyAH0RL3vjwdlnYMnFtmfK5d5KzXIDtvEjxR-IuEN2ufk66fOvdq1mkh6Finl22IvZ7ujY-x4sb7CYb9EHKpbgZXcsScPKs0"/>
+</div>
+<div>
+<p class="font-label-md text-sm">Extra Chapati</p>
+<p class="text-primary font-bold">TSh 1,500</p>
+</div>
+<button class="w-full py-xs bg-surface-container-low text-primary rounded-lg font-label-md active:scale-95 transition-all">Add +</button>
+</div>
+<div class="bg-white p-sm rounded-[18px] shadow-sm flex flex-col gap-sm mt-lg">
+<div class="aspect-square rounded-xl overflow-hidden">
+<img class="h-full w-full object-cover" data-alt="A small side bowl of Kachumbari salad featuring finely diced tomatoes, onions, and cilantro with a hint of lime. The shot is a close-up macro focusing on the fresh, glistening vegetables and vibrant colors. Minimalist presentation in a white bowl against a light gray background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMUrVHXpW7anNNmeHPuPWvGqxu0Kdg9O46BmSSyF9Mq0Z6S0SXlSG_1lBh5WzlmdhF9ytqvw-ZOUGI98aLhWryCYv9UIfcxVlMl3lHNCc117O3smpRHvdmq_s-kFb7GvgmU0kReKmtiM-Ml88gr1UgatZboLojR01tJJojXnp1MGjkVFzm7PtOl6ytYNRQoQ1iXUwrdkZ2V_x-yvBT42lrzowa3JpNVgS0Xk3ENubw02JdVXa0oxASFyTkBWRZGCaM8Rx2jMWuZnM"/>
+</div>
+<div>
+<p class="font-label-md text-sm">Extra Kachumbari</p>
+<p class="text-primary font-bold">TSh 2,000</p>
+</div>
+<button class="w-full py-xs bg-surface-container-low text-primary rounded-lg font-label-md active:scale-95 transition-all">Add +</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Action Bar -->
+<div class="fixed bottom-0 left-0 w-full bg-surface dark:bg-surface-container-highest p-container-padding pb-safe shadow-[0_-4px_24px_rgba(0,0,0,0.08)] z-50">
+<div class="max-w-3xl mx-auto flex flex-col gap-md">
+<div class="flex items-center justify-between px-xs">
+<div class="flex flex-col">
+<span class="text-label-sm text-on-surface-variant">Estimated Delivery</span>
+<span class="font-label-md flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px] text-secondary">schedule</span> 
+                        25 - 35 mins
+                    </span>
+</div>
+<div class="text-right">
+<span class="text-label-sm text-on-surface-variant">Total Payable</span>
+<span class="font-h2 text-h2 text-primary block">TSh 52,200</span>
+</div>
+</div>
+<button class="w-full bg-primary-container text-on-primary-container py-lg rounded-[18px] font-h2 text-h2 flex items-center justify-center gap-md active:scale-[0.98] transition-all shadow-lg hover:brightness-105">
+                Proceed to Checkout
+                <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Hidden Bottom Nav for Desktop Logic but suppressed here as per Transactional rule -->
+</body></html>

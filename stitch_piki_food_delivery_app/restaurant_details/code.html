@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#eae7e7",
+                    "tertiary": "#a93249",
+                    "on-primary-fixed-variant": "#005227",
+                    "background": "#fcf9f8",
+                    "on-background": "#1c1b1b",
+                    "on-surface": "#1c1b1b",
+                    "secondary-container": "#fdc003",
+                    "primary": "#006d36",
+                    "secondary-fixed": "#ffdf9e",
+                    "on-secondary": "#ffffff",
+                    "surface-bright": "#fcf9f8",
+                    "on-secondary-fixed-variant": "#5b4300",
+                    "on-primary-fixed": "#00210c",
+                    "surface-container-low": "#f6f3f2",
+                    "on-primary": "#ffffff",
+                    "inverse-on-surface": "#f3f0ef",
+                    "on-error": "#ffffff",
+                    "on-tertiary-fixed-variant": "#891933",
+                    "tertiary-container": "#ee667b",
+                    "inverse-surface": "#313030",
+                    "surface": "#fcf9f8",
+                    "surface-variant": "#e5e2e1",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#6d7b6d",
+                    "primary-container": "#0fa958",
+                    "secondary-fixed-dim": "#fabd00",
+                    "on-secondary-fixed": "#261a00",
+                    "tertiary-fixed-dim": "#ffb2b9",
+                    "on-primary-container": "#003416",
+                    "surface-container": "#f0eded",
+                    "on-tertiary-container": "#5f001c",
+                    "error-container": "#ffdad6",
+                    "surface-container-highest": "#e5e2e1",
+                    "error": "#ba1a1a",
+                    "surface-tint": "#006d36",
+                    "on-surface-variant": "#3d4a3e",
+                    "on-secondary-container": "#6c5000",
+                    "tertiary-fixed": "#ffd9dc",
+                    "primary-fixed": "#79fca0",
+                    "on-tertiary-fixed": "#400010",
+                    "secondary": "#785900",
+                    "on-error-container": "#93000a",
+                    "surface-dim": "#dcd9d9",
+                    "on-tertiary": "#ffffff",
+                    "outline-variant": "#bccabb",
+                    "primary-fixed-dim": "#5bdf87",
+                    "inverse-primary": "#5bdf87"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "container-padding": "20px",
+                    "xl": "32px",
+                    "sm": "8px",
+                    "md": "16px",
+                    "xs": "4px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "h2": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "display": ["Plus Jakarta Sans"],
+                    "body-sm": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "h1": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "h2": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "display": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "h1": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: #fcf9f8;
+      }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between px-container-padding py-md sticky top-0 z-50 w-full bg-surface shadow-sm">
+<div class="flex items-center gap-md">
+<button class="active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary text-h1" data-icon="arrow_back">arrow_back</span>
+</button>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Deliver to Current Location</span>
+<span class="font-h2 text-h2 text-primary">Dar es Salaam, TZ</span>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-low transition-colors active:scale-95">
+<span class="material-symbols-outlined text-on-surface" data-icon="search">search</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-low transition-colors active:scale-95">
+<span class="material-symbols-outlined text-on-surface" data-icon="favorite">favorite</span>
+</button>
+</div>
+</header>
+<main class="pb-24">
+<!-- Hero Section -->
+<section class="relative h-64 md:h-80 w-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A luxurious high-end restaurant interior in Dar es Salaam with modern Tanzanian architectural influences. The lighting is warm and golden, highlighting vibrant green plants and premium wooden textures. A beautifully plated Swahili fusion dish is visible in the foreground, capturing a sophisticated and welcoming African hospitality vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkEswq0B_eowo02bIK3nmnBXq-GqJz7vfXkz1Qw5V0kN1hmWO9Fgs1CtvrYKySyJtlsude7GIiqIfbcB6SNzuqnx1Oollv-p6CwPtxcqQ1bJr3Jfm4hHjmH49vcOT1wGL9cXJV6bwL397bJATuySTdNuhbJts7afIx2tfS4zQTPh5GS0dfGyMSLDHV7edNEE_NgBNY8MmtM6xX7ItrsKlCobJT_KXHxPe447L2qbxWt_kjE8jGKV5aTGNv4Qsu8CJnYK1fRHzws5U"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-4 left-container-padding">
+<div class="flex gap-sm">
+<span class="bg-primary text-on-primary px-sm py-xs rounded-lg font-label-sm text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+                        4.8 (500+)
+                    </span>
+<span class="bg-secondary-container text-on-secondary-container px-sm py-xs rounded-lg font-label-sm text-label-sm">Free Delivery</span>
+</div>
+</div>
+</section>
+<!-- Restaurant Info -->
+<section class="px-container-padding -mt-6 relative z-10">
+<div class="bg-surface-container-lowest p-md rounded-xl shadow-[0_4px_20px_rgba(15,169,88,0.08)]">
+<h1 class="font-display text-display text-on-surface mb-xs">The Terrace Swahili Bistro</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">Modern Swahili Fusion • Seafood • Grill</p>
+<div class="flex items-center justify-between border-t border-surface-variant pt-md">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-primary mb-xs" data-icon="schedule">schedule</span>
+<span class="font-label-md text-label-md text-on-surface">25-35 min</span>
+</div>
+<div class="w-px h-8 bg-surface-variant"></div>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-primary mb-xs" data-icon="distance">distance</span>
+<span class="font-label-md text-label-md text-on-surface">2.4 km</span>
+</div>
+<div class="w-px h-8 bg-surface-variant"></div>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-primary mb-xs" data-icon="payments">payments</span>
+<span class="font-label-md text-label-md text-on-surface">TSh 2,500</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Categories Scroller -->
+<nav class="sticky top-[72px] bg-background/80 backdrop-blur-md z-40 py-md mt-md">
+<div class="flex gap-md overflow-x-auto no-scrollbar px-container-padding">
+<a class="whitespace-nowrap px-lg py-sm bg-primary text-on-primary rounded-full font-label-md text-label-md shadow-sm" href="#popular">Popular</a>
+<a class="whitespace-nowrap px-lg py-sm bg-surface-container-high text-on-surface-variant rounded-full font-label-md text-label-md hover:bg-surface-container-low transition-colors" href="#appetizers">Appetizers</a>
+<a class="whitespace-nowrap px-lg py-sm bg-surface-container-high text-on-surface-variant rounded-full font-label-md text-label-md hover:bg-surface-container-low transition-colors" href="#mains">Mains</a>
+<a class="whitespace-nowrap px-lg py-sm bg-surface-container-high text-on-surface-variant rounded-full font-label-md text-label-md hover:bg-surface-container-low transition-colors" href="#sides">Sides</a>
+<a class="whitespace-nowrap px-lg py-sm bg-surface-container-high text-on-surface-variant rounded-full font-label-md text-label-md hover:bg-surface-container-low transition-colors" href="#drinks">Drinks</a>
+</div>
+</nav>
+<!-- Menu Section: Popular -->
+<section class="mt-lg px-container-padding" id="popular">
+<h2 class="font-h1 text-h1 text-on-surface mb-md">Popular Items</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<!-- Large Item Card -->
+<div class="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_2px_12px_rgba(15,169,88,0.04)] hover:shadow-lg transition-all duration-300">
+<div class="relative h-48">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A gourmet Zanzibar Spiced Chicken Platter served with saffron-infused rice and a vibrant side salad. The lighting is crisp and bright, showcasing the rich textures and deep amber colors of the perfectly roasted chicken. The presentation is elegant, reflecting a premium urban dining experience in Tanzania." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaqLt7MjVahwW4IWPL13Dp4HWFyGLUspFUZRjbuHrY4PxrbqR7Zh1opfdT0xrfdc0b8LcidYoYAviytJUGHVzg87g8dDPy2bFy32A_WP8oNyjQT1hYvlQRCJr0H-S5EQr0DFcbH_m9XyXTyPwOFH-7p_C2zXyZvnhKDl7ve2jLIkQ7YqXusx0keTO622_81alqTVJ8wxzi-ry0K_B-stXvvrXVPyx5vDU1QVaIUR9CODre9u5K7zzqRWySePJYvFx43_MwxZF_IQY"/>
+<button class="absolute bottom-4 right-4 w-12 h-12 bg-primary text-on-primary rounded-xl flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+<div class="p-md">
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-h2 text-h2 text-on-surface">Zanzibar Spiced Chicken</h3>
+<span class="font-h2 text-h2 text-primary">TSh 18,500</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Half spring chicken marinated in 12 organic Zanzibar spices, served with pilau rice and kachumbari.</p>
+</div>
+</div>
+<!-- Another Item Card -->
+<div class="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_2px_12px_rgba(15,169,88,0.04)] hover:shadow-lg transition-all duration-300">
+<div class="relative h-48">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A premium plate of Grilled King Prawns glazed with a lemon-butter garlic sauce, garnished with fresh parsley and served alongside grilled seasonal vegetables. The lighting is soft and airy, creating a high-end coastal dining atmosphere with a clean and modern aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbaLzAwSw_Txd6cI1noxy7_0m8-9COXwRlwLGWK4kOyvu9-aJoCyAtzuRKXAwxfOwz8-kuGiqdFmpHZo09YF47INh84yAQ10c5UbFiQyFQPHK9PJ4fM4vWotHLk-2ppW-OYTUvp-qzIPz0DGVKVD6t6BmdxVJUsZdEzmrihs0lmy-3V9Lohod2SUYJ5MRYRYwnIssFGwa5t-rWf2sTK76c2aVccPnXcMON4KMwyxCoaeZMR8fMc9-648z4jK8w7jlfLsasML8UCLE"/>
+<button class="absolute bottom-4 right-4 w-12 h-12 bg-primary text-on-primary rounded-xl flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+<div class="p-md">
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-h2 text-h2 text-on-surface">Grilled Garlic Prawns</h3>
+<span class="font-h2 text-h2 text-primary">TSh 24,000</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Giant prawns from the Indian Ocean, grilled over charcoal with garlic butter infusion.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Menu Section: Appetizers (Bento Grid Style) -->
+<section class="mt-xl px-container-padding" id="appetizers">
+<h2 class="font-h1 text-h1 text-on-surface mb-md">Appetizers</h2>
+<div class="grid grid-cols-2 gap-md">
+<div class="col-span-1 bg-surface-container-lowest rounded-xl p-sm shadow-sm flex flex-col gap-sm">
+<div class="h-32 rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A set of crispy golden-brown vegetable samosas served with a vibrant green chutney dip. The photo is taken from a top-down angle, highlighting the crunchy texture and fresh ingredients. The background is a clean, neutral surface that emphasizes the food's warmth." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAi-MWJeDA3Ovp0GN_tJbJ0Ej1ZLPekO2Cjoe8d6li2SFXBiht_pCn-5YowsTDzDtTtlo2OZfarEyFVzWcA08m9UZUyLZEVYd4aRattvxvJMUep1FWvp30E8nuPpIwoG98Y0iNz5kTcVXTGqkgcui7kyi7Gsn6itP9VBj3LtBSrp1ix2Hl5oBJsPL4HXE9l-72QufqkJLnGylDvNxVdjZTsAF7EaBSD-m-TqCXc1LxH2wxh3Hm3JhtyCW-M55GHcRynKAHorsUpLOc"/>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Beef Samosas (3pcs)</h4>
+<p class="font-h2 text-h2 text-primary text-sm">TSh 6,500</p>
+</div>
+<button class="w-full py-xs bg-surface-container text-primary rounded-lg font-label-sm text-label-sm active:scale-95 transition-transform">+ Add</button>
+</div>
+<div class="col-span-1 bg-surface-container-lowest rounded-xl p-sm shadow-sm flex flex-col gap-sm">
+<div class="h-32 rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A bowl of creamy coconut and ginger butternut squash soup garnished with roasted seeds and fresh herbs. The colors are warm and inviting, shot in a high-key lighting style to convey health and freshness in a premium urban setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDWyn4q0TOZ-KS4qF07JjuRuGX5IuwnWr5PmevVgIFc1ngihYFhKRu5nsLtwE5xZiNeCvpg_EmqVKO2QkJaD6u5MmD5tSlYXslNL6evJ8QlIczMRqOKx2q7YQ9j1RJ-pxkxrsmBJ913SmhmMDibmZsv8EkFxtEEsL5DXbziHAypV3vi8H7-rpjkIpon9C7NXL2zXcgQDxVaBGxQoz1BIExLpHzXYceQjI5oYYmdujuOCb_gJhJzMJZezp3ndjQHbCmKsTHwKfQI3Q"/>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Coconut Ginger Soup</h4>
+<p class="font-h2 text-h2 text-primary text-sm">TSh 9,000</p>
+</div>
+<button class="w-full py-xs bg-surface-container text-primary rounded-lg font-label-sm text-label-sm active:scale-95 transition-transform">+ Add</button>
+</div>
+</div>
+</section>
+<!-- Menu Section: Drinks -->
+<section class="mt-xl px-container-padding" id="drinks">
+<h2 class="font-h1 text-h1 text-on-surface mb-md">Refreshments</h2>
+<div class="space-y-md">
+<div class="flex items-center gap-md bg-surface-container-lowest p-md rounded-xl shadow-sm">
+<div class="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A tall glass of fresh passion fruit juice with ice cubes and mint leaves, glowing under sunlight. The lighting is bright and summery, capturing the vibrant orange-yellow color and refreshing tropical vibe characteristic of coastal Tanzania." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYtJzIk42VYhzUKiRr9e5v0vDswcMb2PzwRxa3_rWdYxGhCyMmp815hTUiVZjfpkHxKcxgyGp0Wt-KWI_phh47BK6Jc6psOgRHbl6gsglFBzWWFmVGljuBigYsrc2GgFY-LXeSVZdOQ6KydaT7NarcSDEoYYTw0UJishL9BwLT6qnaYBys9BFr3TR2UVKLjvGHag2PL-p6t2a7mE977lfIKv30BDD1aeWzaTETb9B9iF-7DPxb82V8z2U-brCkPQ7bBKT-4Q7_qtA"/>
+</div>
+<div class="flex-grow">
+<h4 class="font-label-md text-label-md text-on-surface">Fresh Passion Juice</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Pure organic fruit</p>
+<span class="font-h2 text-h2 text-primary">TSh 5,000</span>
+</div>
+<button class="w-10 h-10 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+</div>
+<div class="flex items-center gap-md bg-surface-container-lowest p-md rounded-xl shadow-sm">
+<div class="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A refreshing lime and ginger mocktail served in a chilled glass with crushed ice and a sprig of rosemary. The image features a shallow depth of field and soft, natural daylight, reflecting a high-end, modern corporate café aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD73ZZSNt5cxUlqhXMoGUJg0fQp6vuV3qDCf0nEnFwaxbqlwmzOctT1KVZBlIHDhuzmaGH95FZFQP56awI0-ZllMAlSqYy3kQcbqJLSW_lBLKF1ze9wMGDtyUlhX326eN41Wb33vKa6pVlgNqJcS_Godf0xugvDSWDCOWbJ7u8WsMK6zTsxQaj8GEjflxSF0OvzTfYRvSzkqtT7Y_xYRqAwFOiKVSI_gAm3y3Dl91KNSheu_0-iohK2fJJt2vQEqKNEYn6DOGb745k"/>
+</div>
+<div class="flex-grow">
+<h4 class="font-label-md text-label-md text-on-surface">Dawa Mocktail</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Honey, lime &amp; ginger</p>
+<span class="font-h2 text-h2 text-primary">TSh 7,500</span>
+</div>
+<button class="w-10 h-10 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Fixed Checkout Bar (Injected from UX Logic) -->
+<div class="fixed bottom-0 left-0 w-full p-container-padding pb-safe z-[60] bg-surface/90 backdrop-blur-md">
+<button class="w-full bg-primary text-on-primary h-14 rounded-xl flex items-center justify-between px-lg shadow-lg active:scale-95 transition-all">
+<div class="flex items-center gap-sm">
+<span class="bg-on-primary text-primary w-8 h-8 rounded-lg flex items-center justify-center font-bold">2</span>
+<span class="font-label-md text-label-md">View Cart</span>
+</div>
+<span class="font-h2 text-h2">TSh 42,500</span>
+</button>
+</div>
+<!-- Bottom Navigation (Hidden on detail page as per rules, using Checkout Bar instead) -->
+</body></html>

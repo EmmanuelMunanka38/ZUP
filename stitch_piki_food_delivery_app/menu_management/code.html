@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-container-high": "#eae7e7",
+            "tertiary": "#a93249",
+            "on-primary-fixed-variant": "#005227",
+            "background": "#fcf9f8",
+            "on-background": "#1c1b1b",
+            "on-surface": "#1c1b1b",
+            "secondary-container": "#fdc003",
+            "primary": "#006d36",
+            "secondary-fixed": "#ffdf9e",
+            "on-secondary": "#ffffff",
+            "surface-bright": "#fcf9f8",
+            "on-secondary-fixed-variant": "#5b4300",
+            "on-primary-fixed": "#00210c",
+            "surface-container-low": "#f6f3f2",
+            "on-primary": "#ffffff",
+            "inverse-on-surface": "#f3f0ef",
+            "on-error": "#ffffff",
+            "on-tertiary-fixed-variant": "#891933",
+            "tertiary-container": "#ee667b",
+            "inverse-surface": "#313030",
+            "surface": "#fcf9f8",
+            "surface-variant": "#e5e2e1",
+            "surface-container-lowest": "#ffffff",
+            "outline": "#6d7b6d",
+            "primary-container": "#0fa958",
+            "secondary-fixed-dim": "#fabd00",
+            "on-secondary-fixed": "#261a00",
+            "tertiary-fixed-dim": "#ffb2b9",
+            "on-primary-container": "#003416",
+            "surface-container": "#f0eded",
+            "on-tertiary-container": "#5f001c",
+            "error-container": "#ffdad6",
+            "surface-container-highest": "#e5e2e1",
+            "error": "#ba1a1a",
+            "surface-tint": "#006d36",
+            "on-surface-variant": "#3d4a3e",
+            "on-secondary-container": "#6c5000",
+            "tertiary-fixed": "#ffd9dc",
+            "primary-fixed": "#79fca0",
+            "on-tertiary-fixed": "#400010",
+            "secondary": "#785900",
+            "on-error-container": "#93000a",
+            "surface-dim": "#dcd9d9",
+            "on-tertiary": "#ffffff",
+            "outline-variant": "#bccabb",
+            "primary-fixed-dim": "#5bdf87",
+            "inverse-primary": "#5bdf87"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "base": "8px",
+            "container-padding": "20px",
+            "xl": "32px",
+            "sm": "8px",
+            "md": "16px",
+            "xs": "4px",
+            "lg": "24px"
+          },
+          "fontFamily": {
+            "h2": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "display": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "h1": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "h2": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+            "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+            "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+            "display": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+            "body-sm": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+            "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+            "h1": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+            "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e2e1; border-radius: 10px; }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-32">
+<!-- TopAppBar Execution -->
+<header class="bg-surface dark:bg-surface-dim shadow-sm flex items-center justify-between px-container-padding py-md sticky top-0 z-50 w-full">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim" data-icon="location_on">location_on</span>
+<h1 class="font-h2 text-h2 text-primary dark:text-primary-fixed-dim">Deliver to Current Location</h1>
+</div>
+<div class="flex items-center gap-md">
+<button class="hover:bg-surface-container-low transition-colors p-sm rounded-full active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="shopping_basket">shopping_basket</span>
+</button>
+</div>
+</header>
+<main class="px-container-padding pt-lg">
+<!-- Screen Header -->
+<div class="mb-lg">
+<h2 class="font-display text-h1 text-on-surface mb-xs">Menu Management</h2>
+<p class="font-body-sm text-on-surface-variant">Update your restaurant offerings and availability</p>
+</div>
+<!-- Category Tabs Selector -->
+<div class="flex gap-sm overflow-x-auto pb-md mb-lg custom-scrollbar">
+<button class="whitespace-nowrap px-lg py-sm rounded-full bg-primary-container text-on-primary-container font-label-md transition-all">
+        Appetizers
+      </button>
+<button class="whitespace-nowrap px-lg py-sm rounded-full bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high font-label-md transition-all">
+        Mains
+      </button>
+<button class="whitespace-nowrap px-lg py-sm rounded-full bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high font-label-md transition-all">
+        Drinks
+      </button>
+<button class="whitespace-nowrap px-lg py-sm rounded-full bg-secondary-container text-on-secondary-container flex items-center gap-xs font-label-md transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+        Add Category
+      </button>
+</div>
+<!-- Bento Grid Section for Categories -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-lg">
+<!-- Current Category Heading -->
+<div class="md:col-span-12 flex items-center justify-between">
+<h3 class="font-h2 text-h2 text-on-surface">Appetizers <span class="text-on-surface-variant font-body-md ml-xs">(4 Items)</span></h3>
+<button class="text-primary font-label-md flex items-center gap-xs">
+<span class="material-symbols-outlined text-[20px]" data-icon="sort">sort</span>
+          Rearrange
+        </button>
+</div>
+<!-- Food Item List -->
+<div class="md:col-span-12 space-y-md">
+<!-- Item 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-md flex items-center gap-md shadow-[0_4px_12px_rgba(15,169,88,0.04)] border border-surface-variant/30 group hover:border-primary/20 transition-all">
+<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A gourmet presentation of Swahili beef samosas served on a artisanal wooden platter. The samosas are golden-brown and crispy, accompanied by a vibrant lime wedge and fresh cilantro garnish. The lighting is warm and cinematic, emphasizing the texture of the pastry against a minimalist dark background, reflecting a premium East African culinary aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCb4N4WQUj5SxKLtfaHGWM_qeUQzdz46Si-8kQrWxttk-WFegk8wkIt5bwGWzstMth4Qnjs4fE9OCilpyvYUpd-NNJNIdMo6F_cY0W0xWGvokeuhCNWOYYbTod-O8oLOo9yj1tH34Kn0lscVOpxFChvDMQazwPcnsNB89ZDdwobOTLw9EV5B36rI-1gIBYYtZR8fhVqcW1fc85EahHpBzSpHzixZaMSHdsHIAXc3fERGuwD4Q9w2LrTSJ37gJkTeCEvjCFpfXS3Kh0"/>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex justify-between items-start">
+<h4 class="font-h2 text-body-lg text-on-surface truncate">Beef Samosas (3pcs)</h4>
+<span class="font-label-md text-primary">TSh 7,500</span>
+</div>
+<div class="flex items-center gap-lg mt-sm">
+<!-- Stock Toggle -->
+<div class="flex items-center gap-xs">
+<div class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</div>
+<span class="font-label-sm text-on-surface-variant">In Stock</span>
+</div>
+<!-- Quick Actions -->
+<div class="flex items-center gap-md ml-auto">
+<button class="p-xs text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined" data-icon="delete">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-md flex items-center gap-md shadow-[0_4px_12px_rgba(15,169,88,0.04)] border border-surface-variant/30 group hover:border-primary/20 transition-all">
+<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 relative">
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+<span class="text-[10px] text-white font-bold uppercase tracking-wider">Sold Out</span>
+</div>
+<img class="w-full h-full object-cover grayscale-[0.5]" data-alt="A close-up shot of crispy vegetable pakoras served in a modern ceramic bowl. The pakoras are textured with visible pieces of onion and spinach, dusted with a light spice mix. The setting is bright and airy, using soft daylight to highlight the vibrant greens and yellows of the ingredients, maintaining a clean and professional food photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfEUVuChX6duwF1w6NgxueRsyr3CjddHRZsRmg8zFutgI4AZ8MSzdlz55dW0OEKyuHo0xGtS7YZpc1NKH6YzR-ATH9JJn5WkW3kgYZvSJSwoGFm2sYvCjDvG5fPh80YM_F7hKvBFScHaKCohZClLPDUluF9taHS8apSIdeD_DFyVGcNo_ZS8WuQ-A6DCQD-Z1jyqvUqXa6YHUojmoGSVq6z0iMxyuufwvZp4JDBbF3toDtMi5e7i-fKj3_q8O1jedDhBDYqAcs0E8"/>
+</div>
+<div class="flex-grow min-w-0 opacity-60">
+<div class="flex justify-between items-start">
+<h4 class="font-h2 text-body-lg text-on-surface truncate">Vegetable Pakoras</h4>
+<span class="font-label-md text-on-surface-variant">TSh 5,000</span>
+</div>
+<div class="flex items-center gap-lg mt-sm">
+<div class="flex items-center gap-xs">
+<div class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</div>
+<span class="font-label-sm text-on-surface-variant">Sold Out</span>
+</div>
+<div class="flex items-center gap-md ml-auto">
+<button class="p-xs text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined" data-icon="delete">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-md flex items-center gap-md shadow-[0_4px_12px_rgba(15,169,88,0.04)] border border-surface-variant/30 group hover:border-primary/20 transition-all">
+<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Modern artisanal garlic bread slices topped with melted mozzarella and fresh herbs. The bread is perfectly toasted with golden edges, sitting on a slate stone plate. High-contrast lighting creates sharp shadows and highlights the glistening cheese, set against a clean white tablecloth to create a high-end restaurant atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiRrVLl-UrZI2bGqKS0Pvaz0ipcOXqPrWTTgZuy9-O6r-GCs9efUw2GY-J8wzntgOij1szVhMBhHVo9N5NjLpVzvfrRFDeOz_KYejhzQ2VY1KDZ29NQeRTe1H2GelLpL18N22kt5eg4UfRFUzsamJ8PByqyUUORNzXzmMthnZXBfushzAGNDnpBrQ1AD_aPNHBHGzPDSTOtyA1f8JAG4rtHsfasFePf6AorD-QjsdTkdT6KXnOLb2-P6f0yRkPKCIp313wOYwAvKs"/>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex justify-between items-start">
+<h4 class="font-h2 text-body-lg text-on-surface truncate">Cheese Garlic Bread</h4>
+<span class="font-label-md text-primary">TSh 6,500</span>
+</div>
+<div class="flex items-center gap-lg mt-sm">
+<div class="flex items-center gap-xs">
+<div class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</div>
+<span class="font-label-sm text-on-surface-variant">In Stock</span>
+</div>
+<div class="flex items-center gap-md ml-auto">
+<button class="p-xs text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined" data-icon="delete">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 right-container-padding bg-primary-container text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-all duration-200 z-50">
+<span class="material-symbols-outlined text-[32px]" data-icon="add">add</span>
+</button>
+</main>
+<!-- BottomNavBar Execution -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-surface dark:bg-surface-container-highest shadow-[0_-4px_12px_rgba(15,169,88,0.04)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-label-sm text-label-sm">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-sm text-label-sm">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold scale-110 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person" data-weight="fill" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+</body></html>

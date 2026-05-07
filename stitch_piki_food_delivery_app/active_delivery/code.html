@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#eae7e7",
+                    "tertiary": "#a93249",
+                    "on-primary-fixed-variant": "#005227",
+                    "background": "#fcf9f8",
+                    "on-background": "#1c1b1b",
+                    "on-surface": "#1c1b1b",
+                    "secondary-container": "#fdc003",
+                    "primary": "#006d36",
+                    "secondary-fixed": "#ffdf9e",
+                    "on-secondary": "#ffffff",
+                    "surface-bright": "#fcf9f8",
+                    "on-secondary-fixed-variant": "#5b4300",
+                    "on-primary-fixed": "#00210c",
+                    "surface-container-low": "#f6f3f2",
+                    "on-primary": "#ffffff",
+                    "inverse-on-surface": "#f3f0ef",
+                    "on-error": "#ffffff",
+                    "on-tertiary-fixed-variant": "#891933",
+                    "tertiary-container": "#ee667b",
+                    "inverse-surface": "#313030",
+                    "surface": "#fcf9f8",
+                    "surface-variant": "#e5e2e1",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#6d7b6d",
+                    "primary-container": "#0fa958",
+                    "secondary-fixed-dim": "#fabd00",
+                    "on-secondary-fixed": "#261a00",
+                    "tertiary-fixed-dim": "#ffb2b9",
+                    "on-primary-container": "#003416",
+                    "surface-container": "#f0eded",
+                    "on-tertiary-container": "#5f001c",
+                    "error-container": "#ffdad6",
+                    "surface-container-highest": "#e5e2e1",
+                    "error": "#ba1a1a",
+                    "surface-tint": "#006d36",
+                    "on-surface-variant": "#3d4a3e",
+                    "on-secondary-container": "#6c5000",
+                    "tertiary-fixed": "#ffd9dc",
+                    "primary-fixed": "#79fca0",
+                    "on-tertiary-fixed": "#400010",
+                    "secondary": "#785900",
+                    "on-error-container": "#93000a",
+                    "surface-dim": "#dcd9d9",
+                    "on-tertiary": "#ffffff",
+                    "outline-variant": "#bccabb",
+                    "primary-fixed-dim": "#5bdf87",
+                    "inverse-primary": "#5bdf87"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "container-padding": "20px",
+                    "xl": "32px",
+                    "sm": "8px",
+                    "md": "16px",
+                    "xs": "4px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "h2": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "display": ["Plus Jakarta Sans"],
+                    "body-sm": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "h1": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "h2": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "display": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "h1": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .nav-overlay-blur {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .map-container {
+            height: 100vh;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface overflow-hidden">
+<!-- TOP NAVIGATION BAR (RELEVANT SHELL) -->
+<header class="flex items-center justify-between px-container-padding py-md sticky top-0 z-50 w-full bg-surface shadow-sm">
+<div class="flex items-center gap-md">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary" data-icon="arrow_back">arrow_back</span>
+</button>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Active Delivery</p>
+<h1 class="font-h2 text-h2 text-on-surface">Order #PIKI-9921</h1>
+</div>
+</div>
+<div class="flex gap-sm">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-error-container text-error active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="report">report</span>
+</button>
+</div>
+</header>
+<!-- FULL SCREEN MAP CONTENT -->
+<main class="relative h-[calc(100vh-72px)] w-full overflow-hidden">
+<!-- Mock Map Visual -->
+<div class="map-container bg-surface-container">
+<img class="w-full h-full object-cover grayscale-[20%] opacity-90" data-alt="A detailed aerial satellite map view of an African urban neighborhood with clear street grids and green spaces. A stylized navigation path in bright green is overlaid across the streets, showing a route from a restaurant icon to a house icon. The lighting is bright daylight, emphasizing clarity and professional delivery logistics aesthetic." data-location="Dar es Salaam" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTP291rsAC0pgLG5c-mkUwfBfglGIXfEs7MqqdD8Dj1jByeYGVKTH8KIUJqyMVGhSwKOVwFr9s_d2ec1EB7V_yIw4EqeAX4djg4Movl8FfwLVuxBvmKSTS_px5WecQlb1z6jsZ8jW2WjfMTNv0OvbfpBV_oPLfg_gyDfAQjwixQ2Tbk3lZWvzAMc1GihurGny5Uf5_zlcyxJ90jv9w6fgIDkCAEGLPb6mndZZwQl98RvD-HIgWNs7srDdTohRddY5fvmam09-MfB8"/>
+<!-- Turn-by-Turn Instruction Overlay -->
+<div class="absolute top-lg left-container-padding right-container-padding z-10">
+<div class="bg-primary text-on-primary p-md rounded-xl shadow-lg flex items-center gap-md">
+<div class="bg-on-primary/20 p-2 rounded-lg">
+<span class="material-symbols-outlined text-[32px]" data-icon="turn_slight_right">turn_slight_right</span>
+</div>
+<div class="flex-1">
+<p class="font-label-sm text-label-sm opacity-90">Then turn right in 200m</p>
+<p class="font-h2 text-h2 leading-tight">Head North on Ali Hassan Mwinyi Rd</p>
+</div>
+<div class="text-right border-l border-on-primary/20 pl-md">
+<p class="font-h2 text-h2">1.2</p>
+<p class="font-label-sm text-label-sm">km</p>
+</div>
+</div>
+</div>
+<!-- Floating Action Buttons on Map -->
+<div class="absolute bottom-[360px] right-container-padding flex flex-col gap-md z-10">
+<button class="w-12 h-12 bg-surface rounded-full shadow-lg flex items-center justify-center text-primary active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="my_location">my_location</span>
+</button>
+<button class="w-12 h-12 bg-surface rounded-full shadow-lg flex items-center justify-center text-on-surface-variant active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="layers">layers</span>
+</button>
+</div>
+</div>
+<!-- DRIVER DETAILS CARD -->
+<div class="fixed bottom-0 left-0 right-0 z-40 px-xs pb-xs">
+<div class="bg-surface rounded-t-[24px] shadow-[0_-8px_30px_rgba(0,0,0,0.08)] px-container-padding pt-md pb-container-padding">
+<!-- Drag Handle -->
+<div class="w-12 h-1 bg-surface-container-high rounded-full mx-auto mb-lg"></div>
+<!-- Delivery Phase Status -->
+<div class="flex items-center gap-md mb-lg">
+<div class="w-3 h-3 bg-secondary-container rounded-full animate-pulse"></div>
+<p class="font-label-md text-label-md text-secondary">On the way to pickup</p>
+<div class="ml-auto flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A small circular avatar of a modern restaurant interior with warm lighting and a professional chef. The style is bright and high-end." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCW5vHljWNIG0qByfcU1zGRtt6KbGvSUECzC2WHEkeEWk_9io8Q4bnHYfAlPS96npwP5dGyYpnv8jfVOnKo6GOW-QeLqisLl_YB6vpCBrPNGbAaM07rircaiNnciWYkApI8rCpxfl2d7sJVcnSXa2MqzFzUo-9So2t2q29S8SUbrq-vCWBVv5snMjJO9qNEvLAvC0BVvghp4EvMNriNBe4ofrMVfmA_d0n-t6cpIUyM9rfhK_v8AIrlPFh9nYgZwNwDjWSoxus6lrg"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A small circular professional portrait of a friendly male customer in a clean urban setting. The lighting is soft and daylight-focused." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjy6E5I4XwK9jG2KOF62ZuOL4JRv-ybFaR_x6-oPen6hTVJoo4rSw3-H9Ul_3c8ybX2LsIAdpptAmHsk_1we3xQmMqN9FKHRdlgNe7DTSBUf65PAQXc4ZXeUvw3ZARN7mRY6KQy19RzfBXFojbJh8_SkbxpXh5B8bVXEw6eJBn3mDfWh_3DY8V2_LhMmW2Cw6dAdV99q816STuMkdmcNaYehvQLhumQCUAmq7k0V9L-jV8Gu8grR4BJyCkmTTXJk_WfB8FRXLP7rw"/>
+</div>
+</div>
+</div>
+<!-- Pickup/Dropoff Info -->
+<div class="space-y-lg mb-xl">
+<!-- Pickup -->
+<div class="flex items-start gap-md">
+<div class="flex flex-col items-center gap-xs">
+<span class="material-symbols-outlined text-primary" data-icon="store" style="font-variation-settings: 'FILL' 1;">store</span>
+<div class="w-0.5 h-12 bg-surface-container-highest"></div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Pickup from</p>
+<h3 class="font-h2 text-h2">Mama Ntilie Gourmet</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Msasani Peninsula, Plot 12</p>
+</div>
+<div class="flex gap-sm">
+<button class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary hover:bg-primary/10">
+<span class="material-symbols-outlined" data-icon="call">call</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary hover:bg-primary/10">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Dropoff -->
+<div class="flex items-start gap-md">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-secondary" data-icon="location_on" style="font-variation-settings: 'FILL' 1;">location_on</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Deliver to</p>
+<h3 class="font-h2 text-h2">John Doe</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Masaki Towers, Appt 4B</p>
+</div>
+<div class="flex gap-sm">
+<button class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-secondary hover:bg-secondary/10">
+<span class="material-symbols-outlined" data-icon="call">call</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-secondary hover:bg-secondary/10">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Items Summary -->
+<div class="bg-surface-container-low rounded-xl p-md mb-xl flex items-center justify-between">
+<div class="flex items-center gap-md">
+<div class="bg-primary-container/20 p-2 rounded-lg">
+<span class="material-symbols-outlined text-on-primary-container" data-icon="shopping_bag">shopping_bag</span>
+</div>
+<div>
+<p class="font-label-md text-label-md">3 Items to collect</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Pilau Kuku, Wali wa Nazi, Juice...</p>
+</div>
+</div>
+<button class="text-primary font-label-md">View List</button>
+</div>
+<!-- Action Buttons -->
+<div class="grid grid-cols-2 gap-md">
+<button class="py-4 px-md bg-secondary-fixed text-on-secondary-fixed rounded-xl font-label-md flex items-center justify-center gap-sm active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="near_me">near_me</span>
+                        Navigate
+                    </button>
+<button class="py-4 px-md bg-primary text-on-primary rounded-xl font-label-md flex items-center justify-center gap-sm active:scale-95 transition-all shadow-md">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+                        Arrived
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<!-- BOTTOM NAVIGATION (OFF FOR TRANSACTIONAL/TASK SCREEN - But included as placeholder if needed) -->
+<!-- Suppressed per user intent of a focused navigation screen -->
+</body></html>

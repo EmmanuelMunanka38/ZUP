@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#eae7e7",
+                        "tertiary": "#a93249",
+                        "on-primary-fixed-variant": "#005227",
+                        "background": "#fcf9f8",
+                        "on-background": "#1c1b1b",
+                        "on-surface": "#1c1b1b",
+                        "secondary-container": "#fdc003",
+                        "primary": "#006d36",
+                        "secondary-fixed": "#ffdf9e",
+                        "on-secondary": "#ffffff",
+                        "surface-bright": "#fcf9f8",
+                        "on-secondary-fixed-variant": "#5b4300",
+                        "on-primary-fixed": "#00210c",
+                        "surface-container-low": "#f6f3f2",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#f3f0ef",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#891933",
+                        "tertiary-container": "#ee667b",
+                        "inverse-surface": "#313030",
+                        "surface": "#fcf9f8",
+                        "surface-variant": "#e5e2e1",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#6d7b6d",
+                        "primary-container": "#0fa958",
+                        "secondary-fixed-dim": "#fabd00",
+                        "on-secondary-fixed": "#261a00",
+                        "tertiary-fixed-dim": "#ffb2b9",
+                        "on-primary-container": "#003416",
+                        "surface-container": "#f0eded",
+                        "on-tertiary-container": "#5f001c",
+                        "error-container": "#ffdad6",
+                        "surface-container-highest": "#e5e2e1",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#006d36",
+                        "on-surface-variant": "#3d4a3e",
+                        "on-secondary-container": "#6c5000",
+                        "tertiary-fixed": "#ffd9dc",
+                        "primary-fixed": "#79fca0",
+                        "on-tertiary-fixed": "#400010",
+                        "secondary": "#785900",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#dcd9d9",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#bccabb",
+                        "primary-fixed-dim": "#5bdf87",
+                        "inverse-primary": "#5bdf87"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "18px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "container-padding": "20px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "lg": "24px"
+                    },
+                    "fontFamily": {
+                        "h2": ["Plus Jakarta Sans"],
+                        "label-sm": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "display": ["Plus Jakarta Sans"],
+                        "body-sm": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "h1": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "h2": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "display": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                        "h1": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen relative overflow-hidden">
+<!-- Background Map Section -->
+<div class="fixed inset-0 z-0 h-full w-full">
+<img alt="City Map" class="w-full h-full object-cover grayscale opacity-40" data-alt="A sophisticated and detailed high-resolution city map visualization of Dar es Salaam, Tanzania. The map features elegant muted tones with silver and light gray streets contrasted against a clean white background. Subtle green accents highlight park areas, and small, glowing primary green dots represent active delivery riders. The lighting is bright and airy, reflecting a professional, high-end logistics dashboard aesthetic with a crisp, modern finish." data-location="Dar es Salaam, Tanzania" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAU3ZW-xigrDmLgism3nRDVZvd8IHMbcrcnXxVOX1q6AUXib7flFaMdwQPV4mldH8pAxu0m4sdLCvOcj5fO4R_b2-F1w4M_DLYhSiG3RX9A4nwbvkxVuclzMaxogM_QxeUQNRZmlY96eTi9ArcUPoPsaCcAi6rA6Zv5vf-q1dl1RxuPBAJAezaqxiyZnVs_SV9YN_gJwKp-qIiex2Ni4R22T7rsQhDptDMfWfL8Ajj3Dph3rm0Mz5FezbhvnuOCJURQS8v5HSJzs5M"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-surface/80"></div>
+</div>
+<!-- Top Navigation Anchor (Shared Component: TopAppBar) -->
+<header class="flex items-center justify-between px-container-padding py-md sticky top-0 z-50 w-full bg-surface/90 backdrop-blur-md shadow-sm">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-white shadow-lg">
+<span class="material-symbols-outlined" data-icon="location_on">location_on</span>
+</div>
+<div>
+<h1 class="font-h2 text-h2 text-primary leading-none">Piki Food</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Active in Masaki</p>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-on-surface-variant active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="shopping_basket">shopping_basket</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary">
+<img class="w-full h-full object-cover" data-alt="A professional close-up headshot of a friendly Tanzanian delivery partner wearing a high-quality green polo shirt. The lighting is warm and natural, suggesting an outdoor setting in the golden hour. The background is softly blurred to emphasize the person's welcoming expression, conveying trust and premium service quality. The overall aesthetic is clean, sharp, and corporate." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCb_P9ii4YMd3i5GC8138VkEwDWoiR8SqN3y0TDOWqOgbFuhbhvWq85_q7AijGwf76uwF__wkDDLxowmYBEv3RaLf8M-mcwZfMdAatZuPEQms2JuuCdNon9IurSHLnUHya27zhoEBy83Tdc8NSzE2HUsBtOPZIDbIWwL1qTDz_cuaq95EdBEdsxKk8NzQdhtftEsyf5griWw_ysHOPwMvkKhPvpQwE8zyd_weF0Y-hljbfi6usGS7Z1Mi7HWiwZGcLg29zYIL5pc0s"/>
+</div>
+</div>
+</header>
+<!-- Earnings & Status Canvas -->
+<main class="relative z-10 px-container-padding pt-md">
+<!-- Floating Status Bar -->
+<div class="bg-surface/95 backdrop-blur shadow-lg rounded-xl p-md border border-outline-variant/30 mb-lg">
+<div class="flex items-center justify-between mb-md">
+<div class="flex items-center gap-sm">
+<div class="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
+<span class="font-label-md text-label-md text-primary">ONLINE</span>
+</div>
+<!-- Toggle Switch -->
+<div class="w-14 h-8 bg-primary rounded-full relative p-1 cursor-pointer">
+<div class="absolute right-1 top-1 w-6 h-6 bg-white rounded-full shadow-md"></div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-md">
+<div class="bg-surface-container-low rounded-lg p-md">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Today's Earnings</p>
+<p class="font-h1 text-h1 text-primary mt-xs">TSh 42,500</p>
+</div>
+<div class="bg-surface-container-low rounded-lg p-md">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Total Orders</p>
+<p class="font-h1 text-h1 text-on-surface mt-xs">14</p>
+</div>
+</div>
+</div>
+<!-- Request Card (Simulating Active Request) -->
+<div class="fixed bottom-24 left-container-padding right-container-padding z-40">
+<div class="bg-surface rounded-xl shadow-[0_8px_32px_rgba(0,109,54,0.15)] border border-primary/10 overflow-hidden">
+<div class="bg-primary/5 px-md py-sm border-b border-outline-variant/20 flex justify-between items-center">
+<span class="font-label-md text-label-md text-primary">NEW REQUEST AVAILABLE</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">02:45 min left</span>
+</div>
+<div class="p-md">
+<div class="flex items-start justify-between mb-lg">
+<div class="flex gap-md">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A delicious, high-end photograph of a gourmet burger and fries served on a clean white plate. The lighting is bright and appetizing, using soft studio lights to highlight the textures of the fresh ingredients. The background is a clean, minimalist restaurant setting with subtle green accents, maintaining a premium and professional food photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAicks_UsKUkRwzjrheXgj7HmdOg9fencHxapgwKqD5fynlq7hU2C-FCU6ohAIi63Is9Tgbss37I-ctolJ-tDazITrHuom5OYZZ8ZU7TPkBqzR8Y6XhnSPcQoEFj1Rg0ykj6O1zXWRh3vGm2B-FO5Pmx2-gNJEqhXvJEx4nGD2zglMxqplRj4lo7-rIeRP782H-cCKgGYjPv0WFDsPrwc5PV8b7BRGi2T50cCGaCdYIPm-EDf2v0oXyTjBjWgVPprbJnRHvhq0jylE"/>
+</div>
+<div>
+<h3 class="font-h2 text-h2 text-on-surface">Mamboz BBQ</h3>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="near_me">near_me</span>
+<span class="font-body-sm text-body-sm">1.2 km away from you</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<p class="font-h2 text-h2 text-secondary">TSh 3,500</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Delivery Fee</p>
+</div>
+</div>
+<div class="space-y-md mb-lg">
+<div class="flex items-start gap-md">
+<div class="flex flex-col items-center pt-1">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-0.5 h-6 border-l-2 border-dashed border-outline-variant"></div>
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+</div>
+<div class="flex-1 space-y-md">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">PICKUP</p>
+<p class="font-body-md text-body-md text-on-surface">Mamboz BBQ, City Center</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">DROP-OFF</p>
+<p class="font-body-md text-body-md text-on-surface">Regency Apartments, Oysterbay</p>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-md">
+<button class="py-4 rounded-xl border-1.5 border-outline-variant text-on-surface-variant font-label-md active:scale-95 transition-all">
+                            Ignore
+                        </button>
+<button class="py-4 rounded-xl bg-primary-container text-white font-label-md shadow-lg shadow-primary/20 hover:bg-primary transition-colors active:scale-95">
+                            Accept
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Shell (Shared Component: BottomNavBar) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-surface shadow-[0_-4px_12px_rgba(15,169,88,0.04)] rounded-t-xl">
+<div class="flex flex-col items-center justify-center text-primary font-bold scale-110">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-label-sm text-label-sm">Search</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-sm text-label-sm">Orders</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</div>
+</nav>
+<!-- Floating Action Button (FAB) - Suppression Logic Applied: Only relevant for quick navigation on this screen -->
+<div class="fixed bottom-32 right-container-padding z-50">
+<button class="w-14 h-14 rounded-full bg-secondary-container text-on-secondary-container shadow-xl flex items-center justify-center active:scale-90 transition-all">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+</button>
+</div>
+</body></html>

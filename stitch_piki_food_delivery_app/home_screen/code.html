@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-container-high": "#eae7e7",
+            "tertiary": "#a93249",
+            "on-primary-fixed-variant": "#005227",
+            "background": "#fcf9f8",
+            "on-background": "#1c1b1b",
+            "on-surface": "#1c1b1b",
+            "secondary-container": "#fdc003",
+            "primary": "#006d36",
+            "secondary-fixed": "#ffdf9e",
+            "on-secondary": "#ffffff",
+            "surface-bright": "#fcf9f8",
+            "on-secondary-fixed-variant": "#5b4300",
+            "on-primary-fixed": "#00210c",
+            "surface-container-low": "#f6f3f2",
+            "on-primary": "#ffffff",
+            "inverse-on-surface": "#f3f0ef",
+            "on-error": "#ffffff",
+            "on-tertiary-fixed-variant": "#891933",
+            "tertiary-container": "#ee667b",
+            "inverse-surface": "#313030",
+            "surface": "#fcf9f8",
+            "surface-variant": "#e5e2e1",
+            "surface-container-lowest": "#ffffff",
+            "outline": "#6d7b6d",
+            "primary-container": "#0fa958",
+            "secondary-fixed-dim": "#fabd00",
+            "on-secondary-fixed": "#261a00",
+            "tertiary-fixed-dim": "#ffb2b9",
+            "on-primary-container": "#003416",
+            "surface-container": "#f0eded",
+            "on-tertiary-container": "#5f001c",
+            "error-container": "#ffdad6",
+            "surface-container-highest": "#e5e2e1",
+            "error": "#ba1a1a",
+            "surface-tint": "#006d36",
+            "on-surface-variant": "#3d4a3e",
+            "on-secondary-container": "#6c5000",
+            "tertiary-fixed": "#ffd9dc",
+            "primary-fixed": "#79fca0",
+            "on-tertiary-fixed": "#400010",
+            "secondary": "#785900",
+            "on-error-container": "#93000a",
+            "surface-dim": "#dcd9d9",
+            "on-tertiary": "#ffffff",
+            "outline-variant": "#bccabb",
+            "primary-fixed-dim": "#5bdf87",
+            "inverse-primary": "#5bdf87"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "base": "8px",
+            "container-padding": "20px",
+            "xl": "32px",
+            "sm": "8px",
+            "md": "16px",
+            "xs": "4px",
+            "lg": "24px"
+          },
+          "fontFamily": {
+            "h2": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "display": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "h1": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "h2": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+            "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+            "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+            "display": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+            "body-sm": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+            "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+            "h1": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+            "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fcf9f8; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .card-shadow { box-shadow: 0 4px 12px rgba(15, 169, 88, 0.04); }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-background">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-dim shadow-sm flex items-center justify-between px-container-padding py-md sticky top-0 z-50 w-full">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="location_on">location_on</span>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Deliver to</p>
+<h2 class="font-h2 text-h2 text-primary leading-tight">Current Location</h2>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="hover:bg-surface-container-low transition-colors p-sm rounded-full active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-on-surface" data-icon="shopping_basket">shopping_basket</span>
+</button>
+</div>
+</header>
+<main class="pb-32">
+<!-- Search Bar -->
+<section class="px-container-padding mt-md">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-container-lowest border-none rounded-[18px] card-shadow font-body-md focus:ring-2 focus:ring-primary transition-all outline-none" placeholder="Search for food, restaurants..." type="text"/>
+</div>
+</section>
+<!-- Categories -->
+<section class="mt-xl">
+<div class="flex items-center justify-between px-container-padding mb-md">
+<h3 class="font-h1 text-h1 text-on-surface">Categories</h3>
+<button class="text-primary font-label-md">View All</button>
+</div>
+<div class="flex overflow-x-auto hide-scrollbar gap-md px-container-padding">
+<div class="flex flex-col items-center gap-sm flex-shrink-0">
+<div class="w-[72px] h-[72px] bg-secondary-container rounded-full flex items-center justify-center card-shadow active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[32px] text-on-secondary-container" data-icon="local_pizza">local_pizza</span>
+</div>
+<span class="font-label-md text-label-md">Pizza</span>
+</div>
+<div class="flex flex-col items-center gap-sm flex-shrink-0">
+<div class="w-[72px] h-[72px] bg-surface-container-high rounded-full flex items-center justify-center card-shadow active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[32px] text-on-surface" data-icon="lunch_dining">lunch_dining</span>
+</div>
+<span class="font-label-md text-label-md">Burgers</span>
+</div>
+<div class="flex flex-col items-center gap-sm flex-shrink-0">
+<div class="w-[72px] h-[72px] bg-surface-container-high rounded-full flex items-center justify-center card-shadow active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[32px] text-on-surface" data-icon="dinner_dining">dinner_dining</span>
+</div>
+<span class="font-label-md text-label-md">Swahili</span>
+</div>
+<div class="flex flex-col items-center gap-sm flex-shrink-0">
+<div class="w-[72px] h-[72px] bg-surface-container-high rounded-full flex items-center justify-center card-shadow active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[32px] text-on-surface" data-icon="local_bar">local_bar</span>
+</div>
+<span class="font-label-md text-label-md">Drinks</span>
+</div>
+<div class="flex flex-col items-center gap-sm flex-shrink-0">
+<div class="w-[72px] h-[72px] bg-surface-container-high rounded-full flex items-center justify-center card-shadow active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[32px] text-on-surface" data-icon="bakery_dining">bakery_dining</span>
+</div>
+<span class="font-label-md text-label-md">Pastry</span>
+</div>
+</div>
+</section>
+<!-- Popular Restaurants Carousel -->
+<section class="mt-xl">
+<div class="flex items-center justify-between px-container-padding mb-md">
+<h3 class="font-h1 text-h1 text-on-surface">Popular Restaurants</h3>
+</div>
+<div class="flex overflow-x-auto hide-scrollbar gap-lg px-container-padding">
+<!-- Restaurant Card 1 -->
+<div class="flex-shrink-0 w-[280px] bg-surface-container-lowest rounded-[18px] card-shadow overflow-hidden active:scale-[0.98] transition-transform">
+<div class="relative h-40">
+<img class="w-full h-full object-cover" data-alt="A high-end modern restaurant interior with warm ambient lighting and lush green plants. The aesthetic is clean and corporate yet welcoming, featuring premium wooden textures and a vibrant primary green color scheme typical of Tanzanian urban food hubs. The mood is sophisticated and fast-paced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7JUH7CuqIszqiULdynuGOO9lWLctyCQKwRjOV4h-RGT1DSa8duyVPSRqmJZF0VugxL-K2Ws0ZJ3YIyNrzWPvdSDGdMngxi-zSICpDnmJblg4CNN7Jqxn1sz3vv3DTxLWAbjZbehnCJdK_XUAIV7sOChrgCCcn0fA67jQcLvmR0AfKLCMTEAZDfOCvv4r4ZMZp8AWn7YcX010CP2h65f7Exy5ZkS7xhCJBEhnkruySZN_dPi-Jwzhf5wxHa1yxVr2WLo9_uL_QvGI"/>
+<div class="absolute top-3 right-3 bg-surface/90 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[16px]" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-sm text-label-sm">4.8</span>
+</div>
+</div>
+<div class="p-md">
+<h4 class="font-h2 text-h2 text-on-surface">Dar Grill House</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Swahili • BBQ • 20-30 min</p>
+</div>
+</div>
+<!-- Restaurant Card 2 -->
+<div class="flex-shrink-0 w-[280px] bg-surface-container-lowest rounded-[18px] card-shadow overflow-hidden active:scale-[0.98] transition-transform">
+<div class="relative h-40">
+<img class="w-full h-full object-cover" data-alt="Gourmet stone-baked pizza with melting cheese and fresh basil on a rustic wooden table. The lighting is high-key and bright, reflecting a modern food delivery app style. Accents of vibrant green and amber highlight the freshness. The background is a clean, minimalist urban kitchen setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuNQ8BTyW26hr93CheefFgx9__SHL_uYnx7X_sL1oJkRzG2C14YvZHGXiI-Fu19z6bDu98-JlkraxYDbwvcajChrVUFKzMrcVWF206xRyMzjvTCJyRkAg2_jw_8zBjNGYa6hvLxAjQdWx9DyX5FCdZHl4g3VLoU8xYDzSPqvbH7UPqKJkYLZbNPOAmphI77ecLJ4g6QUOSPimSyHBkVjw_7502r_iU6BrCzuUjdKKpWQX8DeA0jQoWz463_hOZcgWusmd_Sdo6ClM"/>
+<div class="absolute top-3 right-3 bg-surface/90 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[16px]" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-sm text-label-sm">4.5</span>
+</div>
+</div>
+<div class="p-md">
+<h4 class="font-h2 text-h2 text-on-surface">Pizzeria Bella</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Italian • Pizza • 15-25 min</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Nearby Offers -->
+<section class="mt-xl px-container-padding">
+<div class="bg-primary rounded-[18px] p-lg flex items-center justify-between overflow-hidden relative">
+<div class="z-10 flex-1">
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-label-sm text-label-sm mb-sm inline-block">Flash Deal</span>
+<h3 class="font-display text-[28px] text-on-primary leading-tight">50% OFF on<br/>Your First Order</h3>
+<p class="font-body-sm text-on-primary/80 mt-sm">Valid for the next 2 hours!</p>
+<button class="mt-md bg-surface text-primary px-lg py-sm rounded-full font-label-md active:scale-95 transition-transform">Claim Now</button>
+</div>
+<div class="absolute -right-8 -bottom-4 w-40 h-40 opacity-20">
+<span class="material-symbols-outlined text-[160px] text-on-primary" data-icon="local_offer">local_offer</span>
+</div>
+</div>
+</section>
+<!-- Top Drinks -->
+<section class="mt-xl">
+<div class="flex items-center justify-between px-container-padding mb-md">
+<h3 class="font-h1 text-h1 text-on-surface">Top Drinks</h3>
+<button class="text-primary font-label-md">Explore</button>
+</div>
+<div class="flex overflow-x-auto hide-scrollbar gap-md px-container-padding">
+<!-- Drink 1 -->
+<div class="flex-shrink-0 w-36">
+<div class="h-36 bg-surface-container rounded-[18px] overflow-hidden mb-sm card-shadow">
+<img class="w-full h-full object-cover" data-alt="A refreshing, vibrant green detox smoothie in a glass bottle on a white minimalist surface. Soft, high-key lighting creates a premium health-conscious vibe. The background is slightly blurred to emphasize the drink's texture and color, aligned with a modern Tanzanian juice bar aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqxX6yDzr9NXmFzvJgMVh5o27eetl54VlzB5ipuD9y_UmCqo9jr8idETbQUZqBr0ooajdaCrXff5rlPoI_XwKbAvuvluBQRjoXsNVUwRVDnQmrnQpJTM1HnH30-xTSjdLwFdYli_Q_kp0SjRhPLgA5_TYRw4bLpMbub1zH2XBu7Ho4-bIWudeIdL9XFVH2tSt0FQ5OVE93UFYO8Nx5vqukUlWXr-tMyXf8xL1kj4isSm6zFERfC5KrI1DpSdIf9-bUKZqJwUqJQ48"/>
+</div>
+<p class="font-label-md text-on-surface truncate">Avocado Shake</p>
+<p class="font-label-sm text-primary">Tsh 8,000</p>
+</div>
+<!-- Drink 2 -->
+<div class="flex-shrink-0 w-36">
+<div class="h-36 bg-surface-container rounded-[18px] overflow-hidden mb-sm card-shadow">
+<img class="w-full h-full object-cover" data-alt="A chilled glass of fresh tropical fruit juice with orange and passionfruit layers. Bright sunlight creates sharp, clean shadows on a minimalist white table. The mood is energetic and refreshing, using a vibrant amber and green color palette to signal high quality and freshness." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpjajpzJRQ7OX3reRuZoY-JIHyj5mneuPlagYu4rN_EDlptbjOCkChXy000mQaVAwigo3v_u7tgjp1W-H2zZpvBCTOm6ajBoF2BqMiLGSktBnl1xuRO1_zuQlV_T2wpuONq57WstajqtXXKhTYnayDvhgXjRWtZBrcQOE4FncylW8RQiN1gF8k_zlMNkzJChGY53bP1OE38wCb6AnTuLQWKoF-0e9RWbls7WP396wZKRc_NOL820_H10mbsLOKWh4dWTGFM715ulI"/>
+</div>
+<p class="font-label-md text-on-surface truncate">Passion Mix</p>
+<p class="font-label-sm text-primary">Tsh 5,500</p>
+</div>
+<!-- Drink 3 -->
+<div class="flex-shrink-0 w-36">
+<div class="h-36 bg-surface-container rounded-[18px] overflow-hidden mb-sm card-shadow">
+<img class="w-full h-full object-cover" data-alt="A premium iced latte with visible coffee and milk swirls in a tall glass. The setting is a modern, corporate cafe with clean lines and soft ambient lighting. The visual style is crisp and high-end, focusing on the texture of the drink and its cooling appeal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrevsmV0Sl6wYo7H58kwqOntSOSg5dAfTKVimVm6RV04t8XRnMiBhrCsQy6Pbdgb_M22Nr4dMSTImTbwQagQ3tjjldvXmVUkA3-Sw7PCIi7JoAJ8SfeEBdy2rlMj7whzRo2MrsCsp9V54-jP7Tj9pzDVLSMGbUZFLA6qtmA8_iSebf7Il9ZoUwO2DFgmUnI57r03lKZ5A5GGeSnmusN4zDYY6nvJWuv7C2B1hQjcxqsArvEHzjhjbZjvUCtngV2-OIWVCus-0syOY"/>
+</div>
+<p class="font-label-md text-on-surface truncate">Iced Latte</p>
+<p class="font-label-sm text-primary">Tsh 9,500</p>
+</div>
+</div>
+</section>
+<!-- Recommended Meals Bento Grid -->
+<section class="mt-xl px-container-padding">
+<h3 class="font-h1 text-h1 text-on-surface mb-md">Recommended for You</h3>
+<div class="grid grid-cols-2 gap-md">
+<!-- Bento 1 (Large) -->
+<div class="col-span-2 bg-surface-container-lowest rounded-[18px] card-shadow overflow-hidden group active:scale-[0.99] transition-transform">
+<div class="flex h-40">
+<div class="w-1/2 p-md flex flex-col justify-between">
+<div>
+<span class="bg-primary-container/10 text-primary-container px-2 py-0.5 rounded font-label-sm text-[10px] uppercase">Best Seller</span>
+<h4 class="font-h2 text-h2 mt-sm">Pilau Special</h4>
+<p class="font-body-sm text-on-surface-variant text-xs">Aromatic rice with spiced beef and kachumbari.</p>
+</div>
+<p class="font-label-md text-primary">Tsh 12,000</p>
+</div>
+<div class="w-1/2">
+<img class="w-full h-full object-cover" data-alt="A beautifully plated traditional Swahili Pilau dish with tender meat and fresh salsa. The lighting is warm and inviting, highlighting the rich textures of the spices. Set in a modern dining environment with premium finishes, reflecting a blend of African tradition and urban sophistication." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBUpLIjxTrFL91GhoGW1s_J25fwrxy77zPwQt_UgH1qwPiE0DhfVMhMLyctjcChh0Yt3iiIfdQsd0ea9oCyKExemIJjUG8cf-uYYkHnaMKs25apLbo5vGr4GWZPrMbRhnHaMjlD7vHch_RNpuV84EFJN4aCUFdJ9WP8fh2LEBup_UR0hz2Q7c3phfiuSgv03trtaUz9GHB8GQreuktmHy8Nl4MaO-IiTc04V1BlY1CsV_3OTPBaI9yVXc3homtpo7oQmyizCU-19U"/>
+</div>
+</div>
+</div>
+<!-- Bento 2 -->
+<div class="bg-surface-container-lowest rounded-[18px] card-shadow overflow-hidden active:scale-[0.98] transition-transform">
+<div class="h-32">
+<img class="w-full h-full object-cover" data-alt="A juicy cheeseburger with fresh lettuce and tomatoes on a white porcelain plate. High-key, clean lighting emphasizes the quality of ingredients. The background is a minimalist, modern eatery. The primary colors are vibrant green and secondary amber accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAld5KXi98NOKkeKEtGJo4r6b1mUz5krYuLBxXIw7pgq4yXLqXPuR2zaWo6oQ9sE8GaXr8QVrFlyc3eh6zCJXps6j1moT3fZo7i9V57R-iG1rNnMZHYg60jIp1zv1hoOIKnGIGzunbV2tT1bfQTthZguc9BA0DB-C-8zW5X38IJrBFsqifCn1iz7aWBdZDa8mOVQqlYw2KlwUWzQ2ZQLlIjkHCPX-ATeEngJyCW6ynqDeRBghOqVqrhMsXE7D4Cydl4o7bgP06Xv6s"/>
+</div>
+<div class="p-sm">
+<h4 class="font-label-md truncate">Classic Burger</h4>
+<p class="font-label-sm text-primary">Tsh 15,000</p>
+</div>
+</div>
+<!-- Bento 3 -->
+<div class="bg-surface-container-lowest rounded-[18px] card-shadow overflow-hidden active:scale-[0.98] transition-transform">
+<div class="h-32">
+<img class="w-full h-full object-cover" data-alt="A traditional pasta dish with rich tomato sauce and fresh basil in a modern ceramic bowl. Soft, natural lighting creates a high-end gourmet feel. The aesthetic is clean and corporate, focusing on food quality and presentation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjZ4JYRQ8sgL90FqNkTD-CzZLeZ92gRhF8BdrAoJNDqtcPGDCEMgx__a59LSl0_N-cKlUMM4Jlrd_ZjwcWLb16l6yUcDD3rG4yrPSXLSmFPG90_8ASGeZuA9hk8bANl0KaHkQh6q-z7W53OXypNEIGQoAxserE_o2G8KntkTFNDqT3xq53pWGpftVEX4Oy2QCyfB6j3N91M8ia9YfumTgDo6djiE9Eh00IUtgTCpkLtTnKoyvxkuoipIlwZpWQm_gE64dW6PkkhZQ"/>
+</div>
+<div class="p-sm">
+<h4 class="font-label-md truncate">Pasta Arabiata</h4>
+<p class="font-label-sm text-primary">Tsh 18,500</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-surface dark:bg-surface-container-highest shadow-[0_-4px_12px_rgba(15,169,88,0.04)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold scale-110 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary transition-all active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-label-sm text-label-sm">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary transition-all active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-sm text-label-sm">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline hover:text-primary transition-all active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+</body></html>
