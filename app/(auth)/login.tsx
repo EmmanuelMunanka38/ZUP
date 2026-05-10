@@ -5,10 +5,19 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 
 type AuthMode = 'sign-in' | 'sign-up';
+
+let useSignIn: any = () => ({ signIn: null, setActive: null, isLoaded: false });
+let useSignUp: any = () => ({ signUp: null, setActive: null, isLoaded: false });
+try {
+  const clerk = require('@clerk/clerk-expo');
+  useSignIn = clerk.useSignIn;
+  useSignUp = clerk.useSignUp;
+} catch {
+  console.warn('Clerk not available; auth will use mock fallback.');
+}
 
 export default function AuthScreen() {
   const theme = 'light';
@@ -77,13 +86,13 @@ export default function AuthScreen() {
     setIsSubmitting(true);
     try {
       if (mode === 'sign-in') {
-        const result = await signIn!.authenticateWithRedirect({
+        await signIn!.authenticateWithRedirect({
           strategy,
           redirectUrl: '/',
           redirectUrlComplete: '/',
         });
       } else {
-        const result = await signUp!.authenticateWithRedirect({
+        await signUp!.authenticateWithRedirect({
           strategy,
           redirectUrl: '/',
           redirectUrlComplete: '/',
