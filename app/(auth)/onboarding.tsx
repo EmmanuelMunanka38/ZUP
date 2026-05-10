@@ -47,15 +47,15 @@ export default function OnboardingScreen() {
   };
 
   const handleSignUp = () => {
-    router.replace('/(auth)/login');
+    router.replace('/login');
   };
 
   const handleLogin = () => {
-    router.replace('/(auth)/login');
+    router.replace('/login');
   };
 
   const handleGuest = () => {
-    router.replace('/(tabs)');
+    router.replace('/');
   };
 
   const renderSlide = ({ item }: { item: typeof slides[0] }) => (

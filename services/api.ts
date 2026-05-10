@@ -27,7 +27,7 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       clearStoredToken();
-      router.replace('/(auth)/login');
+      router.replace('/login');
     }
     return Promise.reject(error);
   }

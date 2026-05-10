@@ -38,6 +38,21 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsAccessToken": "$EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Zup needs your location to show nearby restaurants and track deliveries.",
+          "locationAlwaysAndWhenInUsePermission": "Zup needs your location to provide real-time delivery tracking even when the app is in the background.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
       ]
     ],
     "experiments": {

@@ -1,14 +1,24 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
-import { Images } from '@/constants/images';
 import { formatPrice } from '@/utils/format';
 import { useDriverStore } from '@/store/driverStore';
+import { useLocationStore } from '@/store/locationStore';
+import { MapView } from '@/components/map/MapView';
+import { AnimatedCarMarker } from '@/components/map/AnimatedCarMarker';
+import { RestaurantMarker } from '@/components/map/RestaurantMarker';
+import { UserLocationMarker } from '@/components/map/UserLocationMarker';
+import { MapControls } from '@/components/map/MapControls';
+import { Coordinate } from '@/types';
+
+const DAR_CENTER: Coordinate = { latitude: -6.7924, longitude: 39.2083 };
 
 export default function DriverDashboardScreen() {
   const theme = 'light';
+  const mapRef = useRef<any>(null);
+  const currentLocation = useLocationStore((s) => s.currentLocation);
   const {
     isOnline, earnings, totalDeliveries, requests,
     toggleOnline, fetchRequests, acceptDelivery, ignoreDelivery,
@@ -17,14 +27,55 @@ export default function DriverDashboardScreen() {
 
   useEffect(() => {
     fetchRequests();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchRequests]);
+
+  const handleRecenter = useCallback(() => {
+    if (currentLocation) {
+      mapRef.current?.flyTo(currentLocation, 15);
+    } else {
+      mapRef.current?.flyTo(DAR_CENTER, 14);
+    }
+  }, [currentLocation]);
+
+  const handleMyLocation = useCallback(() => {
+    if (currentLocation) {
+      mapRef.current?.flyTo(currentLocation, 16);
+    }
+  }, [currentLocation]);
 
   return (
     <View style={styles.container}>
-      <View style={[styles.mapBg, { backgroundColor: Colors[theme]['surface-container'] }]}>
-        <Image source={{ uri: Images.driverDashboard.map }} style={styles.mapImage} />
-      </View>
+      <MapView
+        ref={mapRef}
+        initialCoordinate={currentLocation || DAR_CENTER}
+        zoomLevel={14}
+        scrollEnabled
+        zoomEnabled
+        style={styles.mapBg}
+      >
+        {currentLocation && (
+          <UserLocationMarker coordinate={currentLocation} id="driver-location" />
+        )}
+        <AnimatedCarMarker
+          coordinate={currentLocation || DAR_CENTER}
+          heading={0}
+          id="driver-car"
+          color={Colors[theme].primary}
+        />
+        {request && (
+          <RestaurantMarker
+            coordinate={{ latitude: -6.789, longitude: 39.205 }}
+            name={request.restaurant.name}
+            deliveryTime={`${request.distance} km`}
+            id="request-restaurant"
+          />
+        )}
+      </MapView>
+
+      <MapControls
+        onRecenter={handleRecenter}
+        onMyLocation={handleMyLocation}
+      />
 
       <View style={[styles.header, { backgroundColor: 'rgba(252,249,248,0.9)' }]}>
         <View style={styles.headerLeft}>
@@ -41,7 +92,7 @@ export default function DriverDashboardScreen() {
             <MaterialCommunityIcons name="cart-outline" size={20} color={Colors[theme]['on-surface-variant']} />
           </TouchableOpacity>
           <View style={[styles.avatar, { borderColor: Colors[theme].primary }]}>
-            <Image source={{ uri: Images.driverDashboard.avatar }} style={styles.avatarImage} />
+            <Image source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCb_P9ii4YMd3i5GC8138VkEwDWoiR8SqN3y0TDOWqOgbFuhbhvWq85_q7AijGwf76uwF__wkDDLxowmYBEv3RaLf8M-mcwZfMdAatZuPEQms2JuuCdNon9IurSHLnUHya27zhoEBy83Tdc8NSzE2HUsBtOPZIDbIWwL1qTDz_cuaq95EdBEdsxKk8NzQdhtftEsyf5griWw_ysHOPwMvkKhPvpQwE8zyd_weF0Y-hljbfi6usGS7Z1Mi7HWiwZGcLg29zYIL5pc0s' }} style={styles.avatarImage} />
           </View>
         </View>
       </View>
@@ -64,7 +115,7 @@ export default function DriverDashboardScreen() {
           </View>
           <View style={styles.earningsGrid}>
             <View style={[styles.earningBox, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
-              <Text style={[styles.earningLabel, { color: Colors[theme]['on-surface-variant'] }]}>Today&apos;s Earnings</Text>
+              <Text style={[styles.earningLabel, { color: Colors[theme]['on-surface-variant'] }]}>Today\x27s Earnings</Text>
               <Text style={[styles.earningValue, { color: Colors[theme].primary }]}>{formatPrice(earnings)}</Text>
             </View>
             <View style={[styles.earningBox, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
@@ -174,7 +225,6 @@ export default function DriverDashboardScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, position: 'relative' },
   mapBg: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
-  mapImage: { width: '100%', height: '100%', resizeMode: 'cover' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: Spacing['container-padding'], paddingTop: 56, paddingBottom: Spacing.md,

@@ -29,7 +29,7 @@ export default function SplashScreen() {
       duration: 2000,
       useNativeDriver: false,
     }).start(() => {
-      router.replace('/(auth)/onboarding');
+      router.replace('/onboarding');
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

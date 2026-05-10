@@ -43,7 +43,7 @@ export default function VerifyOTPScreen() {
     try {
       const code = otp.join('');
       await verifyOTP(code);
-      router.replace('/(tabs)');
+      router.replace('/');
     } catch {
       // handled by store
     }
