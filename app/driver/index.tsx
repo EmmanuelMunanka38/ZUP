@@ -6,7 +6,7 @@ import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/
 import { formatPrice } from '@/utils/format';
 import { useDriverStore } from '@/store/driverStore';
 import { useLocationStore } from '@/store/locationStore';
-import { RNMapView, RNMarker } from '@/components/map/MapView';
+import { MapboxMap } from '@/components/map/MapboxMap';
 import { MapControls } from '@/components/map/MapControls';
 import { Coordinate } from '@/types';
 
@@ -42,33 +42,15 @@ export default function DriverDashboardScreen() {
 
   return (
     <View style={styles.container}>
-      <RNMapView
+      <MapboxMap
         ref={mapRef}
-        initialCoordinate={currentLocation || DAR_CENTER}
-        zoomLevel={14}
-        scrollEnabled
-        zoomEnabled
+        initialCamera={{ latitude: (currentLocation || DAR_CENTER).latitude, longitude: (currentLocation || DAR_CENTER).longitude, zoom: 14 }}
         style={styles.mapBg}
-      >
-        {request && (
-          <RNMarker
-            coordinate={{ latitude: -6.789, longitude: 39.205 }}
-            title={request.restaurant.name}
-          >
-            <View style={[styles.markerIcon, { backgroundColor: Colors[theme].primary }]}>
-              <MaterialCommunityIcons name="store" size={18} color="#ffffff" />
-            </View>
-          </RNMarker>
-        )}
-        <RNMarker
-          coordinate={currentLocation || DAR_CENTER}
-          title="Driver"
-        >
-          <View style={[styles.markerIcon, { backgroundColor: Colors[theme].primary }]}>
-            <MaterialCommunityIcons name="bike" size={18} color="#ffffff" />
-          </View>
-        </RNMarker>
-      </RNMapView>
+        markers={[
+          ...(request ? [{ id: 'restaurant', latitude: -6.789, longitude: 39.205, title: request.restaurant.name, icon: 'store' as const, color: Colors[theme].primary }] : []),
+          { id: 'driver', latitude: (currentLocation || DAR_CENTER).latitude, longitude: (currentLocation || DAR_CENTER).longitude, title: 'Driver', icon: 'bike' as const, color: Colors[theme].primary },
+        ]}
+      />
 
       <MapControls
         onRecenter={handleRecenter}
@@ -302,16 +284,4 @@ const styles = StyleSheet.create({
   },
   navItem: { alignItems: 'center', gap: 2 },
   navLabel: { ...Typography['label-sm'] },
-  markerIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
 });
