@@ -47,15 +47,11 @@ export default function OnboardingScreen() {
   };
 
   const handleSignUp = () => {
-    router.replace('/login');
+    router.replace('/login?mode=sign-up');
   };
 
   const handleLogin = () => {
-    router.replace('/login');
-  };
-
-  const handleGuest = () => {
-    router.replace('/');
+    router.replace('/login?mode=sign-in');
   };
 
   const renderSlide = ({ item }: { item: typeof slides[0] }) => (
@@ -122,12 +118,6 @@ export default function OnboardingScreen() {
             title="Login"
             variant="outline"
             onPress={handleLogin}
-            fullWidth
-          />
-          <PikiButton
-            title="Continue as Guest"
-            variant="ghost"
-            onPress={handleGuest}
             fullWidth
           />
         </View>

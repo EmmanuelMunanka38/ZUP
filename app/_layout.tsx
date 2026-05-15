@@ -11,22 +11,9 @@ import {
   PlusJakartaSans_700Bold,
   PlusJakartaSans_800ExtraBold,
 } from '@expo-google-fonts/plus-jakarta-sans';
-import { tokenCache } from '@/utils/clerk';
-
-// Dynamic import of Clerk to avoid native module crash in Expo client without native modules.
-let ClerkProvider: any = ({ children }: any) => children;
-let SignedIn: any = ({ children }: any) => children;
-let SignedOut: any = ({ children }: any) => null;
-try {
-  const clerk = require('@clerk/clerk-expo');
-  ClerkProvider = clerk.ClerkProvider;
-  SignedIn = clerk.SignedIn;
-  SignedOut = clerk.SignedOut;
-} catch (e) {
-  console.warn('Clerk native modules not available; running without Clerk auth wrapper.', e instanceof Error ? e.message : e);
-}
-
-const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
+import { useAuthStore } from '@/store/authStore';
+import { useLocationStore } from '@/store/locationStore';
+import { loadMapbox } from '@/services/mapbox-loader';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -57,6 +44,7 @@ export default function RootLayout() {
     PlusJakartaSans_800ExtraBold,
   });
   const [fontTimedOut, setFontTimedOut] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setFontTimedOut(true), FONT_TIMEOUT_MS);
@@ -64,24 +52,35 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (fontsLoaded || fontError || fontTimedOut) {
+    if (useAuthStore.persist.hasHydrated()) {
+      setHydrated(true);
+      return;
+    }
+    const unsub = useAuthStore.persist.onFinishHydration(() => setHydrated(true));
+    return unsub;
+  }, []);
+
+  useEffect(() => {
+    useLocationStore.getState().initialize();
+    useLocationStore.getState().startWatching();
+    loadMapbox();
+  }, []);
+
+  const fontsReady = fontsLoaded || fontError || fontTimedOut;
+  const ready = fontsReady && hydrated;
+
+  useEffect(() => {
+    if (ready) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError, fontTimedOut]);
+  }, [ready]);
 
-  if (!fontsLoaded && !fontError && !fontTimedOut) return null;
+  if (!ready) return null;
 
   return (
     <ErrorBoundary>
-      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
-        <StatusBar style="dark" />
-        <SignedIn>
-          <Slot />
-        </SignedIn>
-        <SignedOut>
-          <Slot />
-        </SignedOut>
-      </ClerkProvider>
+      <StatusBar style="dark" />
+      <Slot />
     </ErrorBoundary>
   );
 }

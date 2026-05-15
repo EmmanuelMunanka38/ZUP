@@ -3,11 +3,34 @@ import { View, Text, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Typography, Spacing } from '@/constants/theme';
+import { useAuthStore } from '@/store/authStore';
+
+const routeByRole = (role: string) => {
+  switch (role) {
+    case 'driver':
+      router.replace('/driver');
+      break;
+    case 'restaurant_owner':
+      router.replace('/restaurant');
+      break;
+    default:
+      router.replace('/(tabs)');
+  }
+};
 
 export default function SplashScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const barAnim = useRef(new Animated.Value(0)).current;
+  const navigatedRef = useRef(false);
+
+  useEffect(() => {
+    const { user: u } = useAuthStore.getState();
+    if (u && !navigatedRef.current) {
+      navigatedRef.current = true;
+      routeByRole(u.role);
+    }
+  }, []);
 
   useEffect(() => {
     Animated.parallel([
@@ -29,6 +52,8 @@ export default function SplashScreen() {
       duration: 2000,
       useNativeDriver: false,
     }).start(() => {
+      if (navigatedRef.current) return;
+      navigatedRef.current = true;
       router.replace('/onboarding');
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

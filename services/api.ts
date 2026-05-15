@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { router } from 'expo-router';
+import { useAuthStore } from '@/store/authStore';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
 
@@ -13,7 +14,7 @@ export const api = axios.create({
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = getStoredToken();
+    const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -26,23 +27,9 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      clearStoredToken();
-      router.replace('/login');
+      useAuthStore.getState().logout();
+      router.replace('/onboarding');
     }
     return Promise.reject(error);
   }
 );
-
-let storedToken: string | null = null;
-
-export function setStoredToken(token: string) {
-  storedToken = token;
-}
-
-export function getStoredToken(): string | null {
-  return storedToken;
-}
-
-export function clearStoredToken() {
-  storedToken = null;
-}

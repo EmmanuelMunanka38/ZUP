@@ -21,6 +21,8 @@ export interface Restaurant {
   distance: string;
   address: string;
   isOpen: boolean;
+  openingHours: string;
+  closingHours: string;
   categories: string[];
   menu: MenuItem[];
 }
@@ -44,11 +46,20 @@ export interface CartItem {
   specialInstructions?: string;
 }
 
+export interface OrderItem {
+  id: string;
+  menuItemId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  specialInstructions?: string;
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
   restaurant: Restaurant;
-  items: CartItem[];
+  items: OrderItem[];
   subtotal: number;
   deliveryFee: number;
   serviceFee: number;

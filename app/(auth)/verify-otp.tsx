@@ -1,18 +1,40 @@
 import { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PikiButton } from '@/components/ui/PikiButton';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { Images } from '@/constants/images';
 import { useAuthStore } from '@/store/authStore';
 
+function routeByRole(role: string) {
+  switch (role) {
+    case 'driver':
+      router.replace('/driver');
+      break;
+    case 'restaurant_owner':
+      router.replace('/restaurant');
+      break;
+    default:
+      router.replace('/(tabs)');
+  }
+}
+
 export default function VerifyOTPScreen() {
+  const { contact, method, mode, name } = useLocalSearchParams<{
+    contact: string;
+    method: string;
+    mode?: string;
+    name?: string;
+  }>();
+
   const theme = 'light';
   const [otp, setOtp] = useState(['', '', '', '']);
   const [timer, setTimer] = useState(45);
+  const [error, setError] = useState('');
   const inputRefs = useRef<(TextInput | null)[]>([]);
-  const { verifyOTP, isLoading } = useAuthStore();
+  const { verifyOTP, isLoading, sendOtp } = useAuthStore();
+  const verifyingRef = useRef(false);
 
   useEffect(() => {
     if (timer > 0) {
@@ -39,22 +61,45 @@ export default function VerifyOTPScreen() {
   const isComplete = otp.every((d) => d !== '');
 
   const handleVerify = async () => {
-    if (!isComplete || isLoading) return;
+    if (!isComplete || isLoading || !contact || verifyingRef.current) return;
+    setError('');
+    verifyingRef.current = true;
     try {
       const code = otp.join('');
-      await verifyOTP(code);
-      router.replace('/');
-    } catch {
-      // handled by store
+      await verifyOTP(contact, code, mode === 'sign-up' ? name : undefined);
+      const { user: u } = useAuthStore.getState();
+      if (u) {
+        routeByRole(u.role);
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Verification failed. Please try again.');
+    } finally {
+      verifyingRef.current = false;
     }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (timer > 0) return;
+    setError('');
     setTimer(45);
     setOtp(['', '', '', '']);
     inputRefs.current[0]?.focus();
+    if (contact && method) {
+      try {
+        await sendOtp(contact, method as 'sms' | 'email');
+      } catch {
+        // silent
+      }
+    }
   };
+
+  const displayContact = contact || '+255 7## ### 123';
+  const isEmail = contact ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact) : false;
+  const maskedContact = isEmail
+    ? contact!.replace(/(.{2})(.*)(@.*)/, '$1****$3')
+    : contact
+      ? contact!.replace(/(\d{3})\d{4,}(\d{2})/, '$1****$2')
+      : displayContact;
 
   return (
     <ScrollView
@@ -85,9 +130,9 @@ export default function VerifyOTPScreen() {
             OTP Verification
           </Text>
           <Text style={[styles.subtitle, { color: Colors[theme]['on-surface-variant'] }]}>
-            Enter the code sent to your number{' '}
-            <Text style={[styles.phoneHighlight, { color: Colors[theme]['on-surface'] }]}>
-              +255 7## ### 123
+            Enter the code sent to{' '}
+            <Text style={[styles.contactHighlight, { color: Colors[theme]['on-surface'] }]}>
+              {maskedContact}
             </Text>
           </Text>
 
@@ -113,6 +158,13 @@ export default function VerifyOTPScreen() {
               />
             ))}
           </View>
+
+          {error ? (
+            <View style={[styles.errorBox, { backgroundColor: Colors[theme]['error-container'] + '60' }]}>
+              <MaterialCommunityIcons name="alert-circle" size={18} color={Colors[theme].error} />
+              <Text style={[styles.errorText, { color: Colors[theme].error }]}>{error}</Text>
+            </View>
+          ) : null}
 
           <View style={styles.timerSection}>
             <View style={styles.timerRow}>
@@ -174,7 +226,7 @@ const styles = StyleSheet.create({
   brandName: { ...Typography.h2 },
   title: { ...Typography.h1, marginBottom: -Spacing.sm, textAlign: 'center' },
   subtitle: { ...Typography['body-md'], textAlign: 'center', lineHeight: 24, paddingHorizontal: Spacing.md },
-  phoneHighlight: { fontWeight: '700' },
+  contactHighlight: { fontWeight: '700' },
   otpRow: { flexDirection: 'row', gap: Spacing.md },
   otpInput: { width: 64, height: 72, borderRadius: BorderRadius.xl, borderWidth: 2, textAlign: 'center', ...Typography.h1, fontSize: 28 },
   timerSection: { alignItems: 'center', gap: Spacing.sm },
@@ -183,6 +235,8 @@ const styles = StyleSheet.create({
   timerHighlight: { fontWeight: '700' },
   resend: { ...Typography['label-md'] },
   changeButton: { marginTop: -Spacing.sm },
+  errorBox: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, padding: Spacing.md, borderRadius: BorderRadius.md, width: '100%' },
+  errorText: { ...Typography['body-sm'], flex: 1 },
   securityBadge: { flexDirection: 'row', alignItems: 'center', alignSelf: 'center', gap: Spacing.xs, backgroundColor: 'rgba(15, 169, 88, 0.08)', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, marginTop: Spacing.xl },
   securityText: { ...Typography['label-sm'] },
 });
