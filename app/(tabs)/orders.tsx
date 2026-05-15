@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, RefreshControl } from 'react-native';
+import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { useOrderStore } from '@/store/orderStore';
@@ -7,12 +8,40 @@ import { formatPrice, formatDateTime, getStatusLabel } from '@/utils/format';
 
 export default function OrdersScreen() {
   const theme = 'light';
-  const { orders, isLoading, loadOrders } = useOrderStore();
+  const { orders, isLoading, loadOrders, cancelOrder } = useOrderStore();
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadOrders();
+    setRefreshing(false);
+  }, [loadOrders]);
+
+  const handleCancel = (orderId: string) => {
+    Alert.alert('Cancel Order', 'Are you sure you want to cancel this order?', [
+      { text: 'No', style: 'cancel' },
+      {
+        text: 'Yes, Cancel',
+        style: 'destructive',
+        onPress: async () => {
+          setCancellingId(orderId);
+          try {
+            await cancelOrder(orderId);
+          } catch {
+            Alert.alert('Error', 'Failed to cancel order');
+          } finally {
+            setCancellingId(null);
+          }
+        },
+      },
+    ]);
+  };
 
   const handleReorder = () => {};
 
@@ -57,7 +86,12 @@ export default function OrdersScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors[theme].primary} />
+        }
+      >
         <View style={styles.pageHeader}>
           <Text style={[styles.pageTitle, { color: Colors[theme]['on-surface'] }]}>Recent Orders</Text>
           <Text style={[styles.pageSubtitle, { color: Colors[theme]['on-surface-variant'] }]}>
@@ -69,13 +103,16 @@ export default function OrdersScreen() {
           {orders.map((order) => {
             const isCancelled = order.status === 'cancelled';
             const isDelivered = order.status === 'delivered';
-            const action = isCancelled ? 'Support' : 'Reorder';
-            const itemSummary = isCancelled
-              ? 'Payment failed'
-              : `${order.items.length} item${order.items.length !== 1 ? 's' : ''}: ${order.items.map((i) => i.menuItem.name).join(', ')}`;
+            const canCancel = !isCancelled && !isDelivered;
+            const itemSummary = order.items.map((i) => i.name).join(', ');
 
             return (
-              <View key={order.id} style={[styles.orderCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+              <TouchableOpacity
+                key={order.id}
+                activeOpacity={0.7}
+                onPress={() => router.push(`/checkout/track-order?id=${order.id}`)}
+              >
+              <View style={[styles.orderCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
                 <View style={styles.orderTop}>
                   <View style={styles.orderRestaurant}>
                     <View style={[styles.orderImage, { backgroundColor: Colors[theme]['surface-container'] }]} />
@@ -91,8 +128,8 @@ export default function OrdersScreen() {
                       </Text>
                     </View>
                   </View>
-                  <View style={[styles.statusBadge, { backgroundColor: isDelivered ? 'rgba(15, 169, 88, 0.1)' : Colors[theme]['error-container'] }]}>
-                    <Text style={[styles.statusText, { color: isDelivered ? Colors[theme]['primary-container'] : Colors[theme].error }]}>
+                  <View style={[styles.statusBadge, { backgroundColor: isDelivered ? 'rgba(15, 169, 88, 0.1)' : isCancelled ? Colors[theme]['error-container'] : 'rgba(253, 192, 3, 0.1)' }]}>
+                    <Text style={[styles.statusText, { color: isDelivered ? Colors[theme]['primary-container'] : isCancelled ? Colors[theme].error : Colors[theme].tertiary }]}>
                       {getStatusLabel(order.status)}
                     </Text>
                   </View>
@@ -109,34 +146,51 @@ export default function OrdersScreen() {
                       {itemSummary}
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    onPress={action === 'Support' ? handleSupport : handleReorder}
-                    style={[
-                      styles.actionButton,
-                      {
-                        backgroundColor: action === 'Reorder'
-                          ? Colors[theme]['primary-container']
-                          : 'transparent',
-                        borderWidth: action === 'Support' ? 1.5 : 0,
-                        borderColor: action === 'Support' ? Colors[theme]['secondary-container'] : 'transparent',
-                      },
-                    ]}
-                  >
-                    <Text
+                  {canCancel ? (
+                    <TouchableOpacity
+                      onPress={() => handleCancel(order.id)}
+                      disabled={cancellingId === order.id}
                       style={[
-                        styles.actionButtonText,
+                        styles.actionButton,
+                        { backgroundColor: Colors[theme]['error-container'], borderWidth: 0 },
+                      ]}
+                    >
+                      <Text style={[styles.actionButtonText, { color: Colors[theme].error }]}>
+                        {cancellingId === order.id ? 'Cancelling...' : 'Cancel'}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : isCancelled ? (
+                    <TouchableOpacity
+                      onPress={handleSupport}
+                      style={[
+                        styles.actionButton,
                         {
-                          color: action === 'Reorder'
-                            ? Colors[theme]['on-primary']
-                            : Colors[theme]['secondary-container'],
+                          backgroundColor: 'transparent',
+                          borderWidth: 1.5,
+                          borderColor: Colors[theme]['secondary-container'],
                         },
                       ]}
                     >
-                      {action}
-                    </Text>
-                  </TouchableOpacity>
+                      <Text style={[styles.actionButtonText, { color: Colors[theme]['secondary-container'] }]}>
+                        Support
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={handleReorder}
+                      style={[
+                        styles.actionButton,
+                        { backgroundColor: Colors[theme]['primary-container'], borderWidth: 0 },
+                      ]}
+                    >
+                      <Text style={[styles.actionButtonText, { color: Colors[theme]['on-primary'] }]}>
+                        Reorder
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
+              </TouchableOpacity>
             );
           })}
         </View>

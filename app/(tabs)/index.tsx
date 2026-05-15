@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,8 +7,9 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
-import { useEffect } from 'react';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
@@ -15,7 +17,7 @@ import { Images } from '@/constants/images';
 import { formatPrice } from '@/utils/format';
 import { useRestaurantStore } from '@/store/restaurantStore';
 import { useCartStore } from '@/store/cartStore';
-import { mockDrinks } from '@/services/mock-data';
+import { CategorySkeleton, RestaurantCardSkeleton } from '@/components/ui/SkeletonLoader';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.7;
@@ -23,14 +25,37 @@ const DRINK_WIDTH = 144;
 
 export default function HomeScreen() {
   const theme = 'light';
-  const { categories, featured, loadCategories, loadFeatured } = useRestaurantStore();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const { restaurants, categories, featured, isLoading, loadRestaurants, loadCategories, loadFeatured } = useRestaurantStore();
   const items = useCartStore((s) => s.items);
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
 
+  const filteredRestaurants = selectedCategory
+    ? restaurants.filter((r) =>
+        (r.categories as string[]).some((c) => c.toLowerCase() === selectedCategory.toLowerCase())
+      )
+    : [];
+
+  const filteredMenuItems = selectedCategory
+    ? restaurants
+        .flatMap((r) => r.menu || [])
+        .filter((m) => m.category.toLowerCase() === selectedCategory.toLowerCase())
+    : [];
+
+  const showFiltered = selectedCategory !== null;
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([loadRestaurants(), loadCategories(), loadFeatured()]);
+    setRefreshing(false);
+  }, [loadRestaurants, loadCategories, loadFeatured]);
+
   useEffect(() => {
+    loadRestaurants();
     loadCategories();
     loadFeatured();
-  }, [loadCategories, loadFeatured]);
+  }, [loadRestaurants, loadCategories, loadFeatured]);
 
   return (
     <View style={[styles.container, { backgroundColor: Colors[theme].background }]}>
@@ -62,8 +87,14 @@ export default function HomeScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors[theme].primary} />
+        }
       >
-        <TouchableOpacity style={[styles.searchBar, { backgroundColor: Colors[theme]['surface-container-lowest'], borderColor: Colors[theme]['surface-container'] }]}>
+        <TouchableOpacity
+          style={[styles.searchBar, { backgroundColor: Colors[theme]['surface-container-lowest'], borderColor: Colors[theme]['surface-container'] }]}
+          onPress={() => router.push('/search')}
+        >
           <MaterialCommunityIcons name="magnify" size={20} color={Colors[theme]['on-surface-variant']} />
           <Text style={[styles.searchPlaceholder, { color: Colors[theme]['on-surface-variant'] }]}>
             Search for food, restaurants...
@@ -74,43 +105,168 @@ export default function HomeScreen() {
           <Text style={[styles.sectionTitle, { color: Colors[theme]['on-surface'] }]}>
             Categories
           </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/search')}>
             <Text style={[styles.seeAll, { color: Colors[theme].primary }]}>View All</Text>
           </TouchableOpacity>
         </View>
 
+        {isLoading && categories.length === 0 ? (
+          <CategorySkeleton />
+        ) : (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoriesRow}
         >
-          {categories.map((cat) => (
-            <TouchableOpacity key={cat.id} style={styles.categoryItem}>
-              <View
-                style={[
-                  styles.categoryIcon,
-                  { backgroundColor: cat.id === '1' ? Colors[theme]['secondary-container'] : Colors[theme]['surface-container-high'] },
-                ]}
+          {categories.map((cat) => {
+            const isSelected = selectedCategory === cat.name;
+            return (
+              <TouchableOpacity
+                key={cat.id}
+                style={styles.categoryItem}
+                onPress={() => setSelectedCategory(isSelected ? null : cat.name)}
               >
-                <MaterialCommunityIcons
-                  name={cat.icon as any}
-                  size={32}
-                  color={cat.id === '1' ? Colors[theme]['on-secondary-container'] : Colors[theme]['on-surface']}
-                />
-              </View>
-              <Text style={[styles.categoryName, { color: Colors[theme]['on-surface'] }]}>
-                {cat.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <View
+                  style={[
+                    styles.categoryIcon,
+                    {
+                      backgroundColor: isSelected
+                        ? Colors[theme].primary
+                        : Colors[theme]['surface-container-high'],
+                    },
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name={cat.icon as any}
+                    size={32}
+                    color={isSelected ? '#ffffff' : Colors[theme]['on-surface']}
+                  />
+                </View>
+                <Text
+                  style={[
+                    styles.categoryName,
+                    {
+                      color: isSelected ? Colors[theme].primary : Colors[theme]['on-surface'],
+                      fontWeight: isSelected ? '700' : '400',
+                    },
+                  ]}
+                >
+                  {cat.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
+        )}
 
+        {showFiltered && (
+          <View style={styles.filteredSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: Colors[theme]['on-surface'] }]}>
+                {selectedCategory}
+              </Text>
+              <TouchableOpacity onPress={() => setSelectedCategory(null)}>
+                <Text style={[styles.seeAll, { color: Colors[theme].primary }]}>Clear</Text>
+              </TouchableOpacity>
+            </View>
+
+            {filteredRestaurants.length > 0 && (
+              <>
+                <Text style={[styles.filteredSubtitle, { color: Colors[theme]['on-surface-variant'] }]}>
+                  Restaurants
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.restaurantsRow}
+                >
+                  {filteredRestaurants.map((r) => (
+                    <TouchableOpacity
+                      key={r.id}
+                      activeOpacity={0.9}
+                      onPress={() => router.push(`/restaurant-details?id=${r.id}`)}
+                      style={[styles.restaurantCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
+                    >
+                      <View style={styles.restaurantImageContainer}>
+                        <Image source={{ uri: r.image }} style={styles.restaurantImage} />
+                        <View style={[styles.ratingBadge, { backgroundColor: 'rgba(255,255,255,0.9)' }]}>
+                          <MaterialCommunityIcons name="star" size={16} color={Colors[theme]['secondary-container']} />
+                          <Text style={[styles.ratingText, { color: Colors[theme]['on-surface'] }]}>{r.rating}</Text>
+                        </View>
+                      </View>
+                      <View style={styles.restaurantInfo}>
+                        <Text style={[styles.restaurantName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
+                          {r.name}
+                        </Text>
+                        <Text style={[styles.restaurantMeta, { color: Colors[theme]['on-surface-variant'] }]}>
+                          {r.cuisine} · {r.deliveryTime}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </>
+            )}
+
+            {filteredMenuItems.length > 0 && (
+              <>
+                <Text style={[styles.filteredSubtitle, { color: Colors[theme]['on-surface-variant'] }]}>
+                  Menu Items
+                </Text>
+                <View style={styles.filteredMenuGrid}>
+                  {filteredMenuItems.map((m) => (
+                    <TouchableOpacity
+                      key={m.id}
+                      style={[styles.filteredMenuItem, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
+                      onPress={() => router.push(`/restaurant-details?id=${m.restaurantId}`)}
+                      activeOpacity={0.7}
+                    >
+                      <Image source={{ uri: m.image }} style={styles.filteredMenuImage} />
+                      <View style={styles.filteredMenuInfo}>
+                        <Text style={[styles.filteredMenuName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
+                          {m.name}
+                        </Text>
+                        <Text style={[styles.filteredMenuDesc, { color: Colors[theme]['on-surface-variant'] }]} numberOfLines={2}>
+                          {m.description}
+                        </Text>
+                        <Text style={[styles.filteredMenuPrice, { color: Colors[theme].primary }]}>
+                          {formatPrice(m.price)}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
+
+            {filteredRestaurants.length === 0 && filteredMenuItems.length === 0 && (
+              <View style={styles.filteredEmpty}>
+                <MaterialCommunityIcons name="food-off" size={32} color={Colors[theme]['on-surface-variant']} />
+                <Text style={[styles.filteredEmptyText, { color: Colors[theme]['on-surface-variant'] }]}>
+                  No items found in {selectedCategory}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {!showFiltered && (
+          <>
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: Colors[theme]['on-surface'] }]}>
             Popular Restaurants
           </Text>
         </View>
 
+        {isLoading && featured.length === 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.restaurantsRow}
+          >
+            {[1, 2, 3].map((i) => <RestaurantCardSkeleton key={i} />)}
+          </ScrollView>
+        ) : (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -120,7 +276,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               key={restaurant.id}
               activeOpacity={0.9}
-              onPress={() => router.push('/restaurant-details')}
+              onPress={() => router.push(`/restaurant-details?id=${restaurant.id}`)}
               style={[styles.restaurantCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
             >
               <View style={styles.restaurantImageContainer}>
@@ -144,6 +300,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           ))}
         </ScrollView>
+        )}
 
         <View style={styles.dealSection}>
           <View style={[styles.dealBanner, { backgroundColor: Colors[theme].primary }]}>
@@ -166,7 +323,7 @@ export default function HomeScreen() {
           <Text style={[styles.sectionTitle, { color: Colors[theme]['on-surface'] }]}>
             Top Drinks
           </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/search')}>
             <Text style={[styles.seeAll, { color: Colors[theme].primary }]}>Explore</Text>
           </TouchableOpacity>
         </View>
@@ -176,18 +333,22 @@ export default function HomeScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.drinksRow}
         >
-          {mockDrinks.map((drink, i) => (
-            <TouchableOpacity key={i} style={styles.drinkItem}>
+          {restaurants.flatMap((r) => r.menu || []).slice(0, 8).map((item, i) => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.drinkItem}
+              onPress={() => router.push(`/restaurant-details?id=${item.restaurantId}`)}
+            >
               <View style={[styles.drinkImageBg, { backgroundColor: Colors[theme]['surface-container'] }]}>
-                {Images.home.drinks[i] && (
-                  <Image source={{ uri: Images.home.drinks[i] }} style={styles.drinkImageStyle} />
+                {Images.home.drinks[i % Images.home.drinks.length] && (
+                  <Image source={{ uri: Images.home.drinks[i % Images.home.drinks.length] }} style={styles.drinkImageStyle} />
                 )}
               </View>
               <Text style={[styles.drinkName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
-                {drink.name}
+                {item.name}
               </Text>
               <Text style={[styles.drinkPrice, { color: Colors[theme].primary }]}>
-                {formatPrice(drink.price)}
+                {formatPrice(item.price)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -200,43 +361,62 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.recommendedGrid}>
-          <TouchableOpacity
-            style={[styles.recommendedLarge, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
-            activeOpacity={0.8}
-          >
-            <View style={styles.recommendedLargeContent}>
-              <View style={styles.recommendedTextCol}>
-                <View style={[styles.bestSellerBadge, { backgroundColor: 'rgba(15, 169, 88, 0.1)' }]}>
-                  <Text style={[styles.bestSellerText, { color: Colors[theme]['primary-container'] }]}>Best Seller</Text>
-                </View>
-                <Text style={[styles.recommendedName, { color: Colors[theme]['on-surface'] }]}>Pilau Special</Text>
-                <Text style={[styles.recommendedDesc, { color: Colors[theme]['on-surface-variant'] }]}>Aromatic rice with spiced beef and kachumbari.</Text>
-                <Text style={[styles.recommendedPrice, { color: Colors[theme].primary }]}>Tsh 12,000</Text>
-              </View>
-              <View style={[styles.recommendedImageCol, { backgroundColor: Colors[theme]['surface-container'] }]} />
-            </View>
-          </TouchableOpacity>
+          {(() => {
+            const popular = restaurants
+              .flatMap((r) => (r.menu || []).filter((m) => m.isPopular));
+            const big = popular[0];
+            const small1 = popular[1];
+            const small2 = popular[2];
+            if (!big) return null;
+            return (
+              <>
+                <TouchableOpacity
+                  style={[styles.recommendedLarge, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
+                  activeOpacity={0.8}
+                  onPress={() => router.push(`/restaurant-details?id=${big.restaurantId}`)}
+                >
+                  <View style={styles.recommendedLargeContent}>
+                    <View style={styles.recommendedTextCol}>
+                      <View style={[styles.bestSellerBadge, { backgroundColor: 'rgba(15, 169, 88, 0.1)' }]}>
+                        <Text style={[styles.bestSellerText, { color: Colors[theme]['primary-container'] }]}>Best Seller</Text>
+                      </View>
+                      <Text style={[styles.recommendedName, { color: Colors[theme]['on-surface'] }]}>{big.name}</Text>
+                      <Text style={[styles.recommendedDesc, { color: Colors[theme]['on-surface-variant'] }]} numberOfLines={2}>{big.description}</Text>
+                      <Text style={[styles.recommendedPrice, { color: Colors[theme].primary }]}>{formatPrice(big.price)}</Text>
+                    </View>
+                    <Image source={{ uri: big.image || undefined }} style={styles.recommendedImageCol} />
+                  </View>
+                </TouchableOpacity>
 
-          <View style={styles.recommendedSmallRow}>
-            {['Classic Burger', 'Pasta Arabiata'].map((name, i) => (
-              <TouchableOpacity
-                key={i}
-                style={[styles.recommendedSmall, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.recommendedSmallImage, { backgroundColor: Colors[theme]['surface-container'] }]} />
-                <View style={styles.recommendedSmallInfo}>
-                  <Text style={[styles.recommendedSmallName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
-                    {name}
-                  </Text>
-                  <Text style={[styles.recommendedSmallPrice, { color: Colors[theme].primary }]}>
-                    {i === 0 ? 'Tsh 15,000' : 'Tsh 18,500'}
-                  </Text>
+                <View style={styles.recommendedSmallRow}>
+                  {[small1, small2].filter(Boolean).map((item, i) => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={[styles.recommendedSmall, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
+                      activeOpacity={0.8}
+                      onPress={() => router.push(`/restaurant-details?id=${item.restaurantId}`)}
+                    >
+                      <Image
+                        source={{ uri: item.image || undefined }}
+                        style={[styles.recommendedSmallImage, { backgroundColor: Colors[theme]['surface-container'] }]}
+                      />
+                      <View style={styles.recommendedSmallInfo}>
+                        <Text style={[styles.recommendedSmallName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
+                          {item.name}
+                        </Text>
+                        <Text style={[styles.recommendedSmallPrice, { color: Colors[theme].primary }]}>
+                          {formatPrice(item.price)}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
                 </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+              </>
+            );
+          })()}
         </View>
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -319,7 +499,8 @@ const styles = StyleSheet.create({
   categoryName: { ...Typography['label-md'], textAlign: 'center' },
   restaurantsRow: {
     paddingHorizontal: Spacing['container-padding'],
-    gap: Spacing.md,
+    gap: Spacing.lg,
+    paddingBottom: Spacing.sm,
   },
   restaurantCard: {
     width: CARD_WIDTH,
@@ -346,7 +527,7 @@ const styles = StyleSheet.create({
   restaurantMeta: { ...Typography['body-sm'], marginTop: 4 },
   dealSection: {
     paddingHorizontal: Spacing['container-padding'],
-    marginTop: Spacing.lg,
+    marginTop: Spacing.xl,
   },
   dealBanner: {
     borderRadius: BorderRadius.xl,
@@ -426,6 +607,9 @@ const styles = StyleSheet.create({
   recommendedPrice: { ...Typography['label-md'] },
   recommendedImageCol: {
     width: '50%',
+    height: 160,
+    borderTopRightRadius: BorderRadius.xl,
+    borderBottomRightRadius: BorderRadius.xl,
   },
   recommendedSmallRow: {
     flexDirection: 'row',
@@ -445,4 +629,42 @@ const styles = StyleSheet.create({
   },
   recommendedSmallName: { ...Typography['label-md'] },
   recommendedSmallPrice: { ...Typography['label-sm'] },
+  filteredSection: {
+    paddingTop: Spacing.md,
+  },
+  filteredSubtitle: {
+    ...Typography['label-md'],
+    fontWeight: '600',
+    paddingHorizontal: Spacing['container-padding'],
+    marginBottom: Spacing.md,
+  },
+  filteredMenuGrid: {
+    paddingHorizontal: Spacing['container-padding'],
+    gap: Spacing.md,
+  },
+  filteredMenuItem: {
+    flexDirection: 'row',
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
+    ...Shadows.sm,
+  },
+  filteredMenuImage: {
+    width: 80,
+    height: 80,
+  },
+  filteredMenuInfo: {
+    flex: 1,
+    padding: Spacing.md,
+    justifyContent: 'center',
+    gap: 2,
+  },
+  filteredMenuName: { ...Typography.h2 },
+  filteredMenuDesc: { ...Typography['body-sm'] },
+  filteredMenuPrice: { ...Typography.h2, marginTop: 4 },
+  filteredEmpty: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    gap: Spacing.sm,
+  },
+  filteredEmptyText: { ...Typography['body-md'] },
 });

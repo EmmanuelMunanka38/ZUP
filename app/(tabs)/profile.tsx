@@ -20,7 +20,7 @@ export default function ProfileScreen() {
 
   const handleLogout = () => {
     logout();
-    router.replace('/login');
+    router.replace('/onboarding');
   };
 
   return (
@@ -78,6 +78,9 @@ export default function ProfileScreen() {
                 styles.menuItem,
                 { borderBottomWidth: index < menuItems.length - 1 ? 1 : 0, borderBottomColor: Colors[theme]['surface-variant'] },
               ]}
+              onPress={() => {
+                if (item.label === 'Order History') router.push('/checkout/track-order?id=o1');
+              }}
             >
               <View style={[styles.menuIconWrap, { backgroundColor: Colors[theme]['surface-container'] }]}>
                 <MaterialCommunityIcons name={item.icon as any} size={20} color={Colors[theme].primary} />

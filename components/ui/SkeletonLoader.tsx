@@ -60,6 +60,35 @@ export function MapSkeleton() {
   );
 }
 
+export function CategorySkeleton() {
+  return (
+    <View style={styles.categoryRow}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <View key={i} style={styles.categoryItem}>
+          <SkeletonLoader width={56} height={56} borderRadius={BorderRadius.full} />
+          <SkeletonLoader width={48} height={12} borderRadius={4} style={{ marginTop: 4 }} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
+export function RestaurantCardSkeleton() {
+  return (
+    <View style={styles.restaurantCard}>
+      <SkeletonLoader width="100%" height={120} borderRadius={BorderRadius.md} />
+      <View style={styles.restaurantCardInfo}>
+        <SkeletonLoader width="70%" height={18} />
+        <SkeletonLoader width="40%" height={14} style={{ marginTop: 4 }} />
+        <View style={styles.restaurantCardMeta}>
+          <SkeletonLoader width={60} height={12} />
+          <SkeletonLoader width={80} height={12} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
 export function BottomSheetSkeleton() {
   return (
     <View style={styles.bottomSheetSkeleton}>
@@ -87,6 +116,27 @@ const styles = StyleSheet.create({
   },
   mapSkeleton: {
     flex: 1,
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  categoryItem: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  restaurantCard: {
+    width: 240,
+    marginRight: Spacing.md,
+  },
+  restaurantCardInfo: {
+    padding: Spacing.sm,
+  },
+  restaurantCardMeta: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginTop: Spacing.sm,
   },
   bottomSheetSkeleton: {
     padding: Spacing['container-padding'],
