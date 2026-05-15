@@ -180,8 +180,8 @@ export default function DriverDashboardScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.acceptBtn, { backgroundColor: Colors[theme]['primary-container'] }]}
-                onPress={() => {
-                  acceptDelivery(request.id);
+                onPress={async () => {
+                  await acceptDelivery(request.id);
                   router.push('/driver/active-delivery');
                 }}
               >

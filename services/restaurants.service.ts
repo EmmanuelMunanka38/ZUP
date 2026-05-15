@@ -1,31 +1,43 @@
-import { Restaurant, MenuItem, Category } from '@/types';
-import { mockRestaurants, mockMenuItems, mockCategories } from './mock-data';
+import { api } from './api';
+import { Restaurant, MenuItem, Category, ApiResponse } from '@/types';
 
 export const restaurantsService = {
   async getAll(): Promise<Restaurant[]> {
-    await new Promise((r) => setTimeout(r, 400));
-    return mockRestaurants;
+    const { data } = await api.get<ApiResponse<Restaurant[]>>('/restaurants');
+    return data.data;
   },
 
   async getById(id: string): Promise<Restaurant> {
-    await new Promise((r) => setTimeout(r, 300));
-    const restaurant = mockRestaurants.find((r) => r.id === id);
-    if (!restaurant) throw new Error('Restaurant not found');
-    return restaurant;
+    const { data } = await api.get<ApiResponse<any>>(`/restaurants/${id}`);
+    return data.data;
   },
 
   async getMenu(restaurantId: string): Promise<MenuItem[]> {
-    await new Promise((r) => setTimeout(r, 200));
-    return mockMenuItems.filter((m) => m.restaurantId === restaurantId);
+    const { data } = await api.get<ApiResponse<MenuItem[]>>(`/restaurants/${restaurantId}/menu`);
+    return data.data;
   },
 
   async getCategories(): Promise<Category[]> {
-    await new Promise((r) => setTimeout(r, 200));
-    return mockCategories;
+    const { data } = await api.get<ApiResponse<Category[]>>('/categories');
+    return data.data;
   },
 
   async getFeatured(): Promise<Restaurant[]> {
-    await new Promise((r) => setTimeout(r, 300));
-    return mockRestaurants.slice(0, 2);
+    const { data } = await api.get<ApiResponse<Restaurant[]>>('/restaurants/featured');
+    return data.data;
+  },
+
+  async createMenuItem(restaurantId: string, item: Partial<MenuItem>): Promise<MenuItem> {
+    const { data } = await api.post<ApiResponse<MenuItem>>(`/restaurants/${restaurantId}/menu`, item);
+    return data.data;
+  },
+
+  async updateMenuItem(menuId: string, updates: Partial<MenuItem>): Promise<MenuItem> {
+    const { data } = await api.put<ApiResponse<MenuItem>>(`/restaurants/menu/${menuId}`, updates);
+    return data.data;
+  },
+
+  async deleteMenuItem(menuId: string): Promise<void> {
+    await api.delete(`/restaurants/menu/${menuId}`);
   },
 };
