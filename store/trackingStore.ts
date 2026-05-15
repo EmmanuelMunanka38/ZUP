@@ -64,7 +64,7 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
       set(newState);
     });
 
-    trackingService.connect(wsUrl);
+    trackingService.connect(orderId, wsUrl);
   },
 
   disconnect: () => {

@@ -48,16 +48,16 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView({
   const cameraRef = useRef<any>(null);
   const mapRef = useRef<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [mapboxReady, setMapboxReady] = useState(isMapboxAvailable());
+  const [mapboxReady, setMapboxReady] = useState(false);
   const currentLocation = useLocationStore((s) => s.currentLocation);
 
   useEffect(() => {
-    if (!mapboxReady) {
-      loadMapbox().then((mod) => {
-        if (mod) setMapboxReady(true);
-      });
-    }
-  }, [mapboxReady]);
+    let mounted = true;
+    loadMapbox().then((mod) => {
+      if (mounted && mod) setMapboxReady(true);
+    });
+    return () => { mounted = false; };
+  }, []);
 
   const defaultCoordinate: Coordinate = initialCoordinate || currentLocation || {
     latitude: -6.7924,
