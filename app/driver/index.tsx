@@ -6,10 +6,7 @@ import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/
 import { formatPrice } from '@/utils/format';
 import { useDriverStore } from '@/store/driverStore';
 import { useLocationStore } from '@/store/locationStore';
-import { MapView } from '@/components/map/MapView';
-import { AnimatedCarMarker } from '@/components/map/AnimatedCarMarker';
-import { RestaurantMarker } from '@/components/map/RestaurantMarker';
-import { UserLocationMarker } from '@/components/map/UserLocationMarker';
+import { RNMapView, RNMarker } from '@/components/map/MapView';
 import { MapControls } from '@/components/map/MapControls';
 import { Coordinate } from '@/types';
 
@@ -45,7 +42,7 @@ export default function DriverDashboardScreen() {
 
   return (
     <View style={styles.container}>
-      <MapView
+      <RNMapView
         ref={mapRef}
         initialCoordinate={currentLocation || DAR_CENTER}
         zoomLevel={14}
@@ -53,24 +50,25 @@ export default function DriverDashboardScreen() {
         zoomEnabled
         style={styles.mapBg}
       >
-        {currentLocation && (
-          <UserLocationMarker coordinate={currentLocation} id="driver-location" />
-        )}
-        <AnimatedCarMarker
-          coordinate={currentLocation || DAR_CENTER}
-          heading={0}
-          id="driver-car"
-          color={Colors[theme].primary}
-        />
         {request && (
-          <RestaurantMarker
+          <RNMarker
             coordinate={{ latitude: -6.789, longitude: 39.205 }}
-            name={request.restaurant.name}
-            deliveryTime={`${request.distance} km`}
-            id="request-restaurant"
-          />
+            title={request.restaurant.name}
+          >
+            <View style={[styles.markerIcon, { backgroundColor: Colors[theme].primary }]}>
+              <MaterialCommunityIcons name="store" size={18} color="#ffffff" />
+            </View>
+          </RNMarker>
         )}
-      </MapView>
+        <RNMarker
+          coordinate={currentLocation || DAR_CENTER}
+          title="Driver"
+        >
+          <View style={[styles.markerIcon, { backgroundColor: Colors[theme].primary }]}>
+            <MaterialCommunityIcons name="bike" size={18} color="#ffffff" />
+          </View>
+        </RNMarker>
+      </RNMapView>
 
       <MapControls
         onRecenter={handleRecenter}
@@ -304,4 +302,16 @@ const styles = StyleSheet.create({
   },
   navItem: { alignItems: 'center', gap: 2 },
   navLabel: { ...Typography['label-sm'] },
+  markerIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
 });

@@ -7,11 +7,7 @@ import { useDriverStore } from '@/store/driverStore';
 import { useLocationStore } from '@/store/locationStore';
 import { useDriverTracking } from '@/hooks/use-driver-tracking';
 import { driverService } from '@/services/driver.service';
-import { MapView } from '@/components/map/MapView';
-import { AnimatedCarMarker } from '@/components/map/AnimatedCarMarker';
-import { RestaurantMarker } from '@/components/map/RestaurantMarker';
-import { UserLocationMarker } from '@/components/map/UserLocationMarker';
-import { DeliveryRoute } from '@/components/map/DeliveryRoute';
+import { RNMapView, RNMarker, RNRoutePolyline } from '@/components/map/MapView';
 import { MapControls } from '@/components/map/MapControls';
 import { Coordinate } from '@/types';
 
@@ -80,7 +76,7 @@ export default function ActiveDeliveryScreen() {
 
   return (
     <View style={styles.container}>
-      <MapView
+      <RNMapView
         ref={mapRef}
         initialCoordinate={displayLocation}
         zoomLevel={15}
@@ -88,29 +84,36 @@ export default function ActiveDeliveryScreen() {
         zoomEnabled
         style={styles.mapFull}
       >
-        <RestaurantMarker
+        <RNMarker
           coordinate={RESTAURANT_LOCATION}
-          name={activeDelivery?.restaurant.name || 'Restaurant'}
-          id="restaurant-pickup"
-        />
-        <UserLocationMarker
+          title={activeDelivery?.restaurant.name || 'Restaurant'}
+        >
+          <View style={[styles.markerIcon, { backgroundColor: Colors[theme].primary }]}>
+            <MaterialCommunityIcons name="store" size={18} color="#ffffff" />
+          </View>
+        </RNMarker>
+        <RNMarker
           coordinate={CUSTOMER_LOCATION}
-          id="customer-dropoff"
-        />
-        <AnimatedCarMarker
+          title="Customer"
+        >
+          <View style={[styles.markerIcon, { backgroundColor: Colors[theme]['secondary-container'] }]}>
+            <MaterialCommunityIcons name="map-marker" size={18} color="#ffffff" />
+          </View>
+        </RNMarker>
+        <RNMarker
           coordinate={displayLocation}
-          heading={driverHeading}
-          id="driver-car"
-          color={Colors[theme].primary}
+          title="Driver"
+        >
+          <View style={[styles.markerIcon, { backgroundColor: Colors[theme].primary, transform: [{ rotate: `${driverHeading || 0}deg` }] }]}>
+            <MaterialCommunityIcons name="bike" size={18} color="#ffffff" />
+          </View>
+        </RNMarker>
+        <RNRoutePolyline
+          coordinates={[displayLocation, step === 'picked_up' || step === 'to_dropoff' || step === 'arrived' ? CUSTOMER_LOCATION : RESTAURANT_LOCATION]}
+          strokeColor={Colors[theme].primary}
+          strokeWidth={4}
         />
-        <DeliveryRoute
-          origin={displayLocation}
-          destination={step === 'picked_up' || step === 'to_dropoff' || step === 'arrived'
-            ? CUSTOMER_LOCATION : RESTAURANT_LOCATION}
-          coordinates={route?.coordinates}
-          id="nav-route"
-        />
-      </MapView>
+      </RNMapView>
 
       <View style={[styles.topBar, { backgroundColor: 'rgba(252,249,248,0.95)' }]}>
         <TouchableOpacity onPress={() => router.back()}>
@@ -490,4 +493,16 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   actionPrimaryText: { ...Typography['label-md'], color: '#ffffff' },
+  markerIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
 });

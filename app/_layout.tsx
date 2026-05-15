@@ -13,7 +13,6 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { useAuthStore } from '@/store/authStore';
 import { useLocationStore } from '@/store/locationStore';
-import { loadMapbox } from '@/services/mapbox-loader';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -63,7 +62,6 @@ export default function RootLayout() {
   useEffect(() => {
     useLocationStore.getState().initialize();
     useLocationStore.getState().startWatching();
-    loadMapbox();
   }, []);
 
   const fontsReady = fontsLoaded || fontError || fontTimedOut;

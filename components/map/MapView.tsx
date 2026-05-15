@@ -1,8 +1,7 @@
-import { useRef, useCallback, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { View, Text, StyleSheet, Platform, ViewStyle, TouchableOpacity } from 'react-native';
+import { useRef, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
+import { View, Text, StyleSheet, Platform, ViewStyle } from 'react-native';
+import MapView, { Marker, Polyline, Region, AnimatedRegion, MapPressEvent, UserLocationChangeEvent, PROVIDER_GOOGLE, PROVIDER_DEFAULT } from 'react-native-maps';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { mapService } from '@/services/map.service';
-import { loadMapbox, isMapboxAvailable, MapboxLazy } from '@/services/mapbox-loader';
 import { Coordinate } from '@/types';
 import { useLocationStore } from '@/store/locationStore';
 import { MapSkeleton } from '@/components/ui/SkeletonLoader';
@@ -25,12 +24,27 @@ interface MapViewProps {
   zoomEnabled?: boolean;
   rotateEnabled?: boolean;
   pitchEnabled?: boolean;
-  logoEnabled?: boolean;
-  compassEnabled?: boolean;
   showUserLocation?: boolean;
 }
 
-export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView({
+function coordToRegion(coord: Coordinate, zoom = 14): Region {
+  const delta = 0.01 * (16 - zoom + 1);
+  return {
+    latitude: coord.latitude,
+    longitude: coord.longitude,
+    latitudeDelta: delta,
+    longitudeDelta: delta,
+  };
+}
+
+const DEFAULT_REGION: Region = {
+  latitude: -6.7924,
+  longitude: 39.2083,
+  latitudeDelta: 0.05,
+  longitudeDelta: 0.05,
+};
+
+export const RNMapView = forwardRef<MapViewRef, MapViewProps>(function RNMapView({
   style,
   initialCoordinate,
   zoomLevel = 14,
@@ -41,45 +55,32 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView({
   zoomEnabled = true,
   rotateEnabled = false,
   pitchEnabled = false,
-  logoEnabled = false,
-  compassEnabled = false,
   showUserLocation = false,
 }, ref) {
-  const cameraRef = useRef<any>(null);
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<MapView>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [mapboxReady, setMapboxReady] = useState(false);
   const currentLocation = useLocationStore((s) => s.currentLocation);
 
-  useEffect(() => {
-    let mounted = true;
-    loadMapbox().then((mod) => {
-      if (mounted && mod) setMapboxReady(true);
-    });
-    return () => { mounted = false; };
-  }, []);
-
-  const defaultCoordinate: Coordinate = initialCoordinate || currentLocation || {
-    latitude: -6.7924,
-    longitude: 39.2083,
-  };
+  const defaultRegion = initialCoordinate
+    ? coordToRegion(initialCoordinate, zoomLevel)
+    : currentLocation
+      ? coordToRegion(currentLocation, zoomLevel)
+      : DEFAULT_REGION;
 
   const flyTo = useCallback((coordinate: Coordinate, zoom?: number) => {
-    cameraRef.current?.flyTo(
-      [coordinate.longitude, coordinate.latitude],
-      800,
-    );
-    if (zoom) {
-      cameraRef.current?.zoomTo(zoom, 800);
-    }
-  }, []);
+    mapRef.current?.animateToRegion(coordToRegion(coordinate, zoom || zoomLevel), 800);
+  }, [zoomLevel]);
 
   const fitBounds = useCallback((ne: Coordinate, sw: Coordinate, padding = 80) => {
-    cameraRef.current?.fitBounds(
-      [ne.longitude, ne.latitude],
-      [sw.longitude, sw.latitude],
-      [padding, padding, padding, padding],
-      800,
+    mapRef.current?.fitToCoordinates(
+      [
+        { latitude: ne.latitude, longitude: ne.longitude },
+        { latitude: sw.latitude, longitude: sw.longitude },
+      ],
+      {
+        edgePadding: { top: padding, right: padding, bottom: padding, left: padding },
+        animated: true,
+      },
     );
   }, []);
 
@@ -93,55 +94,30 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView({
     getCenter,
   }), [flyTo, fitBounds, getCenter]);
 
-  const handlePress = useCallback(
-    (feature: any) => {
-      if (!onMapPress) return;
-      const geometry = feature.geometry;
-      if (geometry.type === 'Point') {
-        onMapPress({
-          latitude: geometry.coordinates[1],
-          longitude: geometry.coordinates[0],
-        });
-      }
-    },
-    [onMapPress],
-  );
+  const handlePress = useCallback((event: MapPressEvent) => {
+    if (!onMapPress) return;
+    onMapPress({
+      latitude: event.nativeEvent.coordinate.latitude,
+      longitude: event.nativeEvent.coordinate.longitude,
+    });
+  }, [onMapPress]);
 
-  if (Platform.OS === 'web' || !mapboxReady) {
+  if (Platform.OS === 'web') {
     return (
       <View style={[styles.container, style]}>
         <MapSkeleton />
-        {!mapboxReady && Platform.OS !== 'web' && (
-          <View style={styles.fallbackOverlay}>
-            <MaterialCommunityIcons name="map-outline" size={48} color={Colors.light['on-surface-variant']} />
-            <Text style={[styles.fallbackTitle, { color: Colors.light['on-surface'] }]}>
-              Map Unavailable
-            </Text>
-            <Text style={[styles.fallbackText, { color: Colors.light['on-surface-variant'] }]}>
-              Build with expo-dev-client for Mapbox support
-            </Text>
-          </View>
-        )}
       </View>
     );
   }
 
-  const MBMapView = MapboxLazy.MapView;
-  const MBCamera = MapboxLazy.Camera;
-  const MBUserLocation = MapboxLazy.UserLocation;
-
-  if (!MBMapView || !MBCamera) {
-    return <View style={[styles.container, style]}><MapSkeleton /></View>;
-  }
-
   return (
     <View style={[styles.container, style]}>
-      <MBMapView
+      <MapView
         ref={mapRef}
         style={styles.map}
-        styleURL={mapService.getMapStyle('light')}
+        initialRegion={defaultRegion}
         onPress={handlePress}
-        onDidFinishLoadingMap={() => {
+        onMapLoaded={() => {
           setIsLoaded(true);
           onMapLoaded?.();
         }}
@@ -149,40 +125,59 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView({
         zoomEnabled={zoomEnabled}
         rotateEnabled={rotateEnabled}
         pitchEnabled={pitchEnabled}
-        logoEnabled={logoEnabled}
-        compassEnabled={compassEnabled}
-        attributionEnabled={false}
-        surfaceView
+        showsUserLocation={showUserLocation}
+        showsMyLocationButton={false}
+        showsCompass={false}
+        toolbarEnabled={false}
+        mapPadding={Platform.OS === 'ios' ? { top: 0, right: 0, bottom: 0, left: 0 } : undefined}
       >
-        <MBCamera
-          ref={cameraRef}
-          defaultSettings={{
-            centerCoordinate: [defaultCoordinate.longitude, defaultCoordinate.latitude],
-            zoomLevel,
-          }}
-          animationMode="flyTo"
-          animationDuration={800}
-        />
-
-        {showUserLocation && MBUserLocation && (
-          <MBUserLocation
-            visible
-            showsUserHeadingIndicator
-            androidRenderMode="gps"
-          />
-        )}
-
         {children}
-      </MBMapView>
+      </MapView>
 
-      {!isLoaded && (
-        <View style={styles.loadingOverlay}>
-          <MapSkeleton />
-        </View>
-      )}
+      {isLoaded && showUserLocation && <View style={styles.userLocationDot} />}
     </View>
   );
 });
+
+export function RNMarker({ coordinate, title, description, children }: {
+  coordinate: Coordinate;
+  title?: string;
+  description?: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <Marker
+      coordinate={{
+        latitude: coordinate.latitude,
+        longitude: coordinate.longitude,
+      }}
+      title={title}
+      description={description}
+    >
+      {children}
+    </Marker>
+  );
+}
+
+export function RNRoutePolyline({ coordinates, strokeColor = '#006d36', strokeWidth = 4 }: {
+  coordinates: Coordinate[];
+  strokeColor?: string;
+  strokeWidth?: number;
+}) {
+  if (coordinates.length < 2) return null;
+  return (
+    <Polyline
+      coordinates={coordinates.map((c) => ({
+        latitude: c.latitude,
+        longitude: c.longitude,
+      }))}
+      strokeColor={strokeColor}
+      strokeWidth={strokeWidth}
+      lineCap="round"
+      lineJoin="round"
+    />
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -192,22 +187,13 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  fallbackOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.md,
-    padding: Spacing.xl,
-  },
-  fallbackTitle: {
-    ...Typography.h2,
-    textAlign: 'center',
-  },
-  fallbackText: {
-    ...Typography['body-sm'],
-    textAlign: 'center',
+  userLocationDot: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: Colors.light.primary,
   },
 });
