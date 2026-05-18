@@ -4,6 +4,11 @@ import { useAuthStore } from '@/store/authStore';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
 
+// ADD THIS LINE
+console.log('🌐 EXPO_PUBLIC_API_URL is currently:', process.env.EXPO_PUBLIC_API_URL);
+console.log('📡 Axios is pointing to:', BASE_URL);
+
+
 export const api = axios.create({
   baseURL: BASE_URL,
   timeout: 15000,
