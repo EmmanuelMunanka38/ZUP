@@ -17,6 +17,9 @@ interface RestaurantState {
   loadMenu: (restaurantId: string) => Promise<void>;
   loadCategories: () => Promise<void>;
   setCurrentRestaurant: (restaurant: Restaurant | null) => void;
+  addMenuItem: (restaurantId: string, item: Partial<MenuItem>) => Promise<MenuItem>;
+  updateMenuItem: (menuId: string, updates: Partial<MenuItem>) => Promise<void>;
+  removeMenuItem: (menuId: string) => Promise<void>;
 }
 
 export const useRestaurantStore = create<RestaurantState>((set) => ({
@@ -70,4 +73,28 @@ export const useRestaurantStore = create<RestaurantState>((set) => ({
   },
 
   setCurrentRestaurant: (restaurant) => set({ currentRestaurant: restaurant }),
+
+  addMenuItem: async (restaurantId: string, item: Partial<MenuItem>) => {
+    const newItem = await restaurantsService.createMenuItem(restaurantId, item);
+    set((state) => ({
+      currentMenu: [...state.currentMenu, newItem],
+    }));
+    return newItem;
+  },
+
+  updateMenuItem: async (menuId: string, updates: Partial<MenuItem>) => {
+    const updated = await restaurantsService.updateMenuItem(menuId, updates);
+    set((state) => ({
+      currentMenu: state.currentMenu.map((item) =>
+        item.id === menuId ? { ...item, ...updated } : item
+      ),
+    }));
+  },
+
+  removeMenuItem: async (menuId: string) => {
+    await restaurantsService.deleteMenuItem(menuId);
+    set((state) => ({
+      currentMenu: state.currentMenu.filter((item) => item.id !== menuId),
+    }));
+  },
 }));

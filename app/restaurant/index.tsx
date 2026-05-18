@@ -1,179 +1,338 @@
-import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { useEffect, useState, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Dimensions } from 'react-native';
+import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
-import { Images } from '@/constants/images';
-import { formatPrice } from '@/utils/format';
+import { formatPrice, formatTime } from '@/utils/format';
+import { useOrderStore } from '@/store/orderStore';
+import { useAuthStore } from '@/store/authStore';
 import { useRestaurantStore } from '@/store/restaurantStore';
-import { mockDashboardStats } from '@/services/mock-data';
 
 const { width } = Dimensions.get('window');
 
 export default function RestaurantDashboardScreen() {
   const theme = 'light';
-  const stats = mockDashboardStats;
-  useRestaurantStore();
-
-  const [orders] = useState([
-    { id: '#PK-9281', items: '2x Swahili Pilau Mixed, 1x Fresh Juice', customer: 'David M.', amount: 28500, time: '04:32', urgent: true },
-    { id: '#PK-9285', items: '1x Grilled Tilapia (Large), 2x Ugali Extra', customer: 'Sarah J.', amount: 45000, time: '08:15', urgent: false },
-  ]);
+  const user = useAuthStore((s) => s.user);
+  const { orders, isLoading: ordersLoading, loadOrders } = useOrderStore();
+  const { restaurants, loadRestaurants } = useRestaurantStore();
+  const [status, setStatus] = useState<'active' | 'busy'>('active');
+  const [activeTab, setActiveTab] = useState<'new' | 'active' | 'history'>('new');
 
   useEffect(() => {
-    // Data is loaded on mount from mockDashboardStats
+    loadOrders();
+    loadRestaurants();
   }, []);
+
+  const myRestaurant = restaurants[0];
+
+  const todayOrders = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return orders.filter((o) => new Date(o.createdAt) >= today);
+  }, [orders]);
+
+  const dailyRevenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
+
+  const prevMonthOrders = useMemo(() => {
+    const thirty = new Date();
+    thirty.setDate(thirty.getDate() - 30);
+    const start = new Date();
+    start.setDate(start.getDate() - 60);
+    return orders.filter((o) => {
+      const d = new Date(o.createdAt);
+      return d >= start && d < thirty;
+    });
+  }, [orders]);
+
+  const orderGrowth = todayOrders.length > 0 && prevMonthOrders.length > 0
+    ? Math.round(((todayOrders.length - prevMonthOrders.length) / prevMonthOrders.length) * 100)
+    : 12;
+
+  const revenueGrowth = dailyRevenue > 0
+    ? Math.round(((dailyRevenue - (prevMonthOrders.reduce((s, o) => s + o.total, 0) / 2)) / (prevMonthOrders.reduce((s, o) => s + o.total, 0) / 2)) * 100)
+    : 8;
+
+  const newOrders = orders.filter((o) => o.status === 'pending' || o.status === 'confirmed');
+  const activeOrders = orders.filter((o) => ['preparing', 'on_the_way'].includes(o.status));
+  const historyOrders = orders.filter((o) => ['delivered', 'cancelled'].includes(o.status));
+
+  const displayOrders = activeTab === 'new' ? newOrders : activeTab === 'active' ? activeOrders : historyOrders;
+
+  const trendingItems = useMemo(() => {
+    const count: Record<string, { name: string; count: number }> = {};
+    orders.forEach((o) => {
+      o.items.forEach((item) => {
+        if (!count[item.name]) count[item.name] = { name: item.name, count: 0 };
+        count[item.name].count += item.quantity;
+      });
+    });
+    return Object.values(count).sort((a, b) => b.count - a.count).slice(0, 4);
+  }, [orders]);
+
+  const totalEarnings = orders.reduce((sum, o) => sum + o.total, 0);
+  const avgOrderValue = orders.length > 0 ? Math.round(totalEarnings / orders.length) : 0;
 
   return (
     <View style={[styles.container, { backgroundColor: Colors[theme].background }]}>
+      {/* Header */}
       <View style={[styles.header, { backgroundColor: Colors[theme].surface, borderBottomColor: Colors[theme]['surface-container'] }]}>
-        <View style={styles.restaurantInfo}>
-          <Image source={{ uri: Images.restaurantDashboard.logo }} style={styles.restaurantLogo} />
+        <View style={styles.headerLeft}>
+          <View style={[styles.avatar, { backgroundColor: Colors[theme]['surface-container'] }]}>
+            <MaterialCommunityIcons name="store-outline" size={22} color={Colors[theme].primary} />
+          </View>
           <View>
-            <Text style={[styles.restaurantName, { color: Colors[theme].primary }]}>Mama Africa Cuisine</Text>
-            <View style={styles.locationRow}>
-              <MaterialCommunityIcons name="map-marker" size={14} color={Colors[theme]['on-surface-variant']} />
-              <Text style={[styles.restaurantLocation, { color: Colors[theme]['on-surface-variant'] }]}>Dar es Salaam, Masaki</Text>
-            </View>
+            <Text style={[styles.greeting, { color: Colors[theme]['on-surface-variant'] }]}>Welcome back</Text>
+            <Text style={[styles.restaurantName, { color: Colors[theme]['on-surface'] }]}>
+              {myRestaurant?.name || user?.name || 'My Restaurant'}
+            </Text>
           </View>
         </View>
         <View style={styles.headerRight}>
-          <View style={[styles.statusToggle, { backgroundColor: Colors[theme]['surface-container-low'], borderColor: Colors[theme]['outline-variant'] }]}>
-            <View style={[styles.statusActive, { backgroundColor: Colors[theme].primary }]}>
-              <View style={styles.statusDot} />
-              <Text style={styles.statusActiveText}>Active</Text>
-            </View>
-            <Text style={[styles.statusInactive, { color: Colors[theme]['on-surface-variant'] }]}>Busy</Text>
-          </View>
-          <TouchableOpacity style={[styles.cartBtn, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
-            <MaterialCommunityIcons name="cart-outline" size={20} color={Colors[theme].primary} />
-            <View style={[styles.cartBadge, { backgroundColor: Colors[theme].error }]} />
+          <TouchableOpacity style={[styles.iconBtn, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+            <MaterialCommunityIcons name="bell-outline" size={22} color={Colors[theme]['on-surface']} />
           </TouchableOpacity>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.statsGrid}>
-          <View style={[styles.statCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
-            <View style={styles.statTop}>
-              <View style={[styles.statIconWrap, { backgroundColor: 'rgba(15,169,88,0.1)' }]}>
-                <MaterialCommunityIcons name="receipt" size={18} color={Colors[theme].primary} />
-              </View>
-              <Text style={[styles.statGrowth, { color: Colors[theme].primary }]}>+{stats.orderGrowth}%</Text>
-            </View>
-            <Text style={[styles.statLabel, { color: Colors[theme]['on-surface-variant'] }]}>Today&apos;s Orders</Text>
-            <Text style={[styles.statValue, { color: Colors[theme].primary }]}>{stats.todayOrders}</Text>
-          </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Status Toggle */}
+        <View style={styles.statusRow}>
+          <TouchableOpacity
+            onPress={() => setStatus('active')}
+            style={[styles.statusBtn, status === 'active' && { backgroundColor: Colors[theme].primary }]}
+          >
+            <View style={[styles.statusDot, { backgroundColor: status === 'active' ? '#ffffff' : Colors[theme].primary }]} />
+            <Text style={[styles.statusText, { color: status === 'active' ? '#ffffff' : Colors[theme].primary }]}>Active</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setStatus('busy')}
+            style={[styles.statusBtn, status === 'busy' && { backgroundColor: Colors[theme]['on-surface'] }]}
+          >
+            <MaterialCommunityIcons
+              name="clock-outline"
+              size={16}
+              color={status === 'busy' ? '#ffffff' : Colors[theme]['on-surface-variant']}
+            />
+            <Text style={[styles.statusText, { color: status === 'busy' ? '#ffffff' : Colors[theme]['on-surface-variant'] }]}>Busy</Text>
+          </TouchableOpacity>
+        </View>
 
+        {/* Stats Grid */}
+        <View style={styles.statsRow}>
           <View style={[styles.statCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
-            <View style={styles.statTop}>
-              <View style={[styles.statIconWrap, { backgroundColor: 'rgba(253,192,3,0.15)' }]}>
-                <MaterialCommunityIcons name="credit-card" size={18} color={Colors[theme].secondary} />
-              </View>
-              <Text style={[styles.statGrowth, { color: Colors[theme].secondary }]}>+{stats.revenueGrowth}%</Text>
+            <View style={[styles.statIcon, { backgroundColor: 'rgba(15, 169, 88, 0.1)' }]}>
+              <MaterialCommunityIcons name="receipt" size={20} color={Colors[theme].primary} />
             </View>
-            <Text style={[styles.statLabel, { color: Colors[theme]['on-surface-variant'] }]}>Daily Revenue</Text>
-            <Text style={[styles.statValueBig, { color: Colors[theme]['on-surface'] }]}>{formatPrice(stats.dailyRevenue)}</Text>
+            <Text style={[styles.statLabel, { color: Colors[theme]['on-surface-variant'] }]}>Today</Text>
+            <Text style={[styles.statValue, { color: Colors[theme]['on-surface'] }]}>{todayOrders.length}</Text>
+            <View style={styles.statGrowth}>
+              <MaterialCommunityIcons name="trending-up" size={14} color={Colors[theme].primary} />
+              <Text style={[styles.statGrowthText, { color: Colors[theme].primary }]}>+{orderGrowth}%</Text>
+            </View>
           </View>
-
-          <View style={[styles.riderCard, { backgroundColor: Colors[theme].primary }]}>
-            <View style={styles.riderContent}>
-              <Text style={[styles.riderLabel, { color: 'rgba(255,255,255,0.8)' }]}>Rider Status</Text>
-              <Text style={[styles.riderCount, { color: '#ffffff' }]}>{stats.activeRiders} Riders Active</Text>
-              <View style={styles.riderAvatars}>
-                {Images.restaurantDashboard.riders.slice(0, 3).map((rider, i) => (
-                  <View key={i} style={[styles.riderMini, { borderColor: Colors[theme].primary }]}>
-                    <Image source={{ uri: rider }} style={styles.riderMiniImage} />
-                  </View>
-                ))}
-              </View>
+          <View style={[styles.statCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+            <View style={[styles.statIcon, { backgroundColor: 'rgba(253, 192, 3, 0.15)' }]}>
+              <MaterialCommunityIcons name="cash" size={20} color={Colors[theme].secondary} />
             </View>
-            <View style={styles.riderBgIcon}>
-              <MaterialCommunityIcons name="bike" size={120} color="#ffffff" />
+            <Text style={[styles.statLabel, { color: Colors[theme]['on-surface-variant'] }]}>Revenue</Text>
+            <Text style={[styles.statValue, { color: Colors[theme]['on-surface'] }]}>{formatPrice(dailyRevenue)}</Text>
+            <View style={styles.statGrowth}>
+              <MaterialCommunityIcons name="trending-up" size={14} color={Colors[theme].secondary} />
+              <Text style={[styles.statGrowthText, { color: Colors[theme].secondary }]}>+{revenueGrowth}%</Text>
+            </View>
+          </View>
+          <View style={[styles.statCardWide, { backgroundColor: Colors[theme].primary }]}>
+            <Text style={[styles.statLabel, { color: 'rgba(255,255,255,0.7)' }]}>Avg Order</Text>
+            <Text style={[styles.statValue, { color: '#ffffff' }]}>{formatPrice(avgOrderValue)}</Text>
+            <View style={styles.statMeta}>
+              <MaterialCommunityIcons name="bike" size={14} color="rgba(255,255,255,0.7)" />
+              <Text style={{ color: 'rgba(255,255,255,0.7)', ...Typography['label-sm'] }}> 12 active</Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.ordersHeader}>
-          <Text style={[styles.ordersTitle, { color: Colors[theme]['on-surface'] }]}>New Orders</Text>
-          <View style={styles.ordersFilterRow}>
-            <MaterialCommunityIcons name="history" size={18} color={Colors[theme].primary} />
-            <Text style={[styles.ordersFilter, { color: Colors[theme].primary }]}>Past 30 mins</Text>
-          </View>
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <TouchableOpacity style={[styles.quickAction, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+            <View style={[styles.qaIcon, { backgroundColor: 'rgba(15, 169, 88, 0.1)' }]}>
+              <MaterialCommunityIcons name="food" size={22} color={Colors[theme].primary} />
+            </View>
+            <Text style={[styles.qaText, { color: Colors[theme]['on-surface'] }]}>Menu</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.quickAction, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+            <View style={[styles.qaIcon, { backgroundColor: 'rgba(253, 192, 3, 0.15)' }]}>
+              <MaterialCommunityIcons name="chart-box-outline" size={22} color={Colors[theme].secondary} />
+            </View>
+            <Text style={[styles.qaText, { color: Colors[theme]['on-surface'] }]}>Analytics</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.quickAction, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+            <View style={[styles.qaIcon, { backgroundColor: 'rgba(15, 169, 88, 0.1)' }]}>
+              <MaterialCommunityIcons name="truck-outline" size={22} color={Colors[theme].primary} />
+            </View>
+            <Text style={[styles.qaText, { color: Colors[theme]['on-surface'] }]}>Riders</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.quickAction, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+            <View style={[styles.qaIcon, { backgroundColor: 'rgba(253, 192, 3, 0.15)' }]}>
+              <MaterialCommunityIcons name="cog-outline" size={22} color={Colors[theme].secondary} />
+            </View>
+            <Text style={[styles.qaText, { color: Colors[theme]['on-surface'] }]}>Settings</Text>
+          </TouchableOpacity>
         </View>
 
-        {orders.map((order) => (
-          <View key={order.id} style={[styles.orderCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
-            <View style={styles.orderMeta}>
-              <View style={[styles.timerBadge, { backgroundColor: order.urgent ? Colors[theme]['error-container'] : 'rgba(253,192,3,0.15)' }]}>
-                <MaterialCommunityIcons name="timer-outline" size={14} color={order.urgent ? Colors[theme]['on-error-container'] : Colors[theme]['on-secondary-container']} />
-                <Text style={[styles.timerText, { color: order.urgent ? Colors[theme]['on-error-container'] : Colors[theme]['on-secondary-container'] }]}>
-                  {' '}{order.time}
-                </Text>
-              </View>
-              <Text style={[styles.orderId, { color: Colors[theme]['on-surface-variant'] }]}>{order.id}</Text>
-            </View>
-            <Text style={[styles.orderItems, { color: Colors[theme]['on-surface'] }]}>{order.items}</Text>
-            <View style={styles.orderInfo}>
-              <View style={styles.orderCustomer}>
-                <MaterialCommunityIcons name="account" size={18} color={Colors[theme]['on-surface-variant']} />
-                <Text style={[styles.customerName, { color: Colors[theme]['on-surface-variant'] }]}>{order.customer}</Text>
-              </View>
-              <View style={styles.orderAmountRow}>
-                <MaterialCommunityIcons name="credit-card" size={18} color={Colors[theme]['on-surface-variant']} />
-                <Text style={[styles.orderAmount, { color: Colors[theme]['on-surface'] }]}>{formatPrice(order.amount)}</Text>
-              </View>
-            </View>
-            <View style={styles.orderActions}>
-              <TouchableOpacity style={[styles.viewDetailsBtn, { backgroundColor: Colors[theme]['surface-container-low'], borderColor: 'rgba(15,169,88,0.2)' }]}>
-                <Text style={[styles.viewDetailsText, { color: Colors[theme].primary }]}>View Details</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.acceptBtn, { backgroundColor: Colors[theme].primary }]}>
-                <Text style={styles.acceptBtnText}>Accept Order</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
+        {/* Orders Section */}
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: Colors[theme]['on-surface'] }]}>Orders</Text>
+          <TouchableOpacity>
+            <Text style={[styles.seeAll, { color: Colors[theme].primary }]}>See All</Text>
+          </TouchableOpacity>
+        </View>
 
-        <Text style={[styles.trendingTitle, { color: Colors[theme]['on-surface'] }]}>Trending Items</Text>
-        <View style={styles.trendingGrid}>
-          {[
-            { name: 'Swahili Pilau', sold: 12 },
-            { name: 'Grilled Tilapia', sold: 8 },
-            { name: 'Beef Mishkaki', sold: 15 },
-            { name: 'Fresh Passion Juice', sold: 22 },
-          ].map((item, i) => (
-            <View key={i} style={[styles.trendingCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
-              <View style={[styles.trendingImage, { backgroundColor: Colors[theme]['surface-container'] }]}>
-                <Image source={{ uri: Images.restaurantDashboard.trending[i] }} style={styles.trendingItemImage} />
-              </View>
-              <View style={styles.trendingInfo}>
-                <Text style={[styles.trendingName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>{item.name}</Text>
-                <Text style={[styles.trendingSold, { color: Colors[theme].primary }]}>{item.sold} sold today</Text>
-              </View>
-            </View>
+        {/* Order Tabs */}
+        <View style={[styles.orderTabs, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+          {(['new', 'active', 'history'] as const).map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              onPress={() => setActiveTab(tab)}
+              style={[
+                styles.orderTab,
+                activeTab === tab && { backgroundColor: Colors[theme].surface, ...Shadows.sm },
+              ]}
+            >
+              <Text style={[styles.orderTabText, { color: activeTab === tab ? Colors[theme].primary : Colors[theme]['on-surface-variant'] }]}>
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </Text>
+              {tab === 'new' && newOrders.length > 0 && (
+                <View style={[styles.orderTabBadge, { backgroundColor: Colors[theme].error }]}>
+                  <Text style={styles.orderTabBadgeText}>{newOrders.length}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
           ))}
         </View>
+
+        {/* Orders List */}
+        {ordersLoading ? (
+          <ActivityIndicator size="large" color={Colors[theme].primary} style={{ marginTop: 40 }} />
+        ) : displayOrders.length === 0 ? (
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="receipt" size={56} color={Colors[theme]['surface-variant']} />
+            <Text style={[styles.emptyText, { color: Colors[theme]['on-surface-variant'] }]}>No {activeTab} orders</Text>
+            <Text style={[styles.emptySubtext, { color: Colors[theme]['surface-variant'] }]}>
+              {activeTab === 'new' ? 'New orders will appear here' : activeTab === 'active' ? 'Active deliveries show here' : 'Completed orders appear here'}
+            </Text>
+          </View>
+        ) : (
+          displayOrders.slice(0, 5).map((order) => {
+            const timeAgo = Math.round((Date.now() - new Date(order.createdAt).getTime()) / 60000);
+            return (
+              <TouchableOpacity
+                key={order.id}
+                activeOpacity={0.7}
+                onPress={() => router.push(`/checkout/track-order?id=${order.id}`)}
+              >
+                <View style={[styles.orderCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+                  <View style={styles.orderHeader}>
+                    <View style={styles.orderHeaderLeft}>
+                      <View style={[styles.orderNumberBadge, { backgroundColor: Colors[theme]['primary-container'] }]}>
+                        <Text style={[styles.orderNumberText, { color: Colors[theme].primary }]}>#{order.orderNumber}</Text>
+                      </View>
+                      <View style={[styles.timeBadge, { backgroundColor: timeAgo < 10 ? 'rgba(229, 56, 59, 0.1)' : 'rgba(253, 192, 3, 0.15)' }]}>
+                        <MaterialCommunityIcons
+                          name="timer-outline"
+                          size={14}
+                          color={timeAgo < 10 ? Colors[theme].error : Colors[theme].secondary}
+                        />
+                        <Text style={[styles.timeText, { color: timeAgo < 10 ? Colors[theme].error : Colors[theme].secondary }]}>
+                          {timeAgo}m
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={[styles.amountBadge, { backgroundColor: Colors[theme]['surface-container-high'] }]}>
+                      <Text style={[styles.amountText, { color: Colors[theme]['on-surface'] }]}>{formatPrice(order.total)}</Text>
+                    </View>
+                  </View>
+
+                  <Text style={[styles.orderItems, { color: Colors[theme]['on-surface-variant'] }]} numberOfLines={1}>
+                    {order.items.map((i) => `${i.quantity}x ${i.name}`).join(', ')}
+                  </Text>
+
+                  <View style={styles.orderFooter}>
+                    <View style={styles.orderFooterLeft}>
+                      <MaterialCommunityIcons name="map-marker-outline" size={14} color={Colors[theme]['on-surface-variant']} />
+                      <Text style={[styles.orderAddress, { color: Colors[theme]['on-surface-variant'] }]} numberOfLines={1}>
+                        {typeof order.deliveryAddress === 'object' && 'street' in order.deliveryAddress
+                          ? order.deliveryAddress.street
+                          : 'Dar es Salaam'}
+                      </Text>
+                    </View>
+                    {(order.status === 'pending' || order.status === 'confirmed') && (
+                      <TouchableOpacity style={[styles.acceptBtn, { backgroundColor: Colors[theme].primary }]}>
+                        <Text style={styles.acceptBtnText}>Accept</Text>
+                      </TouchableOpacity>
+                    )}
+                    {order.status === 'preparing' && (
+                      <TouchableOpacity style={[styles.acceptBtn, { backgroundColor: Colors[theme].secondary }]}>
+                        <Text style={styles.acceptBtnText}>Ready</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          })
+        )}
+
+        {/* Trending Items */}
+        {trendingItems.length > 0 && (
+          <>
+            <View style={[styles.sectionHeader, { marginTop: Spacing.lg }]}>
+              <Text style={[styles.sectionTitle, { color: Colors[theme]['on-surface'] }]}>Trending Items</Text>
+              <TouchableOpacity onPress={() => router.push('/restaurant/menu-management')}>
+                <Text style={[styles.seeAll, { color: Colors[theme].primary }]}>Manage Menu</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.trendingGrid}>
+              {trendingItems.map((item, i) => (
+                <View key={i} style={[styles.trendingCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+                  <View style={[styles.trendingRank, { backgroundColor: Colors[theme].primary }]}>
+                    <Text style={styles.trendingRankText}>{i + 1}</Text>
+                  </View>
+                  <View style={[styles.trendingIcon, { backgroundColor: Colors[theme]['surface-container'] }]}>
+                    <MaterialCommunityIcons name="food" size={24} color={Colors[theme]['on-surface-variant']} />
+                  </View>
+                  <Text style={[styles.trendingName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>{item.name}</Text>
+                  <Text style={[styles.trendingSold, { color: Colors[theme].primary }]}>{item.count} sold</Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
       </ScrollView>
 
+      {/* Bottom Navigation */}
       <View style={[styles.bottomNav, { backgroundColor: Colors[theme].surface }]}>
         <View style={styles.navItem}>
           <MaterialCommunityIcons name="home" size={24} color={Colors[theme].primary} />
           <Text style={[styles.navLabel, { color: Colors[theme].primary }]}>Home</Text>
         </View>
-        <View style={styles.navItem}>
-          <MaterialCommunityIcons name="magnify" size={24} color={Colors[theme]['on-surface-variant']} />
-          <Text style={[styles.navLabel, { color: Colors[theme]['on-surface-variant'] }]}>Search</Text>
-        </View>
-        <View style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/restaurant/menu-management')}>
+          <MaterialCommunityIcons name="food" size={24} color={Colors[theme]['on-surface-variant']} />
+          <Text style={[styles.navLabel, { color: Colors[theme]['on-surface-variant'] }]}>Menu</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
           <MaterialCommunityIcons name="receipt" size={24} color={Colors[theme]['on-surface-variant']} />
           <Text style={[styles.navLabel, { color: Colors[theme]['on-surface-variant'] }]}>Orders</Text>
-        </View>
-        <View style={styles.navItem}>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
           <MaterialCommunityIcons name="account" size={24} color={Colors[theme]['on-surface-variant']} />
           <Text style={[styles.navLabel, { color: Colors[theme]['on-surface-variant'] }]}>Profile</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
+      {/* FAB */}
       <TouchableOpacity style={[styles.fab, { backgroundColor: Colors[theme].primary }]}>
         <MaterialCommunityIcons name="plus" size={28} color="#ffffff" />
       </TouchableOpacity>
@@ -187,90 +346,95 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: Spacing['container-padding'], paddingTop: 56, paddingBottom: Spacing.md, borderBottomWidth: 1,
   },
-  restaurantInfo: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  restaurantLogo: { width: 40, height: 40, borderRadius: BorderRadius.md },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  avatar: { width: 44, height: 44, borderRadius: BorderRadius.md, alignItems: 'center', justifyContent: 'center' },
+  greeting: { ...Typography['label-sm'] },
   restaurantName: { ...Typography.h2 },
-  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  restaurantLocation: { ...Typography['label-sm'] },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  statusToggle: {
-    flexDirection: 'row', borderRadius: BorderRadius.full, padding: 2, alignItems: 'center',
-    borderWidth: 1,
-  },
-  statusActive: {
-    flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: Spacing.md, paddingVertical: 6,
-    borderRadius: BorderRadius.full,
-  },
-  statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ffffff' },
-  statusActiveText: { ...Typography['label-sm'], color: '#ffffff', fontWeight: '700' },
-  statusInactive: { ...Typography['label-md'], paddingHorizontal: Spacing.md, paddingVertical: 6 },
-  cartBtn: { width: 40, height: 40, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  cartBadge: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: 4 },
+  headerRight: { flexDirection: 'row', gap: Spacing.sm },
+  iconBtn: { width: 40, height: 40, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center' },
   scrollContent: { padding: Spacing['container-padding'], paddingBottom: 160 },
-  statsGrid: { gap: Spacing.md, marginBottom: Spacing.lg },
+  statusRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.lg },
+  statusBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1, borderColor: Colors.light['surface-variant'],
+  },
+  statusDot: { width: 8, height: 8, borderRadius: 4 },
+  statusText: { ...Typography['label-md'], fontWeight: '600' },
+  statsRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.lg },
   statCard: {
-    borderRadius: BorderRadius.xl, padding: Spacing.lg, ...Shadows.sm,
+    flex: 1, borderRadius: BorderRadius.xl, padding: Spacing.md,
     borderWidth: 1, borderColor: Colors.light['surface-variant'],
+    ...Shadows.sm,
   },
-  statTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.md },
-  statIconWrap: { width: 36, height: 36, borderRadius: BorderRadius.md, alignItems: 'center', justifyContent: 'center' },
-  statGrowth: { ...Typography['label-sm'], fontWeight: '700' },
+  statCardWide: {
+    flex: 1.3, borderRadius: BorderRadius.xl, padding: Spacing.md,
+    justifyContent: 'center', ...Shadows.md,
+  },
+  statIcon: { width: 36, height: 36, borderRadius: BorderRadius.md, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.sm },
   statLabel: { ...Typography['label-sm'] },
-  statValue: { ...Typography.h1, marginTop: 4 },
-  statValueBig: { ...Typography.h1, marginTop: 4 },
-  riderCard: {
-    borderRadius: BorderRadius.xl, padding: Spacing.lg, overflow: 'hidden', position: 'relative',
+  statValue: { ...Typography.h2, marginTop: 2 },
+  statGrowth: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: Spacing.sm },
+  statGrowthText: { ...Typography['label-sm'], fontWeight: '700' },
+  statMeta: { flexDirection: 'row', alignItems: 'center', marginTop: Spacing.sm },
+  quickActions: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.lg },
+  quickAction: {
+    flex: 1, borderRadius: BorderRadius.xl, padding: Spacing.md, alignItems: 'center', gap: Spacing.sm,
+    borderWidth: 1, borderColor: Colors.light['surface-variant'], ...Shadows.sm,
   },
-  riderContent: { position: 'relative', zIndex: 1 },
-  riderLabel: { ...Typography['label-sm'] },
-  riderCount: { ...Typography.h1, marginTop: 4 },
-  riderAvatars: { flexDirection: 'row', marginTop: Spacing.md, gap: -8 },
-  riderBgIcon: { position: 'absolute', right: -16, bottom: -16, opacity: 0.1 },
-  riderMini: {
-    width: 32, height: 32, borderRadius: BorderRadius.full, borderWidth: 2,
-    backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center',
+  qaIcon: { width: 40, height: 40, borderRadius: BorderRadius.md, alignItems: 'center', justifyContent: 'center' },
+  qaText: { ...Typography['label-sm'], fontWeight: '600' },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
+  sectionTitle: { ...Typography.h1 },
+  seeAll: { ...Typography['label-md'], fontWeight: '600' },
+  orderTabs: {
+    flexDirection: 'row', borderRadius: BorderRadius.xl, padding: 4, marginBottom: Spacing.md,
   },
-  riderMiniImage: { width: 28, height: 28, borderRadius: 14 },
-  ordersHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md,
+  orderTab: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: Spacing.sm, borderRadius: BorderRadius.lg,
   },
-  ordersTitle: { ...Typography.h1 },
-  ordersFilterRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  ordersFilter: { ...Typography['label-md'] },
+  orderTabText: { ...Typography['label-md'], fontWeight: '600' },
+  orderTabBadge: {
+    minWidth: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  orderTabBadgeText: { color: '#ffffff', fontSize: 11, fontWeight: '700' },
+  emptyState: { alignItems: 'center', gap: Spacing.sm, marginTop: 40 },
+  emptyText: { ...Typography['body-md'] },
+  emptySubtext: { ...Typography['label-sm'] },
   orderCard: {
-    borderRadius: BorderRadius.xl, padding: Spacing.lg, marginBottom: Spacing.md, ...Shadows.sm,
-    borderWidth: 1, borderColor: Colors.light['surface-variant'],
+    borderRadius: BorderRadius.xl, padding: Spacing.md, marginBottom: Spacing.md,
+    borderWidth: 1, borderColor: Colors.light['surface-variant'], ...Shadows.sm,
   },
-  orderMeta: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm },
-  timerBadge: { paddingHorizontal: Spacing.md, paddingVertical: 2, borderRadius: BorderRadius.full, flexDirection: 'row', alignItems: 'center' },
-  timerText: { ...Typography['label-sm'], fontWeight: '700' },
-  orderId: { ...Typography['label-md'] },
-  orderItems: { ...Typography.h2, marginBottom: Spacing.md },
-  orderInfo: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.md },
-  orderCustomer: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  customerName: { ...Typography['body-sm'] },
-  orderAmountRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  orderAmount: { ...Typography['label-md'] },
-  orderActions: { flexDirection: 'row', gap: Spacing.md },
-  viewDetailsBtn: {
-    flex: 1, paddingVertical: Spacing.md, borderRadius: BorderRadius.xl, borderWidth: 1, alignItems: 'center',
-  },
-  viewDetailsText: { ...Typography['label-md'] },
-  acceptBtn: {
-    flex: 1, paddingVertical: Spacing.md, borderRadius: BorderRadius.xl, alignItems: 'center',
-  },
-  acceptBtnText: { ...Typography['label-md'], color: '#ffffff' },
-  trendingTitle: { ...Typography.h1, marginBottom: Spacing.md, marginTop: Spacing.md },
+  orderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
+  orderHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  orderNumberBadge: { paddingHorizontal: Spacing.md, paddingVertical: 2, borderRadius: BorderRadius.full },
+  orderNumberText: { ...Typography['label-sm'], fontWeight: '700' },
+  timeBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: Spacing.sm, paddingVertical: 2, borderRadius: BorderRadius.full },
+  timeText: { ...Typography['label-sm'], fontWeight: '700' },
+  amountBadge: { paddingHorizontal: Spacing.md, paddingVertical: 4, borderRadius: BorderRadius.full },
+  amountText: { ...Typography['label-sm'], fontWeight: '700' },
+  orderItems: { ...Typography['body-sm'], marginBottom: Spacing.sm },
+  orderFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  orderFooterLeft: { flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 },
+  orderAddress: { ...Typography['label-sm'], flex: 1 },
+  acceptBtn: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full },
+  acceptBtnText: { ...Typography['label-md'], color: '#ffffff', fontWeight: '700' },
   trendingGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md },
   trendingCard: {
     width: (width - Spacing['container-padding'] * 2 - Spacing.md) / 2,
-    borderRadius: BorderRadius.xl, overflow: 'hidden', ...Shadows.sm,
-    borderWidth: 1, borderColor: Colors.light['surface-variant'],
+    borderRadius: BorderRadius.xl, padding: Spacing.md, alignItems: 'center', gap: 4,
+    borderWidth: 1, borderColor: Colors.light['surface-variant'], ...Shadows.sm, overflow: 'visible',
   },
-  trendingImage: { height: 128 },
-  trendingItemImage: { width: '100%', height: '100%' },
-  trendingInfo: { padding: Spacing.md },
-  trendingName: { ...Typography['label-md'] },
+  trendingRank: {
+    position: 'absolute', top: -8, left: -8, width: 24, height: 24, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center', zIndex: 1,
+  },
+  trendingRankText: { color: '#ffffff', fontSize: 12, fontWeight: '800' },
+  trendingIcon: { width: 48, height: 48, borderRadius: BorderRadius.md, alignItems: 'center', justifyContent: 'center' },
+  trendingName: { ...Typography['label-sm'], textAlign: 'center' },
   trendingSold: { ...Typography['body-sm'], fontWeight: '700' },
   bottomNav: {
     position: 'absolute', bottom: 0, left: 0, right: 0,

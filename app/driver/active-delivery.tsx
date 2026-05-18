@@ -1,75 +1,163 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { useRef, useCallback, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
-import { Images } from '@/constants/images';
 import { useDriverStore } from '@/store/driverStore';
+import { useLocationStore } from '@/store/locationStore';
+import { useDriverTracking } from '@/hooks/use-driver-tracking';
+import { driverService } from '@/services/driver.service';
+import { MapboxMap } from '@/components/map/MapboxMap';
+import { MapControls } from '@/components/map/MapControls';
+import { Coordinate } from '@/types';
+
+const DAR_CENTER: Coordinate = { latitude: -6.7924, longitude: 39.2083 };
+const RESTAURANT_LOCATION: Coordinate = { latitude: -6.789, longitude: 39.205 };
+const CUSTOMER_LOCATION: Coordinate = { latitude: -6.797, longitude: 39.215 };
+
+type DriverStep = 'to_pickup' | 'picked_up' | 'to_dropoff' | 'arrived' | 'completed';
 
 export default function ActiveDeliveryScreen() {
   const theme = 'light';
+  const mapRef = useRef<any>(null);
+  const currentLocation = useLocationStore((s) => s.currentLocation);
   const { activeDelivery, completeDelivery } = useDriverStore();
+  const [updating, setUpdating] = useState(false);
+  const [step, setStep] = useState<DriverStep>('to_pickup');
+
+  const {
+    driverLocation,
+    driverHeading,
+    route,
+    estimatedMinutes,
+  } = useDriverTracking(activeDelivery?.orderId || 'o1');
+
+  const displayLocation = driverLocation || currentLocation || DAR_CENTER;
+
+  const handleRecenter = useCallback(() => {
+    mapRef.current?.flyTo(displayLocation, 15);
+  }, [displayLocation]);
+
+  const handleMyLocation = useCallback(() => {
+    if (currentLocation) {
+      mapRef.current?.flyTo(currentLocation, 16);
+    }
+  }, [currentLocation]);
+
+  const handleStatusUpdate = useCallback(async (newStatus: string, nextStep: DriverStep) => {
+    if (!activeDelivery) return;
+    setUpdating(true);
+    try {
+      await driverService.updateOrderStatus(activeDelivery.orderId, newStatus);
+      setStep(nextStep);
+    } catch {
+      // fallback
+    } finally {
+      setUpdating(false);
+    }
+  }, [activeDelivery]);
+
+  const handleComplete = useCallback(async () => {
+    if (!activeDelivery) return;
+    setUpdating(true);
+    try {
+      await completeDelivery();
+      router.back();
+    } catch {
+      setUpdating(false);
+    }
+  }, [activeDelivery, completeDelivery]);
+
+  const statusLabel = step === 'to_pickup' ? 'On the way to pickup'
+    : step === 'picked_up' ? 'Picked up, heading to customer'
+    : step === 'to_dropoff' ? 'Heading to drop-off'
+    : step === 'arrived' ? 'Arrived at destination'
+    : 'Completed';
 
   return (
     <View style={styles.container}>
-      <View style={[styles.mapFull, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
-        <Image source={{ uri: Images.activeDelivery.map }} style={styles.mapImageFull} />
+      <MapboxMap
+        ref={mapRef}
+        initialCamera={{ latitude: displayLocation.latitude, longitude: displayLocation.longitude, zoom: 15 }}
+        style={styles.mapFull}
+        markers={[
+          { id: 'restaurant', latitude: RESTAURANT_LOCATION.latitude, longitude: RESTAURANT_LOCATION.longitude, title: activeDelivery?.restaurant.name || 'Restaurant', icon: 'store', color: Colors[theme].primary },
+          { id: 'customer', latitude: CUSTOMER_LOCATION.latitude, longitude: CUSTOMER_LOCATION.longitude, title: 'Customer', icon: 'map-marker', color: Colors[theme]['secondary-container'] },
+          { id: 'driver', latitude: displayLocation.latitude, longitude: displayLocation.longitude, title: 'Driver', icon: 'bike', color: Colors[theme].primary, rotation: driverHeading || 0 },
+        ]}
+        routePolyline={{
+          coordinates: [[displayLocation.longitude, displayLocation.latitude], [step === 'picked_up' || step === 'to_dropoff' || step === 'arrived' ? CUSTOMER_LOCATION.longitude : RESTAURANT_LOCATION.longitude, step === 'picked_up' || step === 'to_dropoff' || step === 'arrived' ? CUSTOMER_LOCATION.latitude : RESTAURANT_LOCATION.latitude]],
+          color: Colors[theme].primary,
+          width: 4,
+        }}
+      />
 
-        <View style={[styles.topBar, { backgroundColor: 'rgba(252,249,248,0.95)' }]}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <MaterialCommunityIcons name="arrow-left" size={28} color={Colors[theme].primary} />
-          </TouchableOpacity>
-          <View style={styles.topBarCenter}>
-            <Text style={[styles.topBarLabel, { color: Colors[theme]['on-surface-variant'] }]}>
-              Active Delivery
-            </Text>
-            <Text style={[styles.topBarOrder, { color: Colors[theme]['on-surface'] }]}>
-              Order #{activeDelivery?.orderId || 'N/A'}
-            </Text>
-          </View>
-          <TouchableOpacity style={[styles.reportBtn, { backgroundColor: Colors[theme]['error-container'] }]}>
-            <MaterialCommunityIcons name="alert-circle" size={22} color={Colors[theme].error} />
-          </TouchableOpacity>
+      <View style={[styles.topBar, { backgroundColor: 'rgba(252,249,248,0.95)' }]}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <MaterialCommunityIcons name="arrow-left" size={28} color={Colors[theme].primary} />
+        </TouchableOpacity>
+        <View style={styles.topBarCenter}>
+          <Text style={[styles.topBarLabel, { color: Colors[theme]['on-surface-variant'] }]}>
+            Active Delivery
+          </Text>
+          <Text style={[styles.topBarOrder, { color: Colors[theme]['on-surface'] }]}>
+            Order #{activeDelivery?.orderId?.substring(0, 8) || 'N/A'}
+          </Text>
         </View>
+        <TouchableOpacity style={[styles.reportBtn, { backgroundColor: Colors[theme]['error-container'] }]}>
+          <MaterialCommunityIcons name="alert-circle" size={22} color={Colors[theme].error} />
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.navOverlay}>
-          <View style={[styles.navCard, { backgroundColor: Colors[theme].primary }]}>
-            <View style={styles.navCardLeft}>
-              <View style={styles.navTurnIcon}>
-                <MaterialCommunityIcons name="arrow-right-bold" size={28} color="rgba(255,255,255,0.9)" />
-              </View>
-              <View>
-                <Text style={styles.navTurnLabel}>Then turn right in 200m</Text>
-                <Text style={styles.navTurnStreet}>Head North on Ali Hassan Mwinyi Rd</Text>
-              </View>
+      <View style={styles.navOverlay}>
+        <View style={[styles.navCard, { backgroundColor: Colors[theme].primary }]}>
+          <View style={styles.navCardLeft}>
+            <View style={styles.navTurnIcon}>
+              <MaterialCommunityIcons name="arrow-right-bold" size={28} color="rgba(255,255,255,0.9)" />
             </View>
-            <View style={[styles.navDistance, { borderLeftColor: 'rgba(255,255,255,0.2)' }]}>
-              <Text style={styles.navDistanceValue}>1.2</Text>
-              <Text style={styles.navDistanceUnit}>km</Text>
+            <View>
+              <Text style={styles.navTurnLabel}>
+                {step === 'to_pickup' ? 'Proceed to pickup' :
+                 step === 'picked_up' || step === 'to_dropoff' ? 'Deliver to customer' :
+                 'Destination'}
+              </Text>
+              <Text style={styles.navTurnStreet}>
+                {step === 'to_pickup'
+                  ? (activeDelivery?.restaurant.address || 'Head to restaurant')
+                  : (activeDelivery?.customer.address || 'Deliver to customer')}
+              </Text>
+              {estimatedMinutes > 0 && (
+                <Text style={styles.navEta}>{estimatedMinutes} min away</Text>
+              )}
             </View>
           </View>
-        </View>
-
-        <View style={styles.mapActions}>
-          <TouchableOpacity style={[styles.mapActionBtn, { backgroundColor: '#ffffff' }]}>
-            <MaterialCommunityIcons name="crosshairs" size={22} color={Colors[theme].primary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.mapActionBtn, { backgroundColor: '#ffffff' }]}>
-            <MaterialCommunityIcons name="layers" size={22} color={Colors[theme]['on-surface-variant']} />
-          </TouchableOpacity>
+          <View style={[styles.navDistance, { borderLeftColor: 'rgba(255,255,255,0.2)' }]}>
+            <Text style={styles.navDistanceValue}>{activeDelivery?.distance || '0'}</Text>
+            <Text style={styles.navDistanceUnit}>km</Text>
+          </View>
         </View>
       </View>
 
+      <MapControls
+        onRecenter={handleRecenter}
+        onMyLocation={handleMyLocation}
+      />
+
       <View style={[styles.bottomSheet, { backgroundColor: Colors[theme].surface }]}>
-        <View style={styles.pullHandle} />
+        <View style={[styles.pullHandle, { backgroundColor: Colors[theme]['surface-container-highest'] }]} />
 
         <View style={styles.statusRow}>
           <View style={[styles.statusDot, { backgroundColor: Colors[theme]['secondary-container'] }]} />
           <Text style={[styles.statusText, { color: Colors[theme]['secondary'] }]}>
-            On the way to pickup
+            {statusLabel}
           </Text>
           <View style={styles.avatarStack}>
-            <View style={styles.avatarMini}><Image source={{ uri: activeDelivery?.restaurant.image || Images.activeDelivery.restaurant }} style={styles.avatarMiniImg} /></View>
-            <View style={[styles.avatarMini, { marginLeft: -12 }]}><Image source={{ uri: Images.activeDelivery.customer }} style={styles.avatarMiniImg} /></View>
+            <View style={styles.avatarMini}>
+              <Image source={{ uri: activeDelivery?.restaurant.image || '' }} style={styles.avatarMiniImg} />
+            </View>
+            <View style={[styles.avatarMini, { marginLeft: -12 }]}>
+              <Image source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCjy6E5I4XwK9jG2KOF62ZuOL4JRv-ybFaR_x6-oPen6hTVJoo4rSw3-H9Ul_3c8ybX2LsIAdpptAmHsk_1we3xQmMqN9FKHRdlgNe7DTSBUf65PAQXc4ZXeUvw3ZARN7mRY6KQy19RzfBXFojbJh8_SkbxpXh5B8bVXEw6eJBn3mDfWh_3DY8V2_LhMmW2Cw6dAdV99q816STuMkdmcNaYehvQLhumQCUAmq7k0V9L-jV8Gu8grR4BJyCkmTTXJk_WfB8FRXLP7rw' }} style={styles.avatarMiniImg} />
+            </View>
           </View>
         </View>
 
@@ -82,9 +170,14 @@ export default function ActiveDeliveryScreen() {
             <View style={styles.stopInfo}>
               <View style={styles.stopTop}>
                 <View>
-                  <Text style={[styles.stopLabel, { color: Colors[theme]['on-surface-variant'] }]}>
-                    Pickup from
-                  </Text>
+                  <View style={styles.stopLabel}>
+                    <Text style={[styles.stopLabelText, { color: Colors[theme]['on-surface-variant'] }]}>
+                      Pickup from
+                    </Text>
+                    {step === 'picked_up' && (
+                      <MaterialCommunityIcons name="check-circle" size={16} color={Colors[theme].primary} />
+                    )}
+                  </View>
                   <Text style={[styles.stopName, { color: Colors[theme]['on-surface'] }]}>
                     {activeDelivery?.restaurant.name || 'Mama Ntilie Gourmet'}
                   </Text>
@@ -111,9 +204,14 @@ export default function ActiveDeliveryScreen() {
             <View style={styles.stopInfo}>
               <View style={styles.stopTop}>
                 <View>
-                  <Text style={[styles.stopLabel, { color: Colors[theme]['on-surface-variant'] }]}>
-                    Deliver to
-                  </Text>
+                  <View style={styles.stopLabel}>
+                    <Text style={[styles.stopLabelText, { color: Colors[theme]['on-surface-variant'] }]}>
+                      Deliver to
+                    </Text>
+                    {(step === 'arrived' || step === 'completed') && (
+                      <MaterialCommunityIcons name="check-circle" size={16} color={Colors[theme].primary} />
+                    )}
+                  </View>
                   <Text style={[styles.stopName, { color: Colors[theme]['on-surface'] }]}>
                     {activeDelivery?.customer.name || 'John Doe'}
                   </Text>
@@ -148,28 +246,68 @@ export default function ActiveDeliveryScreen() {
               </Text>
             </View>
           </View>
-          <TouchableOpacity>
-            <Text style={[styles.viewListBtn, { color: Colors[theme].primary }]}>View List</Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.actionGrid}>
-          <TouchableOpacity style={[styles.actionSecondary, { backgroundColor: Colors[theme]['secondary-fixed'] }]}>
-            <MaterialCommunityIcons name="crosshairs-gps" size={20} color={Colors[theme]['on-secondary-fixed']} />
-            <Text style={[styles.actionSecondaryText, { color: Colors[theme]['on-secondary-fixed'] }]}>
-              Navigate
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
-            onPress={() => {
-              completeDelivery();
-              router.back();
-            }}
-          >
-            <MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" />
-            <Text style={styles.actionPrimaryText}>Arrived</Text>
-          </TouchableOpacity>
+          {step === 'to_pickup' && (
+            <TouchableOpacity
+              style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
+              onPress={() => handleStatusUpdate('on_the_way', 'picked_up')}
+              disabled={updating}
+            >
+              {updating ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" />
+                  <Text style={styles.actionPrimaryText}>Picked Up</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
+          {step === 'picked_up' && (
+            <TouchableOpacity
+              style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
+              onPress={() => handleStatusUpdate('arrived', 'arrived')}
+              disabled={updating}
+            >
+              {updating ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" />
+                  <Text style={styles.actionPrimaryText}>Arrived</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
+          {step === 'arrived' && (
+            <TouchableOpacity
+              style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
+              onPress={handleComplete}
+              disabled={updating}
+            >
+              {updating ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" />
+                  <Text style={styles.actionPrimaryText}>Delivered</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
+          {(step === 'to_pickup' || step === 'picked_up') && (
+            <TouchableOpacity
+              style={[styles.actionSecondary, { backgroundColor: Colors[theme]['secondary-fixed'] }]}
+              onPress={handleMyLocation}
+            >
+              <MaterialCommunityIcons name="crosshairs-gps" size={20} color={Colors[theme]['on-secondary-fixed']} />
+              <Text style={[styles.actionSecondaryText, { color: Colors[theme]['on-secondary-fixed'] }]}>
+                Navigate
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </View>
@@ -179,14 +317,18 @@ export default function ActiveDeliveryScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   mapFull: { flex: 1, position: 'relative' },
-  mapImageFull: { width: '100%', height: '100%', resizeMode: 'cover', position: 'absolute' },
   topBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing['container-padding'],
     paddingTop: 56,
     paddingBottom: Spacing.md,
+    zIndex: 10,
   },
   topBarCenter: { flex: 1, alignItems: 'center' },
   topBarLabel: { ...Typography['label-sm'], textTransform: 'uppercase', letterSpacing: 0.5 },
@@ -203,6 +345,7 @@ const styles = StyleSheet.create({
     top: 100,
     left: Spacing['container-padding'],
     right: Spacing['container-padding'],
+    zIndex: 10,
   },
   navCard: {
     borderRadius: BorderRadius.xl,
@@ -227,27 +370,10 @@ const styles = StyleSheet.create({
   },
   navTurnLabel: { ...Typography['label-sm'], color: 'rgba(255,255,255,0.8)' },
   navTurnStreet: { ...Typography['body-md'], color: '#ffffff', fontWeight: '600' },
+  navEta: { ...Typography['label-sm'], color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   navDistance: { alignItems: 'center', paddingLeft: Spacing.md, borderLeftWidth: 1 },
   navDistanceValue: { ...Typography.display, color: '#ffffff', fontSize: 24 },
   navDistanceUnit: { ...Typography['label-sm'], color: 'rgba(255,255,255,0.8)' },
-  mapActions: {
-    position: 'absolute',
-    bottom: 320,
-    right: Spacing['container-padding'],
-    gap: Spacing.sm,
-  },
-  mapActionBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: BorderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
   bottomSheet: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -263,7 +389,6 @@ const styles = StyleSheet.create({
   pullHandle: {
     width: 48,
     height: 4,
-    backgroundColor: '#e5e2e1',
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: Spacing.md,
@@ -294,7 +419,8 @@ const styles = StyleSheet.create({
   stopLine: { width: 2, flex: 1, marginVertical: 4 },
   stopInfo: { flex: 1 },
   stopTop: { flexDirection: 'row', justifyContent: 'space-between' },
-  stopLabel: { ...Typography['label-sm'] },
+  stopLabel: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  stopLabelText: { ...Typography['label-sm'] },
   stopName: { ...Typography.h2 },
   stopAddress: { ...Typography['body-sm'] },
   stopActions: { flexDirection: 'row', gap: Spacing.xs },
@@ -323,7 +449,6 @@ const styles = StyleSheet.create({
   },
   itemsTitle: { ...Typography['label-md'] },
   itemsList: { ...Typography['body-sm'] },
-  viewListBtn: { ...Typography['label-md'] },
   actionGrid: { flexDirection: 'row', gap: Spacing.md },
   actionSecondary: {
     flex: 1,

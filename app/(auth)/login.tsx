@@ -1,158 +1,295 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { router } from 'expo-router';
+import { useState, useCallback } from 'react';
+import {
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  KeyboardAvoidingView, Platform, TextInput, ActivityIndicator,
+} from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { PikiButton } from '@/components/ui/PikiButton';
-import { PikiInput } from '@/components/ui/PikiInput';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
-import { Images } from '@/constants/images';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { useAuthStore } from '@/store/authStore';
 
-export default function LoginScreen() {
+export default function AuthScreen() {
+  const { mode: modeParam, type } = useLocalSearchParams<{ mode?: string; type?: string }>();
   const theme = 'light';
-  const [phone, setPhone] = useState('');
-  const { login, isLoading } = useAuthStore();
+  const [mode, setMode] = useState<'sign-in' | 'sign-up'>(modeParam === 'sign-up' ? 'sign-up' : 'sign-in');
+  const [contact, setContact] = useState('');
+  const [otpMethod, setOtpMethod] = useState<'sms' | 'email'>('sms');
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { sendOtp } = useAuthStore();
 
-  const isValid = phone.length >= 9;
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
+  const isPhone = /^\+?\d{7,15}$/.test(contact.replace(/[\s-]/g, ''));
+  const isContactValid = isEmail || isPhone;
+  const isNameValid = mode === 'sign-up' ? name.trim().length >= 2 : true;
+  const canSubmit = isContactValid && isNameValid && !isSubmitting;
 
-  const handleLogin = async () => {
-    if (!isValid || isLoading) return;
+  const handleSendOtp = useCallback(async () => {
+    if (!canSubmit) return;
+    setError('');
+    setIsSubmitting(true);
+
+    const sanitizedContact = isEmail ? contact.trim().toLowerCase() : contact.trim().replace(/[\s-]/g, '');
+
     try {
-      await login(phone);
-      router.push('/(auth)/verify-otp');
-    } catch {
-      // error handled by store
+      await sendOtp(sanitizedContact, otpMethod);
+      const params = new URLSearchParams({
+        contact: sanitizedContact,
+        method: otpMethod,
+        mode,
+      });
+      if (mode === 'sign-up') params.set('name', name.trim());
+      router.push(`/verify-otp?${params.toString()}`);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to send OTP. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [canSubmit, contact, otpMethod, mode, name, sendOtp, isEmail]);
+
+  const switchMode = useCallback(() => {
+    setMode((m) => (m === 'sign-in' ? 'sign-up' : 'sign-in'));
+    setError('');
+  }, []);
+
+  const detectMethod = (text: string) => {
+    setContact(text);
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
+      setOtpMethod('email');
+    } else if (text.length > 0) {
+      setOtpMethod('sms');
     }
   };
 
   return (
-    <ScrollView
+    <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: Colors[theme].background }]}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.heroSection}>
-        <Image source={{ uri: Images.login.hero }} style={styles.heroImage} />
-        <View style={styles.heroOverlay} />
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <View style={[styles.backButtonInner, { backgroundColor: 'rgba(252,249,248,0.8)' }]}>
-            <MaterialCommunityIcons name="arrow-left" size={24} color={Colors[theme]['on-surface']} />
+          <View style={[styles.backButtonInner, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+            <MaterialCommunityIcons name="arrow-left" size={22} color={Colors[theme]['on-surface']} />
           </View>
         </TouchableOpacity>
-      </View>
 
-      <View style={styles.cardWrapper}>
+        <View style={styles.header}>
+          <View style={[styles.brandIcon, { backgroundColor: Colors[theme].primary }]}>
+            <MaterialCommunityIcons name="moped" size={32} color="#ffffff" />
+          </View>
+          <Text style={[styles.brandName, { color: Colors[theme].primary }]}>Piki Food</Text>
+        </View>
+
         <View style={[styles.card, { backgroundColor: Colors[theme].surface }]}>
-          <View style={styles.brandSection}>
-            <View style={[styles.brandIcon, { backgroundColor: Colors[theme]['primary-container'] }]}>
-              <MaterialCommunityIcons name="silverware-fork-knife" size={32} color="#ffffff" />
-            </View>
-            <Text style={[styles.brandName, { color: Colors[theme]['on-surface'] }]}>Piki Food</Text>
+          <View style={styles.toggleRow}>
+            <TouchableOpacity
+              style={[
+                styles.toggleBtn,
+                mode === 'sign-in' && { backgroundColor: Colors[theme].primary },
+              ]}
+              onPress={() => mode !== 'sign-in' && switchMode()}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.toggleText,
+                  { color: mode === 'sign-in' ? '#ffffff' : Colors[theme]['on-surface-variant'] },
+                ]}
+              >
+                Sign In
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.toggleBtn,
+                mode === 'sign-up' && { backgroundColor: Colors[theme].primary },
+              ]}
+              onPress={() => mode !== 'sign-up' && switchMode()}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.toggleText,
+                  { color: mode === 'sign-up' ? '#ffffff' : Colors[theme]['on-surface-variant'] },
+                ]}
+              >
+                Sign Up
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <Text style={[styles.title, { color: Colors[theme]['on-surface'] }]}>
-            Join the Piki family
+            {mode === 'sign-in' ? 'Welcome back' : type === 'agent' ? 'Agent Login' : 'Create account'}
           </Text>
           <Text style={[styles.subtitle, { color: Colors[theme]['on-surface-variant'] }]}>
-            Delicious meals from Dar&apos;s best kitchens delivered to your doorstep.
+            {mode === 'sign-in'
+              ? 'Enter your phone or email to receive a code'
+              : 'Enter your details to get started'}
           </Text>
 
-          <PikiInput
-            label="Enter Phone Number"
-            placeholder="712 345 678"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-            maxLength={10}
-            leftElement={
-              <View style={[styles.countryCode, { borderRightColor: Colors[theme]['outline-variant'] }]}>
-                <Text style={[styles.countryCodeText, { color: Colors[theme]['on-surface'] }]}>
-                  +255
-                </Text>
+          {error ? (
+            <View style={[styles.errorBox, { backgroundColor: Colors[theme]['error-container'] + '60' }]}>
+              <MaterialCommunityIcons name="alert-circle" size={18} color={Colors[theme].error} />
+              <Text style={[styles.errorText, { color: Colors[theme].error }]}>{error}</Text>
+            </View>
+          ) : null}
+
+          {mode === 'sign-up' && (
+            <View style={styles.inputGroup}>
+              <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>
+                Full Name
+              </Text>
+              <View style={[styles.inputWrap, { backgroundColor: Colors[theme]['surface-container-low'], borderColor: name ? Colors[theme].primary : Colors[theme]['outline-variant'] }]}>
+                <MaterialCommunityIcons name="account-outline" size={20} color={Colors[theme]['on-surface-variant']} />
+                <TextInput
+                  style={[styles.input, { color: Colors[theme]['on-surface'] }]}
+                  placeholder="Name "
+                  placeholderTextColor={Colors[theme]['on-surface-variant'] + '80'}
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                />
               </View>
-            }
-            containerStyle={styles.phoneInput}
-          />
+            </View>
+          )}
 
-          <PikiButton
-            title="Continue"
-            onPress={handleLogin}
-            disabled={!isValid}
-            loading={isLoading}
-            fullWidth
-          />
-
-          <View style={styles.divider}>
-            <View style={[styles.dividerLine, { backgroundColor: Colors[theme]['surface-variant'] }]} />
-            <Text style={[styles.dividerText, { color: Colors[theme]['on-surface-variant'] }]}>
-              or continue with
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>
+              Phone Number or Email
             </Text>
-            <View style={[styles.dividerLine, { backgroundColor: Colors[theme]['surface-variant'] }]} />
+            <View style={[styles.inputWrap, { backgroundColor: Colors[theme]['surface-container-low'], borderColor: contact ? (isContactValid ? Colors[theme].primary : Colors[theme].tertiary) : Colors[theme]['outline-variant'] }]}>
+              <MaterialCommunityIcons
+                name={isEmail ? 'email-outline' : 'phone-outline'}
+                size={20}
+                color={Colors[theme]['on-surface-variant']}
+              />
+              <TextInput
+                style={[styles.input, { color: Colors[theme]['on-surface'] }]}
+                placeholder="Email or phone "
+                placeholderTextColor={Colors[theme]['on-surface-variant'] + '80'}
+                value={contact}
+                onChangeText={detectMethod}
+                keyboardType={otpMethod === 'email' ? 'email-address' : 'phone-pad'}
+                autoCapitalize="none"
+                autoComplete="email"
+              />
+            </View>
           </View>
 
-          <View style={styles.socialRow}>
-            <TouchableOpacity style={[styles.socialButton, { borderColor: Colors[theme]['outline-variant'] }]}>
-              <Text style={[styles.socialIcon, { color: '#4285F4' }]}>G</Text>
-              <Text style={[styles.socialLabel, { color: Colors[theme]['on-surface'] }]}>Google</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.socialButton, { borderColor: Colors[theme]['outline-variant'] }]}>
-              <MaterialCommunityIcons name="apple" size={20} color={Colors[theme]['on-surface']} />
-              <Text style={[styles.socialLabel, { color: Colors[theme]['on-surface'] }]}>Apple</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+          {!isEmail && (
+            <View style={styles.inputGroup}>
+              <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>
+                Receive OTP via
+              </Text>
+              <View style={styles.methodRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.methodBtn,
+                    otpMethod === 'sms' && { backgroundColor: Colors[theme].primary, borderColor: Colors[theme].primary },
+                  ]}
+                  onPress={() => setOtpMethod('sms')}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons
+                    name="message-text-outline"
+                    size={18}
+                    color={otpMethod === 'sms' ? '#ffffff' : Colors[theme]['on-surface-variant']}
+                  />
+                  <Text style={[styles.methodText, { color: otpMethod === 'sms' ? '#ffffff' : Colors[theme]['on-surface-variant'] }]}>
+                    SMS
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.methodBtn,
+                    otpMethod === 'email' && { backgroundColor: Colors[theme].primary, borderColor: Colors[theme].primary },
+                  ]}
+                  onPress={() => setOtpMethod('email')}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons
+                    name="email-outline"
+                    size={18}
+                    color={otpMethod === 'email' ? '#ffffff' : Colors[theme]['on-surface-variant']}
+                  />
+                  <Text style={[styles.methodText, { color: otpMethod === 'email' ? '#ffffff' : Colors[theme]['on-surface-variant'] }]}>
+                    Email
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
-      <View style={styles.bentoGrid}>
-        <View style={styles.bentoLeft}>
-          <Image source={{ uri: Images.login.pizza }} style={styles.bentoImage} />
-          <View style={styles.bentoOverlay} />
-          <Text style={styles.bentoLabel}>Hot Pizza</Text>
+          <TouchableOpacity
+            style={[
+              styles.submitBtn,
+              { backgroundColor: canSubmit ? Colors[theme].primary : Colors[theme]['surface-container-high'] },
+            ]}
+            onPress={handleSendOtp}
+            disabled={!canSubmit}
+            activeOpacity={0.85}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color="#ffffff" size="small" />
+            ) : (
+              <Text style={[styles.submitText, { color: canSubmit ? '#ffffff' : Colors[theme]['on-surface-variant'] }]}>
+                {mode === 'sign-in' ? 'Send OTP' : 'Create Account'}
+              </Text>
+            )}
+          </TouchableOpacity>
         </View>
-        <View style={styles.bentoRight}>
-          <Image source={{ uri: Images.login.salad }} style={styles.bentoImage} />
-          <View style={styles.bentoOverlay} />
-          <Text style={styles.bentoLabel}>Healthy Choices</Text>
-        </View>
-      </View>
 
-      <Text style={[styles.terms, { color: Colors[theme]['on-surface-variant'] }]}>
-        By continuing, you agree to Piki&apos;s Terms of Service and Privacy Policy.
-      </Text>
-    </ScrollView>
+        <View style={styles.switchRow}>
+          <Text style={[styles.switchText, { color: Colors[theme]['on-surface-variant'] }]}>
+            {mode === 'sign-in' ? 'No account yet?' : 'Already registered?'}
+          </Text>
+          <TouchableOpacity onPress={switchMode}>
+            <Text style={[styles.switchLink, { color: Colors[theme].primary }]}>
+              {mode === 'sign-in' ? 'Sign Up' : 'Sign In'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={[styles.terms, { color: Colors[theme]['on-surface-variant'] }]}>
+          By continuing, you agree to Piki's Terms of Service and Privacy Policy.
+        </Text>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { flexGrow: 1 },
-  heroSection: { height: 200, width: '100%', position: 'relative' },
-  heroImage: { width: '100%', height: '100%' },
-  heroOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, backgroundColor: '#fcf9f8', borderTopLeftRadius: 32, borderTopRightRadius: 32 },
-  backButton: { position: 'absolute', top: 60, left: Spacing['container-padding'], zIndex: 10 },
-  backButtonInner: { width: 40, height: 40, borderRadius: BorderRadius.sm, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
-  cardWrapper: { paddingHorizontal: Spacing['container-padding'], marginTop: -40, zIndex: 10 },
-  card: { borderRadius: 24, padding: Spacing.xl, borderWidth: 1, borderColor: '#e5e2e1', gap: Spacing.lg, shadowColor: '#0fa958', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 24, elevation: 4 },
-  brandSection: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  brandIcon: { width: 48, height: 48, borderRadius: BorderRadius.xl, alignItems: 'center', justifyContent: 'center' },
-  brandName: { ...Typography.h2 },
-  title: { ...Typography.h1 },
-  subtitle: { ...Typography['body-md'] },
-  phoneInput: {},
-  countryCode: { paddingRight: Spacing.md, borderRightWidth: 1, paddingVertical: Spacing.md },
-  countryCodeText: { ...Typography['body-md'], fontWeight: '600' },
-  divider: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  dividerLine: { flex: 1, height: 1 },
-  dividerText: { ...Typography['body-sm'], textTransform: 'uppercase', letterSpacing: 0.5 },
-  socialRow: { flexDirection: 'row', gap: Spacing.md },
-  socialButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, paddingVertical: Spacing.md, borderRadius: BorderRadius.xl, borderWidth: 1.5 },
-  socialIcon: { fontSize: 20, fontWeight: '700' },
-  socialLabel: { ...Typography['label-md'] },
-  bentoGrid: { flexDirection: 'row', gap: Spacing.md, height: 160, paddingHorizontal: Spacing['container-padding'], marginTop: Spacing.xl },
-  bentoLeft: { flex: 1, borderRadius: BorderRadius.xl, overflow: 'hidden', position: 'relative' },
-  bentoRight: { flex: 1, borderRadius: BorderRadius.xl, overflow: 'hidden', position: 'relative' },
-  bentoImage: { width: '100%', height: '100%' },
-  bentoOverlay: { position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1 },
-  bentoLabel: { position: 'absolute', bottom: Spacing.sm, left: Spacing.sm, zIndex: 2, ...Typography['label-sm'], color: '#ffffff' },
-  terms: { ...Typography['body-sm'], textAlign: 'center', marginTop: Spacing.xl, paddingHorizontal: Spacing['container-padding'], paddingBottom: Spacing.xl, lineHeight: 18 },
+  content: { flexGrow: 1, paddingHorizontal: Spacing['container-padding'], paddingBottom: Spacing.xl },
+  backButton: { marginTop: 60, marginBottom: Spacing.md },
+  backButtonInner: { width: 40, height: 40, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center' },
+  header: { alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.xl },
+  brandIcon: { width: 64, height: 64, borderRadius: BorderRadius.xl, alignItems: 'center', justifyContent: 'center', ...Shadows.md },
+  brandName: { ...Typography.h1, fontSize: 28 },
+  card: { borderRadius: 24, padding: Spacing.xl, borderWidth: 1, borderColor: Colors.light['outline-variant'], gap: Spacing.md, ...Shadows.md },
+  toggleRow: { flexDirection: 'row', backgroundColor: Colors.light['surface-container-low'], borderRadius: BorderRadius.full, padding: 4 },
+  toggleBtn: { flex: 1, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, alignItems: 'center' },
+  toggleText: { ...Typography['label-md'], fontWeight: '600' },
+  title: { ...Typography.h1, fontSize: 26, marginTop: Spacing.sm },
+  subtitle: { ...Typography['body-sm'], marginTop: -Spacing.sm },
+  errorBox: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, padding: Spacing.md, borderRadius: BorderRadius.md },
+  errorText: { ...Typography['body-sm'], flex: 1 },
+  inputGroup: { gap: Spacing.xs },
+  inputLabel: { ...Typography['label-sm'], fontWeight: '500', marginLeft: 4 },
+  inputWrap: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.xl, borderWidth: 1.5, height: 52 },
+  input: { flex: 1, ...Typography['body-md'], height: '100%' },
+  methodRow: { flexDirection: 'row', gap: Spacing.sm },
+  methodBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, borderWidth: 1.5, borderColor: Colors.light['outline-variant'] },
+  methodText: { ...Typography['label-md'], fontWeight: '600' },
+  submitBtn: { paddingVertical: Spacing.md, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center', height: 52 },
+  submitText: { ...Typography['label-md'], fontWeight: '700', fontSize: 16 },
+  switchRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Spacing.xs, marginTop: Spacing.lg },
+  switchText: { ...Typography['body-md'] },
+  switchLink: { ...Typography['label-md'], fontWeight: '700' },
+  terms: { ...Typography['body-sm'], textAlign: 'center', marginTop: Spacing.lg, lineHeight: 18, paddingHorizontal: Spacing.md },
 });

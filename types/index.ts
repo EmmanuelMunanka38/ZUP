@@ -21,6 +21,8 @@ export interface Restaurant {
   distance: string;
   address: string;
   isOpen: boolean;
+  openingHours: string;
+  closingHours: string;
   categories: string[];
   menu: MenuItem[];
 }
@@ -44,11 +46,20 @@ export interface CartItem {
   specialInstructions?: string;
 }
 
+export interface OrderItem {
+  id: string;
+  menuItemId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  specialInstructions?: string;
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
   restaurant: Restaurant;
-  items: CartItem[];
+  items: OrderItem[];
   subtotal: number;
   deliveryFee: number;
   serviceFee: number;
@@ -159,3 +170,59 @@ export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;
 }
+
+export interface Coordinate {
+  latitude: number;
+  longitude: number;
+}
+
+export interface MapRegion {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+}
+
+export interface DriverLocation {
+  driverId: string;
+  coordinate: Coordinate;
+  heading: number;
+  speed: number;
+  timestamp: string;
+}
+
+export interface DeliveryRoute {
+  distance: number;
+  duration: number;
+  polyline: string;
+  coordinates: Coordinate[];
+}
+
+export type OrderTrackingStatus =
+  | 'restaurant_confirmed'
+  | 'preparing_order'
+  | 'driver_assigned'
+  | 'driver_arriving'
+  | 'picked_up'
+  | 'on_the_way'
+  | 'delivered';
+
+export interface TrackingUpdate {
+  orderId: string;
+  status: OrderTrackingStatus;
+  estimatedMinutes: number;
+  estimatedArrival: string;
+  driverLocation?: DriverLocation;
+  route?: DeliveryRoute;
+  timestamp: string;
+}
+
+export interface MapStyle {
+  light: string;
+  dark: string;
+}
+
+export const MAPBOX_STYLES: MapStyle = {
+  light: 'mapbox://styles/mapbox/light-v11',
+  dark: 'mapbox://styles/mapbox/dark-v11',
+};

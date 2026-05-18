@@ -8,6 +8,7 @@ interface CartState {
   addItem: (item: MenuItem, quantity?: number) => void;
   removeItem: (id: string) => void;
   updateQty: (id: string, quantity: number) => void;
+  setRestaurantName: (name: string) => void;
   clearCart: () => void;
   itemCount: () => number;
   subtotal: () => number;
@@ -28,8 +29,6 @@ export const useCartStore = create<CartState>((set, get) => ({
               ? { ...i, quantity: i.quantity + quantity }
               : i
           ),
-          restaurantId: menuItem.restaurantId,
-          restaurantName: null,
         };
       }
       return {
@@ -38,10 +37,11 @@ export const useCartStore = create<CartState>((set, get) => ({
           { id: menuItem.id, menuItem, quantity },
         ],
         restaurantId: menuItem.restaurantId,
-        restaurantName: null,
       };
     });
   },
+
+  setRestaurantName: (name) => set({ restaurantName: name }),
 
   removeItem: (id) => {
     set((state) => ({

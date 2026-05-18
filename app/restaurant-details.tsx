@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,32 +6,80 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Dimensions,
+  ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
-import { Images } from '@/constants/images';
 import { formatPrice } from '@/utils/format';
 import { useCartStore } from '@/store/cartStore';
-import { mockMenuItems } from '@/services/mock-data';
+import { useRestaurantStore } from '@/store/restaurantStore';
 
-const categories = ['Popular', 'Appetizers', 'Mains', 'Sides', 'Drinks'];
+const { width } = Dimensions.get('window');
+
+const CATEGORIES = ['All', 'Popular', 'Appetizers', 'Mains', 'Sides', 'Drinks'];
 
 export default function RestaurantDetailsScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const theme = 'light';
-  const [activeCategory, setActiveCategory] = useState('Popular');
-  const { addItem, itemCount, subtotal } = useCartStore();
+  const [activeCategory, setActiveCategory] = useState('All');
+  const addItem = useCartStore((s) => s.addItem);
+  const setRestaurantName = useCartStore((s) => s.setRestaurantName);
+  const cartCount = useCartStore((s) => s.itemCount());
+  const cartSubtotal = useCartStore((s) => s.subtotal());
 
-  const filteredItems = mockMenuItems.filter(
-    (item) => item.category === activeCategory || activeCategory === 'All'
-  );
+  const restaurant = useRestaurantStore((s) => s.currentRestaurant);
+  const isLoading = useRestaurantStore((s) => s.isLoading);
+  const loadCurrentRestaurant = useRestaurantStore((s) => s.loadCurrentRestaurant);
+
+  useEffect(() => {
+    if (id) {
+      loadCurrentRestaurant(id);
+    }
+  }, [id, loadCurrentRestaurant]);
+
+  useEffect(() => {
+    if (restaurant) {
+      setRestaurantName(restaurant.name);
+    }
+  }, [restaurant, setRestaurantName]);
+
+  const filteredItems = useMemo(() => {
+    if (!restaurant) return [];
+    if (activeCategory === 'All') return restaurant.menu;
+    if (activeCategory === 'Popular')
+      return restaurant.menu.filter((m) => m.isPopular);
+    return restaurant.menu.filter((m) => m.category === activeCategory);
+  }, [activeCategory, restaurant]);
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color={Colors[theme].primary} />
+      </View>
+    );
+  }
+
+  if (!restaurant) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={[styles.emptyText, { color: Colors[theme]['on-surface-variant'] }]}>
+          Restaurant not found
+        </Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={[styles.goBack, { color: Colors[theme].primary }]}>Go back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: Colors[theme].background }]}>
       <View style={[styles.headerBar, { backgroundColor: Colors[theme].surface, borderBottomColor: Colors[theme]['surface-container'] }]}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => router.back()} style={styles.headerBackBtn}>
-            <MaterialCommunityIcons name="arrow-left" size={24} color={Colors[theme].primary} />
+            <MaterialCommunityIcons name="arrow-left" size={24} color={Colors[theme]['on-surface']} />
           </TouchableOpacity>
           <View>
             <Text style={[styles.headerLabel, { color: Colors[theme]['on-surface-variant'] }]}>
@@ -42,55 +90,72 @@ export default function RestaurantDetailsScreen() {
             </Text>
           </View>
         </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={[styles.headerActionBtn, { backgroundColor: Colors[theme]['surface-container'] }]}>
-            <MaterialCommunityIcons name="magnify" size={20} color={Colors[theme]['on-surface']} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.headerActionBtn, { backgroundColor: Colors[theme]['surface-container'] }]}>
-            <MaterialCommunityIcons name="heart-outline" size={20} color={Colors[theme]['on-surface']} />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={[styles.headerActionBtn, { backgroundColor: Colors[theme]['surface-container'] }]}>
+          <MaterialCommunityIcons name="cart-outline" size={20} color={Colors[theme]['on-surface']} />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView bounces={false}>
+      <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
         <View style={styles.heroSection}>
-          <Image
-            source={{ uri: Images.restaurantDetails.hero }}
-            style={styles.heroImage}
-          />
+          <Image source={{ uri: restaurant.image }} style={styles.heroImage} />
           <View style={styles.heroGradient} />
-          <View style={styles.heroBadges}>
-            <View style={[styles.heroBadge, { backgroundColor: Colors[theme].primary }]}>
-              <MaterialCommunityIcons name="star" size={14} color="#ffffff" />
-              <Text style={styles.heroBadgeText}> 4.8 (500+)</Text>
-            </View>
-            <View style={[styles.heroBadge, { backgroundColor: Colors[theme]['secondary-container'] }]}>
-              <Text style={[styles.heroBadgeText, { color: Colors[theme]['on-secondary-container'] }]}>Free Delivery</Text>
+          <View style={styles.heroContent}>
+            <View style={styles.heroBadges}>
+              <View style={[styles.heroBadge, { backgroundColor: 'rgba(255,255,255,0.9)' }]}>
+                <MaterialCommunityIcons name="star" size={14} color={Colors[theme]['secondary-container']} />
+                <Text style={[styles.heroBadgeText, { color: Colors[theme]['on-surface'] }]}>
+                  {restaurant.rating} ({restaurant.ratingCount})
+                </Text>
+              </View>
+              <View style={[styles.heroBadge, { backgroundColor: restaurant.isOpen ? Colors[theme].primary : Colors[theme].error }]}>
+                <Text style={[styles.heroBadgeText, { color: '#ffffff' }]}>
+                  {restaurant.isOpen ? 'Open' : 'Closed'}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
 
-        <View style={[styles.restaurantInfo, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+        <View style={[styles.infoCard, { backgroundColor: Colors[theme].surface }]}>
           <Text style={[styles.restaurantName, { color: Colors[theme]['on-surface'] }]}>
-            The Terrace Swahili Bistro
+            {restaurant.name}
           </Text>
           <Text style={[styles.cuisine, { color: Colors[theme]['on-surface-variant'] }]}>
-            Modern Swahili Fusion · Seafood · Grill
+            {restaurant.cuisine}
           </Text>
+
           <View style={[styles.metaRow, { borderTopColor: Colors[theme]['surface-variant'] }]}>
             <View style={styles.metaItem}>
-              <MaterialCommunityIcons name="clock-outline" size={20} color={Colors[theme].primary} />
-              <Text style={[styles.metaText, { color: Colors[theme]['on-surface'] }]}>25-35 min</Text>
+              <MaterialCommunityIcons name="map-marker" size={18} color={Colors[theme].primary} />
+              <Text style={[styles.metaText, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
+                {restaurant.address}
+              </Text>
             </View>
-            <View style={[styles.metaDivider, { backgroundColor: Colors[theme]['surface-variant'] }]} />
             <View style={styles.metaItem}>
+              <MaterialCommunityIcons name="clock-outline" size={18} color={Colors[theme].primary} />
+              <Text style={[styles.metaText, { color: Colors[theme]['on-surface'] }]}>
+                {restaurant.openingHours} - {restaurant.closingHours}
+              </Text>
+            </View>
+          </View>
+
+          <View style={[styles.deliveryRow, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+            <View style={styles.deliveryItem}>
+              <MaterialCommunityIcons name="clock-fast" size={20} color={Colors[theme].primary} />
+              <Text style={[styles.deliveryLabel, { color: Colors[theme]['on-surface-variant'] }]}>Delivery</Text>
+              <Text style={[styles.deliveryValue, { color: Colors[theme]['on-surface'] }]}>{restaurant.deliveryTime}</Text>
+            </View>
+            <View style={[styles.deliveryDivider, { backgroundColor: Colors[theme]['surface-variant'] }]} />
+            <View style={styles.deliveryItem}>
               <MaterialCommunityIcons name="map-marker-distance" size={20} color={Colors[theme].primary} />
-              <Text style={[styles.metaText, { color: Colors[theme]['on-surface'] }]}>2.4 km</Text>
+              <Text style={[styles.deliveryLabel, { color: Colors[theme]['on-surface-variant'] }]}>Distance</Text>
+              <Text style={[styles.deliveryValue, { color: Colors[theme]['on-surface'] }]}>{restaurant.distance}</Text>
             </View>
-            <View style={[styles.metaDivider, { backgroundColor: Colors[theme]['surface-variant'] }]} />
-            <View style={styles.metaItem}>
-              <MaterialCommunityIcons name="credit-card" size={20} color={Colors[theme].primary} />
-              <Text style={[styles.metaText, { color: Colors[theme]['on-surface'] }]}>TSh 2,500</Text>
+            <View style={[styles.deliveryDivider, { backgroundColor: Colors[theme]['surface-variant'] }]} />
+            <View style={styles.deliveryItem}>
+              <MaterialCommunityIcons name="bike" size={20} color={Colors[theme].primary} />
+              <Text style={[styles.deliveryLabel, { color: Colors[theme]['on-surface-variant'] }]}>Fee</Text>
+              <Text style={[styles.deliveryValue, { color: Colors[theme]['on-surface'] }]}>{formatPrice(restaurant.deliveryFee)}</Text>
             </View>
           </View>
         </View>
@@ -101,7 +166,7 @@ export default function RestaurantDetailsScreen() {
           style={styles.categoryBar}
           contentContainerStyle={styles.categoryContent}
         >
-          {categories.map((cat) => (
+          {CATEGORIES.map((cat) => (
             <TouchableOpacity
               key={cat}
               onPress={() => setActiveCategory(cat)}
@@ -134,10 +199,15 @@ export default function RestaurantDetailsScreen() {
 
         <View style={styles.menuSection}>
           <Text style={[styles.menuSectionTitle, { color: Colors[theme]['on-surface'] }]}>
-            {activeCategory}
+            {activeCategory === 'All' ? 'Menu' : activeCategory}
           </Text>
           <View style={styles.menuGrid}>
-            {(activeCategory === 'Popular' ? mockMenuItems : filteredItems).map((item) => (
+            {filteredItems.length === 0 && (
+              <Text style={[styles.emptyMenu, { color: Colors[theme]['on-surface-variant'] }]}>
+                No items in this category
+              </Text>
+            )}
+            {filteredItems.map((item) => (
               <View key={item.id} style={[styles.menuCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
                 <View style={styles.menuImageContainer}>
                   <Image source={{ uri: item.image }} style={styles.menuImage} />
@@ -170,7 +240,7 @@ export default function RestaurantDetailsScreen() {
         </View>
       </ScrollView>
 
-      {itemCount() > 0 && (
+      {cartCount > 0 && (
         <View style={[styles.cartBar, { backgroundColor: Colors[theme].surface }]}>
           <TouchableOpacity
             style={[styles.checkoutButton, { backgroundColor: Colors[theme].primary }]}
@@ -178,11 +248,11 @@ export default function RestaurantDetailsScreen() {
           >
             <View style={styles.checkoutLeft}>
               <View style={[styles.cartBadge, { backgroundColor: Colors[theme]['on-primary'] }]}>
-                <Text style={[styles.cartBadgeText, { color: Colors[theme].primary }]}>{itemCount()}</Text>
+                <Text style={[styles.cartBadgeText, { color: Colors[theme].primary }]}>{cartCount}</Text>
               </View>
               <Text style={styles.checkoutLabel}>View Cart</Text>
             </View>
-            <Text style={styles.checkoutTotal}>{formatPrice(subtotal())}</Text>
+            <Text style={styles.checkoutTotal}>{formatPrice(cartSubtotal)}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -192,6 +262,9 @@ export default function RestaurantDetailsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  centered: { justifyContent: 'center', alignItems: 'center', gap: Spacing.md },
+  emptyText: { ...Typography['body-md'] },
+  goBack: { ...Typography['label-md'], marginTop: Spacing.sm },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -205,7 +278,6 @@ const styles = StyleSheet.create({
   headerBackBtn: { padding: 4 },
   headerLabel: { ...Typography['label-sm'] },
   headerLocation: { ...Typography.h2 },
-  headerRight: { flexDirection: 'row', gap: Spacing.sm },
   headerActionBtn: {
     width: 40,
     height: 40,
@@ -223,10 +295,13 @@ const styles = StyleSheet.create({
     height: '50%',
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
-  heroBadges: {
+  heroContent: {
     position: 'absolute',
     bottom: 16,
     left: Spacing['container-padding'],
+    right: Spacing['container-padding'],
+  },
+  heroBadges: {
     flexDirection: 'row',
     gap: Spacing.sm,
   },
@@ -238,8 +313,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 2,
   },
-  heroBadgeText: { ...Typography['label-sm'], color: '#ffffff' },
-  restaurantInfo: {
+  heroBadgeText: { ...Typography['label-sm'], fontWeight: '600' },
+  infoCard: {
     marginHorizontal: Spacing['container-padding'],
     marginTop: Spacing.md,
     borderRadius: BorderRadius.xl,
@@ -249,15 +324,27 @@ const styles = StyleSheet.create({
   restaurantName: { ...Typography.display, fontSize: 22 },
   cuisine: { ...Typography['body-sm'], marginTop: 4 },
   metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
     borderTopWidth: 1,
     marginTop: Spacing.md,
     paddingTop: Spacing.md,
+    gap: Spacing.sm,
   },
-  metaItem: { alignItems: 'center', gap: 4 },
-  metaText: { ...Typography['label-sm'] },
-  metaDivider: { width: 1, height: 32 },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  metaText: { ...Typography['body-sm'], flex: 1 },
+  deliveryRow: {
+    flexDirection: 'row',
+    marginTop: Spacing.md,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.md,
+  },
+  deliveryItem: { flex: 1, alignItems: 'center', gap: 2 },
+  deliveryLabel: { ...Typography['label-sm'], fontSize: 10 },
+  deliveryValue: { ...Typography['label-md'], fontWeight: '600' },
+  deliveryDivider: { width: 1, height: 32, alignSelf: 'center' },
   categoryBar: { marginTop: Spacing.md },
   categoryContent: { paddingHorizontal: Spacing['container-padding'], gap: Spacing.sm },
   categoryChip: {
@@ -268,6 +355,7 @@ const styles = StyleSheet.create({
   categoryText: { ...Typography['label-md'] },
   menuSection: { padding: Spacing['container-padding'], paddingBottom: 120 },
   menuSectionTitle: { ...Typography.h2, marginBottom: Spacing.md },
+  emptyMenu: { ...Typography['body-md'], textAlign: 'center', paddingVertical: 40 },
   menuGrid: { gap: Spacing.md },
   menuCard: {
     borderRadius: BorderRadius.xl,
@@ -294,7 +382,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 4,
   },
-  menuItemName: { ...Typography.h2 },
+  menuItemName: { ...Typography.h2, flex: 1 },
   menuItemPrice: { ...Typography.h2 },
   menuItemDesc: { ...Typography['body-sm'] },
   cartBar: {
