@@ -1,6 +1,7 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { AsyncStorage } from '@/utils/storage';
 import { User } from '@/types';
-import { setStoredToken, clearStoredToken } from '@/services/api';
 
 interface AuthState {
   user: User | null;
@@ -8,56 +9,59 @@ interface AuthState {
   isLoading: boolean;
   setUser: (user: User) => void;
   setToken: (token: string) => void;
-  login: (phone: string) => Promise<{ requiresOTP: boolean }>;
-  verifyOTP: (code: string) => Promise<void>;
+  sendOtp: (contact: string, method: 'sms' | 'email') => Promise<void>;
+  verifyOTP: (contact: string, code: string, name?: string) => Promise<void>;
   logout: () => void;
-  hydrate: (user: User, token: string) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
-  isLoading: true,
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      token: null,
+      isLoading: false,
 
-  setUser: (user) => set({ user }),
-  setToken: (token) => {
-    setStoredToken(token);
-    set({ token });
-  },
+      setUser: (user) => set({ user }),
+      setToken: (token) => set({ token }),
 
-  login: async (phone: string) => {
-    set({ isLoading: true });
-    try {
-      const { authService } = await import('@/services/auth.service');
-      const response = await authService.login(phone);
-      set({ isLoading: false });
-      return response;
-    } catch {
-      set({ isLoading: false });
-      throw new Error('Login failed');
+      sendOtp: async (contact: string, method: 'sms' | 'email') => {
+        set({ isLoading: true });
+        try {
+          const { authService } = await import('@/services/auth.service');
+          await authService.sendOtp(contact, method);
+          set({ isLoading: false });
+        } catch (err: any) {
+          set({ isLoading: false });
+          const message = err?.response?.data?.message
+            || err?.response?.data?.errors?.[0]?.message
+            || 'Failed to send OTP';
+          throw new Error(message);
+        }
+      },
+
+      verifyOTP: async (contact: string, code: string, name?: string) => {
+        set({ isLoading: true });
+        try {
+          const { authService } = await import('@/services/auth.service');
+          const { user, token } = await authService.verifyOTP(contact, code, name);
+          set({ user, token, isLoading: false });
+        } catch (err: any) {
+          set({ isLoading: false });
+          const message = err?.response?.data?.message
+            || err?.response?.data?.errors?.[0]?.message
+            || 'Verification failed';
+          throw new Error(message);
+        }
+      },
+
+      logout: () => {
+        set({ user: null, token: null });
+      },
+    }),
+    {
+      name: 'auth-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({ user: state.user, token: state.token }),
     }
-  },
-
-  verifyOTP: async (code: string) => {
-    set({ isLoading: true });
-    try {
-      const { authService } = await import('@/services/auth.service');
-      const { user, token } = await authService.verifyOTP(code);
-      setStoredToken(token);
-      set({ user, token, isLoading: false });
-    } catch {
-      set({ isLoading: false });
-      throw new Error('Verification failed');
-    }
-  },
-
-  logout: () => {
-    clearStoredToken();
-    set({ user: null, token: null });
-  },
-
-  hydrate: (user, token) => {
-    setStoredToken(token);
-    set({ user, token, isLoading: false });
-  },
-}));
+  )
+);
