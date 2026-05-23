@@ -1,9 +1,9 @@
 export interface User {
   id: string;
-  phone: string;
+  phone?: string;
   name: string;
   avatar?: string;
-  email?: string;
+  email: string;
   role: 'customer' | 'restaurant_owner' | 'driver';
   createdAt: string;
 }
@@ -223,6 +223,6 @@ export interface MapStyle {
 }
 
 export const MAPBOX_STYLES: MapStyle = {
-  light: 'mapbox://styles/mapbox/light-v11',
-  dark: 'mapbox://styles/mapbox/dark-v11',
+  light: 'mapbox://styles/mapbox/streets-v12',
+  dark: 'mapbox://styles/mapbox/streets-v12',
 };

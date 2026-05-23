@@ -9,8 +9,8 @@ interface AuthState {
   isLoading: boolean;
   setUser: (user: User) => void;
   setToken: (token: string) => void;
-  sendOtp: (contact: string, method: 'sms' | 'email') => Promise<void>;
-  verifyOTP: (contact: string, code: string, name?: string) => Promise<void>;
+  sendOtp: (email: string, phone: string) => Promise<void>;
+  verifyOTP: (email: string, code: string, name?: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -24,11 +24,11 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user }),
       setToken: (token) => set({ token }),
 
-      sendOtp: async (contact: string, method: 'sms' | 'email') => {
+      sendOtp: async (email: string, phone: string) => {
         set({ isLoading: true });
         try {
           const { authService } = await import('@/services/auth.service');
-          await authService.sendOtp(contact, method);
+          await authService.sendOtp(email, phone);
           set({ isLoading: false });
         } catch (err: any) {
           set({ isLoading: false });
@@ -39,11 +39,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      verifyOTP: async (contact: string, code: string, name?: string) => {
+      verifyOTP: async (email: string, code: string, name?: string) => {
         set({ isLoading: true });
         try {
           const { authService } = await import('@/services/auth.service');
-          const { user, token } = await authService.verifyOTP(contact, code, name);
+          const { user, token } = await authService.verifyOTP(email, code, name);
           set({ user, token, isLoading: false });
         } catch (err: any) {
           set({ isLoading: false });
