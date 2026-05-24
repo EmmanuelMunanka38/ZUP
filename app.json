@@ -67,7 +67,8 @@
       "router": {},
       "eas": {
         "projectId": "44d147c3-ea46-465f-9ed2-8fc0015e6fd3"
-      }
+      },
+      "apiUrl": "https://zupbackend-production.up.railway.app"
     }
   }
 }

@@ -12,31 +12,31 @@ export default function AuthScreen() {
   const { mode: modeParam, type } = useLocalSearchParams<{ mode?: string; type?: string }>();
   const theme = 'light';
   const [mode, setMode] = useState<'sign-in' | 'sign-up'>(modeParam === 'sign-up' ? 'sign-up' : 'sign-in');
-  const [contact, setContact] = useState('');
-  const [otpMethod, setOtpMethod] = useState<'sms' | 'email'>('sms');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { sendOtp } = useAuthStore();
 
-  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
-  const isPhone = /^\+?\d{7,15}$/.test(contact.replace(/[\s-]/g, ''));
-  const isContactValid = isEmail || isPhone;
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isPhoneValid = /^\+?\d{7,15}$/.test(phone.replace(/[\s-]/g, ''));
   const isNameValid = mode === 'sign-up' ? name.trim().length >= 2 : true;
-  const canSubmit = isContactValid && isNameValid && !isSubmitting;
+  const canSubmit = isEmailValid && isPhoneValid && isNameValid && !isSubmitting;
 
   const handleSendOtp = useCallback(async () => {
     if (!canSubmit) return;
     setError('');
     setIsSubmitting(true);
 
-    const sanitizedContact = isEmail ? contact.trim().toLowerCase() : contact.trim().replace(/[\s-]/g, '');
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPhone = phone.trim().replace(/[\s-]/g, '');
 
     try {
-      await sendOtp(sanitizedContact, otpMethod);
+      await sendOtp(cleanEmail, cleanPhone);
       const params = new URLSearchParams({
-        contact: sanitizedContact,
-        method: otpMethod,
+        email: cleanEmail,
+        phone: cleanPhone,
         mode,
       });
       if (mode === 'sign-up') params.set('name', name.trim());
@@ -46,21 +46,12 @@ export default function AuthScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [canSubmit, contact, otpMethod, mode, name, sendOtp, isEmail]);
+  }, [canSubmit, email, phone, mode, name, sendOtp]);
 
   const switchMode = useCallback(() => {
     setMode((m) => (m === 'sign-in' ? 'sign-up' : 'sign-in'));
     setError('');
   }, []);
-
-  const detectMethod = (text: string) => {
-    setContact(text);
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
-      setOtpMethod('email');
-    } else if (text.length > 0) {
-      setOtpMethod('sms');
-    }
-  };
 
   return (
     <KeyboardAvoidingView
@@ -128,7 +119,7 @@ export default function AuthScreen() {
           </Text>
           <Text style={[styles.subtitle, { color: Colors[theme]['on-surface-variant'] }]}>
             {mode === 'sign-in'
-              ? 'Enter your phone or email to receive a code'
+              ? 'Enter your email and phone to receive a code'
               : 'Enter your details to get started'}
           </Text>
 
@@ -148,7 +139,7 @@ export default function AuthScreen() {
                 <MaterialCommunityIcons name="account-outline" size={20} color={Colors[theme]['on-surface-variant']} />
                 <TextInput
                   style={[styles.input, { color: Colors[theme]['on-surface'] }]}
-                  placeholder="Name "
+                  placeholder="Name"
                   placeholderTextColor={Colors[theme]['on-surface-variant'] + '80'}
                   value={name}
                   onChangeText={setName}
@@ -160,70 +151,40 @@ export default function AuthScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>
-              Phone Number or Email
+              Email
             </Text>
-            <View style={[styles.inputWrap, { backgroundColor: Colors[theme]['surface-container-low'], borderColor: contact ? (isContactValid ? Colors[theme].primary : Colors[theme].tertiary) : Colors[theme]['outline-variant'] }]}>
-              <MaterialCommunityIcons
-                name={isEmail ? 'email-outline' : 'phone-outline'}
-                size={20}
-                color={Colors[theme]['on-surface-variant']}
-              />
+            <View style={[styles.inputWrap, { backgroundColor: Colors[theme]['surface-container-low'], borderColor: email ? (isEmailValid ? Colors[theme].primary : Colors[theme].tertiary) : Colors[theme]['outline-variant'] }]}>
+              <MaterialCommunityIcons name="email-outline" size={20} color={Colors[theme]['on-surface-variant']} />
               <TextInput
                 style={[styles.input, { color: Colors[theme]['on-surface'] }]}
-                placeholder="Email or phone "
+                placeholder="your@email.com"
                 placeholderTextColor={Colors[theme]['on-surface-variant'] + '80'}
-                value={contact}
-                onChangeText={detectMethod}
-                keyboardType={otpMethod === 'email' ? 'email-address' : 'phone-pad'}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
               />
             </View>
           </View>
 
-          {!isEmail && (
-            <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>
-                Receive OTP via
-              </Text>
-              <View style={styles.methodRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.methodBtn,
-                    otpMethod === 'sms' && { backgroundColor: Colors[theme].primary, borderColor: Colors[theme].primary },
-                  ]}
-                  onPress={() => setOtpMethod('sms')}
-                  activeOpacity={0.7}
-                >
-                  <MaterialCommunityIcons
-                    name="message-text-outline"
-                    size={18}
-                    color={otpMethod === 'sms' ? '#ffffff' : Colors[theme]['on-surface-variant']}
-                  />
-                  <Text style={[styles.methodText, { color: otpMethod === 'sms' ? '#ffffff' : Colors[theme]['on-surface-variant'] }]}>
-                    SMS
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.methodBtn,
-                    otpMethod === 'email' && { backgroundColor: Colors[theme].primary, borderColor: Colors[theme].primary },
-                  ]}
-                  onPress={() => setOtpMethod('email')}
-                  activeOpacity={0.7}
-                >
-                  <MaterialCommunityIcons
-                    name="email-outline"
-                    size={18}
-                    color={otpMethod === 'email' ? '#ffffff' : Colors[theme]['on-surface-variant']}
-                  />
-                  <Text style={[styles.methodText, { color: otpMethod === 'email' ? '#ffffff' : Colors[theme]['on-surface-variant'] }]}>
-                    Email
-                  </Text>
-                </TouchableOpacity>
-              </View>
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>
+              Phone Number
+            </Text>
+            <View style={[styles.inputWrap, { backgroundColor: Colors[theme]['surface-container-low'], borderColor: phone ? (isPhoneValid ? Colors[theme].primary : Colors[theme].tertiary) : Colors[theme]['outline-variant'] }]}>
+              <MaterialCommunityIcons name="phone-outline" size={20} color={Colors[theme]['on-surface-variant']} />
+              <TextInput
+                style={[styles.input, { color: Colors[theme]['on-surface'] }]}
+                placeholder="+255 7## ### ###"
+                placeholderTextColor={Colors[theme]['on-surface-variant'] + '80'}
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+                autoCapitalize="none"
+              />
             </View>
-          )}
+          </View>
 
           <TouchableOpacity
             style={[
@@ -283,9 +244,6 @@ const styles = StyleSheet.create({
   inputLabel: { ...Typography['label-sm'], fontWeight: '500', marginLeft: 4 },
   inputWrap: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.xl, borderWidth: 1.5, height: 52 },
   input: { flex: 1, ...Typography['body-md'], height: '100%' },
-  methodRow: { flexDirection: 'row', gap: Spacing.sm },
-  methodBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, borderWidth: 1.5, borderColor: Colors.light['outline-variant'] },
-  methodText: { ...Typography['label-md'], fontWeight: '600' },
   submitBtn: { paddingVertical: Spacing.md, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center', height: 52 },
   submitText: { ...Typography['label-md'], fontWeight: '700', fontSize: 16 },
   switchRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Spacing.xs, marginTop: Spacing.lg },

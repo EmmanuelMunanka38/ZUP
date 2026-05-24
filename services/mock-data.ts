@@ -3,8 +3,8 @@ import { Images } from '@/constants/images';
 
 export const mockUsers: User[] = [
   { id: 'u1', phone: '+255712345678', name: 'Jabari Mwangi', email: 'jabari.m@piki.food', role: 'customer', createdAt: '2024-01-15' },
-  { id: 'u2', phone: '+255712345679', name: 'Mama Africa Cuisine', role: 'restaurant_owner', createdAt: '2023-11-01' },
-  { id: 'u3', phone: '+255712345680', name: 'Juma Bakari', role: 'driver', createdAt: '2024-02-20' },
+  { id: 'u2', phone: '+255712345679', name: 'Mama Africa Cuisine', email: 'mama@africacuisine.co.tz', role: 'restaurant_owner', createdAt: '2023-11-01' },
+  { id: 'u3', phone: '+255712345680', name: 'Juma Bakari', email: 'juma.bakari@piki.food', role: 'driver', createdAt: '2024-02-20' },
 ];
 
 export const mockCategories: Category[] = [

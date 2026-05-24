@@ -67,7 +67,7 @@ class TrackingService {
       return;
     }
 
-    const baseUrl = url || process.env.EXPO_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3000';
+    const baseUrl = url || process.env.EXPO_PUBLIC_API_URL || 'https://zup-backend-dhkw.onrender.com';
     const token = useAuthStore.getState().token;
 
     try {
