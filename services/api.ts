@@ -1,16 +1,8 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
-import Constants from 'expo-constants';
 
-const EXPO_API_URL = process.env.EXPO_PUBLIC_API_URL || (Constants.expoConfig?.extra?.apiUrl as string) || 'https://zupbackend-production.up.railway.app';
-const BASE_URL = EXPO_API_URL;
-
-// Debug: print where the app is reading the API URL from at runtime/build
-console.log('🌐 EXPO_PUBLIC_API_URL (process.env):', process.env.EXPO_PUBLIC_API_URL);
-console.log('📡 Expo extra.apiUrl (Constants):', Constants.expoConfig?.extra?.apiUrl);
-console.log('📡 Axios is pointing to:', BASE_URL);
-
+const BASE_URL = (process.env.EXPO_PUBLIC_API_URL || 'https://zup-backend-dhkw.onrender.com') + '/api';
 
 export const api = axios.create({
   baseURL: BASE_URL,
@@ -20,6 +12,23 @@ export const api = axios.create({
   },
 });
 
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (err: any) => void;
+}> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token!);
+    }
+  });
+  failedQueue = [];
+};
+
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = useAuthStore.getState().token;
@@ -28,16 +37,56 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
-    if (error.response?.status === 401) {
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any;
+
+    if (error.response?.status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      }).then((token) => {
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return api(originalRequest);
+      });
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    const refreshToken = useAuthStore.getState().refreshToken;
+    if (!refreshToken) {
+      isRefreshing = false;
       useAuthStore.getState().logout();
       router.replace('/onboarding');
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
-  }
+
+    try {
+      const { data } = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken });
+      const { accessToken: newAccessToken, refreshToken: newRefreshToken } = data.data;
+
+      useAuthStore.getState().setToken(newAccessToken);
+      useAuthStore.getState().setRefreshToken(newRefreshToken);
+
+      processQueue(null, newAccessToken);
+
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+      return api(originalRequest);
+    } catch (refreshError) {
+      processQueue(refreshError, null);
+      useAuthStore.getState().logout();
+      router.replace('/onboarding');
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
+  },
 );

@@ -67,7 +67,7 @@ class TrackingService {
       return;
     }
 
-    const baseUrl = url || process.env.EXPO_PUBLIC_API_URL?.replace('/api', '') || 'https://zupbackend-production.up.railway.app';
+    const baseUrl = url || process.env.EXPO_PUBLIC_API_URL || 'https://zup-backend-dhkw.onrender.com';
     const token = useAuthStore.getState().token;
 
     try {
