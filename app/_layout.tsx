@@ -13,6 +13,7 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { useAuthStore } from '@/store/authStore';
 import { useLocationStore } from '@/store/locationStore';
+import { useCartStore } from '@/store/cartStore';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -63,6 +64,12 @@ export default function RootLayout() {
     useLocationStore.getState().initialize();
     useLocationStore.getState().startWatching();
   }, []);
+
+  useEffect(() => {
+    if (hydrated && useAuthStore.getState().token) {
+      useCartStore.getState().loadCart();
+    }
+  }, [hydrated]);
 
   const fontsReady = fontsLoaded || fontError || fontTimedOut;
   const ready = fontsReady && hydrated;

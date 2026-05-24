@@ -59,7 +59,7 @@ export const MapboxMap = forwardRef<MapboxMapRef, MapboxMapProps>(function Mapbo
 
   const html = useMemo(() => {
     const accessToken = MAPBOX_ACCESS_TOKEN;
-    const mapStyle = MAPBOX_STYLES.light;
+    const mapStyle = process.env.EXPO_PUBLIC_MAPBOX_STYLE || MAPBOX_STYLES.light;
     return generateMapHTML(accessToken, mapStyle);
   }, []);
 

@@ -21,9 +21,9 @@ function routeByRole(role: string) {
 }
 
 export default function VerifyOTPScreen() {
-  const { contact, method, mode, name } = useLocalSearchParams<{
-    contact: string;
-    method: string;
+  const { email, phone, mode, name } = useLocalSearchParams<{
+    email: string;
+    phone: string;
     mode?: string;
     name?: string;
   }>();
@@ -61,12 +61,12 @@ export default function VerifyOTPScreen() {
   const isComplete = otp.every((d) => d !== '');
 
   const handleVerify = async () => {
-    if (!isComplete || isLoading || !contact || verifyingRef.current) return;
+    if (!isComplete || isLoading || !email || verifyingRef.current) return;
     setError('');
     verifyingRef.current = true;
     try {
       const code = otp.join('');
-      await verifyOTP(contact, code, mode === 'sign-up' ? name : undefined);
+      await verifyOTP(email, code, mode === 'sign-up' ? name : undefined);
       const { user: u } = useAuthStore.getState();
       if (u) {
         routeByRole(u.role);
@@ -84,22 +84,19 @@ export default function VerifyOTPScreen() {
     setTimer(45);
     setOtp(['', '', '', '']);
     inputRefs.current[0]?.focus();
-    if (contact && method) {
+    if (email && phone) {
       try {
-        await sendOtp(contact, method as 'sms' | 'email');
+        await sendOtp(email, phone);
       } catch {
         // silent
       }
     }
   };
 
-  const displayContact = contact || '+255 7## ### 123';
-  const isEmail = contact ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact) : false;
-  const maskedContact = isEmail
-    ? contact!.replace(/(.{2})(.*)(@.*)/, '$1****$3')
-    : contact
-      ? contact!.replace(/(\d{3})\d{4,}(\d{2})/, '$1****$2')
-      : displayContact;
+  const isEmailContact = email ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) : false;
+  const maskedContact = isEmailContact
+    ? email.replace(/(.{2})(.*)(@.*)/, '$1****$3')
+    : email;
 
   return (
     <ScrollView
@@ -192,7 +189,7 @@ export default function VerifyOTPScreen() {
           />
 
           <PikiButton
-            title="Change phone number"
+            title="Change email"
             variant="outline"
             onPress={() => router.back()}
             fullWidth
