@@ -20,6 +20,7 @@ export interface Restaurant {
   deliveryTime: string;
   distance: string;
   address: string;
+  location: Coordinate;
   isOpen: boolean;
   openingHours: string;
   closingHours: string;
