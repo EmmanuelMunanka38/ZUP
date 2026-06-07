@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { mapService } from '@/services/map.service';
 import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
@@ -14,8 +15,6 @@ import { formatPrice, getStatusLabel } from '@/utils/format';
 import { OrderStatus, Coordinate } from '@/types';
 import { MapboxMap } from '@/components/map/MapboxMap';
 import { MapControls } from '@/components/map/MapControls';
-
-const DAR_CENTER: Coordinate = { latitude: -6.7924, longitude: 39.2083 };
 
 const STATUS_STEPS = [
   { key: 'confirmed', label: 'Restaurant confirmed', icon: 'clipboard-check-outline' as const },
@@ -44,6 +43,8 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: '#ba1a1a',
 };
 
+const DAR_CENTER = { latitude: -6.7924, longitude: 39.2083 };
+
 export default function TrackOrderScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = 'light';
@@ -58,6 +59,15 @@ export default function TrackOrderScreen() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sheetIndex, setSheetIndex] = useState(0);
+  const [routeCoordinates, setRouteCoordinates] = useState<[number, number][] | null>(null);
+  const [isFollowMode, setIsFollowMode] = useState(true);
+  const [hasFittedBounds, setHasFittedBounds] = useState(false);
+
+  const [initialRoute, setInitialRoute] = useState<{
+    coordinates: [number, number][];
+    minutes: number;
+    arrival: string;
+  } | null>(null);
 
   const {
     estimatedMinutes,
@@ -70,17 +80,24 @@ export default function TrackOrderScreen() {
   } = useTrackingStore();
 
   const userLocation = useLocationStore((s) => s.currentLocation);
-  const deliveryCoord = userLocation || DAR_CENTER;
 
   useEffect(() => {
     if (!id) return;
     setIsLoading(true);
     loadCurrentOrder(id)
-      .then(() => connectTracking(id))
+      .then(() => {
+        const order = useOrderStore.getState().currentOrder;
+        const restLoc = order?.restaurant?.location;
+        const userLoc = useLocationStore.getState().currentLocation;
+        connectTracking(id, undefined, {
+          restaurantLocation: restLoc,
+          deliveryLocation: userLoc || undefined,
+        });
+      })
       .catch(() => setError('Failed to load order'))
       .finally(() => setIsLoading(false));
     return () => disconnectTracking();
-  }, [id, loadCurrentOrder, connectTracking, disconnectTracking]);
+  }, [id]);
 
   useEffect(() => {
     Animated.timing(statusAnim, {
@@ -126,11 +143,77 @@ export default function TrackOrderScreen() {
 
   const statusIndex = order ? ORDER_STATUS_MAP[order.status] ?? -1 : -1;
 
+  const restaurantLocation = order?.restaurant?.location;
+
+  useEffect(() => {
+    if (route?.coordinates) {
+      setRouteCoordinates(route.coordinates.map((c) => [c.longitude, c.latitude] as [number, number]));
+    }
+  }, [route]);
+
+  useEffect(() => {
+    if (!driverLocation || !userLocation || routeCoordinates) return;
+    let cancelled = false;
+    const fetchRoute = async () => {
+      const result = await mapService.fetchRoute(
+        [driverLocation.longitude, driverLocation.latitude],
+        [userLocation.longitude, userLocation.latitude],
+      );
+      if (result && !cancelled) {
+        setRouteCoordinates(result.coordinates);
+      }
+    };
+    fetchRoute();
+    return () => { cancelled = true; };
+  }, [driverLocation?.latitude, driverLocation?.longitude]);
+
+  useEffect(() => {
+    if (!restaurantLocation || !userLocation || initialRoute) return;
+    let cancelled = false;
+    const fetchInitialRoute = async () => {
+      const result = await mapService.fetchRoute(
+        [restaurantLocation.longitude, restaurantLocation.latitude],
+        [userLocation.longitude, userLocation.latitude],
+      );
+      if (result && !cancelled) {
+        const mins = Math.round(result.duration / 60);
+        setInitialRoute({
+          coordinates: result.coordinates,
+          minutes: mins,
+          arrival: new Date(Date.now() + result.duration * 1000).toLocaleTimeString('en-US', {
+            hour: 'numeric', minute: '2-digit', hour12: true,
+          }),
+        });
+      }
+    };
+    fetchInitialRoute();
+    return () => { cancelled = true; };
+  }, [restaurantLocation?.latitude, restaurantLocation?.longitude, userLocation?.latitude, userLocation?.longitude]);
+
+  useEffect(() => {
+    if (isFollowMode && driverLocation && hasFittedBounds) {
+      mapRef.current?.flyTo(driverLocation, 15, 1500);
+    }
+  }, [driverLocation?.latitude, driverLocation?.longitude, isFollowMode, hasFittedBounds]);
+
+  const handleMapLoaded = useCallback(() => {
+    if (!hasFittedBounds) {
+      const points = [restaurantLocation || DAR_CENTER, userLocation, driverLocation].filter(Boolean) as Coordinate[];
+      if (points.length < 2) return;
+      const lats = points.map((p) => p.latitude);
+      const lngs = points.map((p) => p.longitude);
+      const ne = { latitude: Math.max(...lats), longitude: Math.max(...lngs) };
+      const sw = { latitude: Math.min(...lats), longitude: Math.min(...lngs) };
+      mapRef.current?.fitBounds(ne, sw, 100);
+      setHasFittedBounds(true);
+    }
+  }, [hasFittedBounds, restaurantLocation, userLocation, driverLocation]);
+
   const handleRecenter = useCallback(() => {
     if (driverLocation) {
       mapRef.current?.flyTo(driverLocation, 15);
-    } else {
-      mapRef.current?.flyTo(DAR_CENTER, 14);
+    } else if (userLocation) {
+      mapRef.current?.flyTo(userLocation, 14);
     }
   }, [driverLocation]);
 
@@ -141,6 +224,12 @@ export default function TrackOrderScreen() {
       handleRecenter();
     }
   }, [userLocation, handleRecenter]);
+
+  useEffect(() => {
+    if (userLocation) {
+      mapRef.current?.flyTo(userLocation, 15);
+    }
+  }, [userLocation]);
 
   const handleCall = useCallback(() => {
     if (rider?.phone) {
@@ -178,18 +267,53 @@ export default function TrackOrderScreen() {
         {/* Full-screen Map */}
         <MapboxMap
           ref={mapRef}
-          initialCamera={{ latitude: DAR_CENTER.latitude, longitude: DAR_CENTER.longitude, zoom: 14 }}
+          initialCamera={{
+            latitude: userLocation?.latitude || DAR_CENTER.latitude,
+            longitude: userLocation?.longitude || DAR_CENTER.longitude,
+            zoom: 14,
+          }}
           showUserLocation
+          onMapLoaded={handleMapLoaded}
           style={StyleSheet.absoluteFillObject}
           markers={[
-            { id: 'restaurant', latitude: -6.7924, longitude: 39.2083, title: order.restaurant.name, icon: 'store', color: Colors[theme].primary },
-            ...(driverLocation ? [{ id: 'driver', latitude: driverLocation.latitude, longitude: driverLocation.longitude, title: 'Driver', icon: 'bike', color: Colors[theme].primary, rotation: driverHeading || 0 }] : []),
-            { id: 'delivery', latitude: deliveryCoord.latitude, longitude: deliveryCoord.longitude, title: 'Delivery', icon: 'map-marker', color: Colors[theme]['secondary-container'] },
+            {
+              id: 'restaurant',
+              latitude: restaurantLocation?.latitude || DAR_CENTER.latitude,
+              longitude: restaurantLocation?.longitude || DAR_CENTER.longitude,
+              title: order.restaurant.name,
+              icon: 'store',
+              color: Colors[theme].primary,
+            },
+            ...(driverLocation
+              ? [{
+                  id: 'driver',
+                  latitude: driverLocation.latitude,
+                  longitude: driverLocation.longitude,
+                  title: 'Driver',
+                  icon: 'bike',
+                  color: Colors[theme].primary,
+                  rotation: driverHeading || 0,
+                }]
+              : []),
+            ...(userLocation
+              ? [{
+                  id: 'delivery',
+                  latitude: userLocation.latitude,
+                  longitude: userLocation.longitude,
+                  title: 'Delivery',
+                  icon: 'map-marker',
+                  color: Colors[theme]['secondary-container'],
+                }]
+              : []),
           ]}
-          routePolyline={driverLocation ? {
-            coordinates: [[driverLocation.longitude, driverLocation.latitude], [deliveryCoord.longitude, deliveryCoord.latitude]],
-            color: Colors[theme].primary,
-            width: 4,
+          routePolyline={routeCoordinates && routeCoordinates.length >= 2 ? {
+            coordinates: routeCoordinates,
+            color: '#0fa958',
+            width: 5,
+          } : initialRoute?.coordinates ? {
+            coordinates: initialRoute.coordinates,
+            color: '#0fa958',
+            width: 5,
           } : undefined}
         />
 
@@ -201,7 +325,7 @@ export default function TrackOrderScreen() {
           <View style={styles.headerCenter}>
             <Text style={styles.headerLabel}>Order #{order.orderNumber}</Text>
             <Text style={[styles.headerEta, { color: '#ffffff' }]}>
-              {estimatedArrival || (order.estimatedDelivery
+              {estimatedArrival || initialRoute?.arrival || (order.estimatedDelivery
                 ? new Date(order.estimatedDelivery).toLocaleTimeString('en-US', {
                     hour: 'numeric', minute: '2-digit', hour12: true,
                   })
@@ -221,11 +345,31 @@ export default function TrackOrderScreen() {
 
         {/* Map controls */}
         <MapControls
-          onRecenter={handleRecenter}
-          onMyLocation={handleMyLocation}
+          onRecenter={() => { setIsFollowMode(false); handleRecenter(); }}
+          onMyLocation={() => { setIsFollowMode(false); handleMyLocation(); }}
           showZoom={false}
           showMyLocation
         />
+
+        {/* Follow driver toggle */}
+        {driverLocation && (
+          <TouchableOpacity
+            onPress={() => setIsFollowMode((p) => !p)}
+            style={[
+              styles.followBtn,
+              {
+                backgroundColor: isFollowMode ? Colors[theme].primary : Colors[theme].surface,
+              },
+            ]}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons
+              name="navigation"
+              size={20}
+              color={isFollowMode ? '#ffffff' : Colors[theme].primary}
+            />
+          </TouchableOpacity>
+        )}
 
         {/* Bottom Sheet */}
         <BottomSheet
@@ -254,7 +398,9 @@ export default function TrackOrderScreen() {
                   {getStatusLabel(order.status)}
                 </Text>
                 <Text style={[styles.collapsedEta, { color: Colors[theme]['on-surface-variant'] }]}>
-                  {estimatedMinutes > 0 ? `${estimatedMinutes} min away` : 'Arriving now'}
+                  {(estimatedMinutes || initialRoute?.minutes || 0) > 0
+                    ? `${estimatedMinutes || initialRoute?.minutes} min away`
+                    : 'Arriving now'}
                 </Text>
               </View>
               {rider && (
@@ -303,7 +449,7 @@ export default function TrackOrderScreen() {
                 <View style={styles.infoContent}>
                   <Text style={[styles.infoLabel, { color: Colors[theme]['on-surface-variant'] }]}>Estimated arrival</Text>
                   <Text style={[styles.infoValue, { color: Colors[theme]['on-surface'] }]}>
-                    {estimatedArrival || (order.estimatedDelivery
+                    {estimatedArrival || initialRoute?.arrival || (order.estimatedDelivery
                       ? new Date(order.estimatedDelivery).toLocaleTimeString('en-US', {
                           hour: 'numeric', minute: '2-digit', hour12: true,
                         })
@@ -317,9 +463,11 @@ export default function TrackOrderScreen() {
                 <View style={styles.infoContent}>
                   <Text style={[styles.infoLabel, { color: Colors[theme]['on-surface-variant'] }]}>Delivering to</Text>
                   <Text style={[styles.infoValue, { color: Colors[theme]['on-surface'] }]}>
-                    {typeof order.deliveryAddress === 'object' && 'street' in order.deliveryAddress
-                      ? `${order.deliveryAddress.street}, ${order.deliveryAddress.area}`
-                      : 'Your location'}
+                    {userLocation
+                      ? 'Your Location'
+                      : typeof order.deliveryAddress === 'object' && 'street' in order.deliveryAddress
+                        ? `${order.deliveryAddress.street}, ${order.deliveryAddress.area}`
+                        : 'Your location'}
                   </Text>
                 </View>
               </View>
@@ -637,5 +785,19 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
+  },
+
+  // Follow toggle
+  followBtn: {
+    position: 'absolute',
+    right: Spacing.md,
+    bottom: Platform.OS === 'ios' ? 244 : 224,
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.md,
+    zIndex: 10,
   },
 });

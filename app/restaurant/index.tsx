@@ -322,7 +322,7 @@ export default function RestaurantDashboardScreen() {
           <MaterialCommunityIcons name="food" size={24} color={Colors[theme]['on-surface-variant']} />
           <Text style={[styles.navLabel, { color: Colors[theme]['on-surface-variant'] }]}>Menu</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem} onPress={() => setActiveTab('new')}>
           <MaterialCommunityIcons name="receipt" size={24} color={Colors[theme]['on-surface-variant']} />
           <Text style={[styles.navLabel, { color: Colors[theme]['on-surface-variant'] }]}>Orders</Text>
         </TouchableOpacity>

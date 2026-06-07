@@ -1,8 +1,8 @@
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { useDriverStore } from '@/store/driverStore';
 import { useLocationStore } from '@/store/locationStore';
 import { useDriverTracking } from '@/hooks/use-driver-tracking';
@@ -10,10 +10,6 @@ import { driverService } from '@/services/driver.service';
 import { MapboxMap } from '@/components/map/MapboxMap';
 import { MapControls } from '@/components/map/MapControls';
 import { Coordinate } from '@/types';
-
-const DAR_CENTER: Coordinate = { latitude: -6.7924, longitude: 39.2083 };
-const RESTAURANT_LOCATION: Coordinate = { latitude: -6.789, longitude: 39.205 };
-const CUSTOMER_LOCATION: Coordinate = { latitude: -6.797, longitude: 39.215 };
 
 type DriverStep = 'to_pickup' | 'picked_up' | 'to_dropoff' | 'arrived' | 'completed';
 
@@ -32,7 +28,7 @@ export default function ActiveDeliveryScreen() {
     estimatedMinutes,
   } = useDriverTracking(activeDelivery?.orderId || 'o1');
 
-  const displayLocation = driverLocation || currentLocation || DAR_CENTER;
+  const displayLocation = driverLocation || currentLocation || { latitude: -6.7924, longitude: 39.2083 };
 
   const handleRecenter = useCallback(() => {
     mapRef.current?.flyTo(displayLocation, 15);
@@ -41,6 +37,12 @@ export default function ActiveDeliveryScreen() {
   const handleMyLocation = useCallback(() => {
     if (currentLocation) {
       mapRef.current?.flyTo(currentLocation, 16);
+    }
+  }, [currentLocation]);
+
+  useEffect(() => {
+    if (currentLocation) {
+      mapRef.current?.flyTo(currentLocation, 15);
     }
   }, [currentLocation]);
 
@@ -81,20 +83,20 @@ export default function ActiveDeliveryScreen() {
         initialCamera={{ latitude: displayLocation.latitude, longitude: displayLocation.longitude, zoom: 15 }}
         style={styles.mapFull}
         markers={[
-          { id: 'restaurant', latitude: RESTAURANT_LOCATION.latitude, longitude: RESTAURANT_LOCATION.longitude, title: activeDelivery?.restaurant.name || 'Restaurant', icon: 'store', color: Colors[theme].primary },
-          { id: 'customer', latitude: CUSTOMER_LOCATION.latitude, longitude: CUSTOMER_LOCATION.longitude, title: 'Customer', icon: 'map-marker', color: Colors[theme]['secondary-container'] },
+          { id: 'restaurant', latitude: displayLocation.latitude + 0.002, longitude: displayLocation.longitude - 0.002, title: activeDelivery?.restaurant.name || 'Restaurant', icon: 'store', color: Colors[theme].primary },
+          { id: 'customer', latitude: displayLocation.latitude - 0.002, longitude: displayLocation.longitude + 0.002, title: 'Customer', icon: 'map-marker', color: Colors[theme]['secondary-container'] },
           { id: 'driver', latitude: displayLocation.latitude, longitude: displayLocation.longitude, title: 'Driver', icon: 'bike', color: Colors[theme].primary, rotation: driverHeading || 0 },
         ]}
         routePolyline={{
-          coordinates: [[displayLocation.longitude, displayLocation.latitude], [step === 'picked_up' || step === 'to_dropoff' || step === 'arrived' ? CUSTOMER_LOCATION.longitude : RESTAURANT_LOCATION.longitude, step === 'picked_up' || step === 'to_dropoff' || step === 'arrived' ? CUSTOMER_LOCATION.latitude : RESTAURANT_LOCATION.latitude]],
+          coordinates: [[displayLocation.longitude, displayLocation.latitude], [displayLocation.longitude + 0.002, displayLocation.latitude - 0.002]],
           color: Colors[theme].primary,
           width: 4,
         }}
       />
 
-      <View style={[styles.topBar, { backgroundColor: 'rgba(252,249,248,0.95)' }]}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={28} color={Colors[theme].primary} />
+      <View style={[styles.topBar, { backgroundColor: Colors[theme].surface, borderBottomColor: Colors[theme]['surface-container'] }]}>
+        <TouchableOpacity onPress={() => router.back()} style={[styles.topBarBack, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+          <MaterialCommunityIcons name="arrow-left" size={22} color={Colors[theme]['on-surface']} />
         </TouchableOpacity>
         <View style={styles.topBarCenter}>
           <Text style={[styles.topBarLabel, { color: Colors[theme]['on-surface-variant'] }]}>
@@ -104,7 +106,7 @@ export default function ActiveDeliveryScreen() {
             Order #{activeDelivery?.orderId?.substring(0, 8) || 'N/A'}
           </Text>
         </View>
-        <TouchableOpacity style={[styles.reportBtn, { backgroundColor: Colors[theme]['error-container'] }]}>
+        <TouchableOpacity style={[styles.topBarBack, { backgroundColor: Colors[theme]['error-container'] }]}>
           <MaterialCommunityIcons name="alert-circle" size={22} color={Colors[theme].error} />
         </TouchableOpacity>
       </View>
@@ -232,7 +234,7 @@ export default function ActiveDeliveryScreen() {
           </View>
         </View>
 
-        <View style={[styles.itemsCard, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+        <View style={[styles.itemsCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
           <View style={styles.itemsLeft}>
             <View style={[styles.itemsIcon, { backgroundColor: 'rgba(15,169,88,0.15)' }]}>
               <MaterialCommunityIcons name="shopping-outline" size={20} color={Colors[theme]['on-primary-container']} />
@@ -328,12 +330,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing['container-padding'],
     paddingTop: 56,
     paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
     zIndex: 10,
   },
   topBarCenter: { flex: 1, alignItems: 'center' },
   topBarLabel: { ...Typography['label-sm'], textTransform: 'uppercase', letterSpacing: 0.5 },
   topBarOrder: { ...Typography.h2 },
-  reportBtn: {
+  topBarBack: {
     width: 40,
     height: 40,
     borderRadius: BorderRadius.full,
@@ -353,7 +356,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
+    shadowColor: '#0fa958',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -380,7 +383,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing['container-padding'],
     paddingTop: Spacing.sm,
     paddingBottom: 40,
-    shadowColor: '#000',
+    shadowColor: '#0fa958',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.08,
     shadowRadius: 24,
@@ -438,6 +441,9 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xl,
     padding: Spacing.md,
     marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.light['surface-variant'],
+    ...Shadows.sm,
   },
   itemsLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, flex: 1 },
   itemsIcon: {

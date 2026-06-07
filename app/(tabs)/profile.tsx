@@ -1,8 +1,10 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { useAuthStore } from '@/store/authStore';
+import { restaurantsService } from '@/services/restaurants.service';
+import { useState } from 'react';
 
 const menuItems = [
   { icon: 'home-map-marker', label: 'Saved Addresses' },
@@ -17,10 +19,46 @@ export default function ProfileScreen() {
   const theme = 'light';
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const [creating, setCreating] = useState(false);
 
   const handleLogout = () => {
     logout();
     router.replace('/onboarding');
+  };
+
+  const handleCreateTestData = async () => {
+    setCreating(true);
+    try {
+      const restaurant = await restaurantsService.create({
+        name: 'kk',
+        cuisine: 'Local',
+        image: 'https://images.unsplash.com/photo-1552566626-52f8b828add9',
+        address: 'Mbeya City Center',
+        categories: ['Local'],
+        isOpen: true,
+        deliveryFee: 2000,
+        deliveryTime: '15-25 min',
+        distance: '0.5 km',
+        openingHours: '08:00 AM',
+        closingHours: '10:00 PM',
+        rating: 5,
+        ratingCount: 1,
+      });
+      await restaurantsService.createMenuItem(restaurant.id, {
+        name: 'togwa',
+        price: 3000,
+        image: '',
+        description: 'Traditional fermented beverage made from maize',
+        category: 'Drinks',
+        isAvailable: true,
+      });
+      Alert.alert('Success', `Restaurant "kk" and item "togwa" created!\n\nNow go to the restaurant and place an order.`);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to create test data';
+      Alert.alert('Error', msg);
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -79,6 +117,7 @@ export default function ProfileScreen() {
                 { borderBottomWidth: index < menuItems.length - 1 ? 1 : 0, borderBottomColor: Colors[theme]['surface-variant'] },
               ]}
               onPress={() => {
+                if (item.label === 'Saved Addresses') router.push('/saved-addresses');
                 if (item.label === 'Order History') router.push('/checkout/track-order?id=o1');
               }}
             >
@@ -96,6 +135,21 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        <TouchableOpacity
+          style={[styles.testBtn, { backgroundColor: Colors[theme]['primary-container'] }]}
+          onPress={handleCreateTestData}
+          disabled={creating}
+        >
+          {creating ? (
+            <ActivityIndicator size="small" color={Colors[theme]['on-primary-container']} />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="flask" size={20} color={Colors[theme]['on-primary-container']} />
+              <Text style={[styles.testBtnText, { color: Colors[theme]['on-primary-container'] }]}>Create Test Data</Text>
+            </>
+          )}
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.logoutBtn, { backgroundColor: Colors[theme]['surface-container-highest'] }]}
@@ -218,4 +272,14 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   logoutText: { ...Typography['label-md'] },
+  testBtn: {
+    marginTop: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+  },
+  testBtnText: { ...Typography['label-md'] },
 });
