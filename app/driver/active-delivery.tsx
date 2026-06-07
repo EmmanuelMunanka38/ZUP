@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -10,10 +10,6 @@ import { driverService } from '@/services/driver.service';
 import { MapboxMap } from '@/components/map/MapboxMap';
 import { MapControls } from '@/components/map/MapControls';
 import { Coordinate } from '@/types';
-
-const DAR_CENTER: Coordinate = { latitude: -6.7924, longitude: 39.2083 };
-const RESTAURANT_LOCATION: Coordinate = { latitude: -6.789, longitude: 39.205 };
-const CUSTOMER_LOCATION: Coordinate = { latitude: -6.797, longitude: 39.215 };
 
 type DriverStep = 'to_pickup' | 'picked_up' | 'to_dropoff' | 'arrived' | 'completed';
 
@@ -32,7 +28,7 @@ export default function ActiveDeliveryScreen() {
     estimatedMinutes,
   } = useDriverTracking(activeDelivery?.orderId || 'o1');
 
-  const displayLocation = driverLocation || currentLocation || DAR_CENTER;
+  const displayLocation = driverLocation || currentLocation || { latitude: -6.7924, longitude: 39.2083 };
 
   const handleRecenter = useCallback(() => {
     mapRef.current?.flyTo(displayLocation, 15);
@@ -41,6 +37,12 @@ export default function ActiveDeliveryScreen() {
   const handleMyLocation = useCallback(() => {
     if (currentLocation) {
       mapRef.current?.flyTo(currentLocation, 16);
+    }
+  }, [currentLocation]);
+
+  useEffect(() => {
+    if (currentLocation) {
+      mapRef.current?.flyTo(currentLocation, 15);
     }
   }, [currentLocation]);
 
@@ -81,12 +83,12 @@ export default function ActiveDeliveryScreen() {
         initialCamera={{ latitude: displayLocation.latitude, longitude: displayLocation.longitude, zoom: 15 }}
         style={styles.mapFull}
         markers={[
-          { id: 'restaurant', latitude: RESTAURANT_LOCATION.latitude, longitude: RESTAURANT_LOCATION.longitude, title: activeDelivery?.restaurant.name || 'Restaurant', icon: 'store', color: Colors[theme].primary },
-          { id: 'customer', latitude: CUSTOMER_LOCATION.latitude, longitude: CUSTOMER_LOCATION.longitude, title: 'Customer', icon: 'map-marker', color: Colors[theme]['secondary-container'] },
+          { id: 'restaurant', latitude: displayLocation.latitude + 0.002, longitude: displayLocation.longitude - 0.002, title: activeDelivery?.restaurant.name || 'Restaurant', icon: 'store', color: Colors[theme].primary },
+          { id: 'customer', latitude: displayLocation.latitude - 0.002, longitude: displayLocation.longitude + 0.002, title: 'Customer', icon: 'map-marker', color: Colors[theme]['secondary-container'] },
           { id: 'driver', latitude: displayLocation.latitude, longitude: displayLocation.longitude, title: 'Driver', icon: 'bike', color: Colors[theme].primary, rotation: driverHeading || 0 },
         ]}
         routePolyline={{
-          coordinates: [[displayLocation.longitude, displayLocation.latitude], [step === 'picked_up' || step === 'to_dropoff' || step === 'arrived' ? CUSTOMER_LOCATION.longitude : RESTAURANT_LOCATION.longitude, step === 'picked_up' || step === 'to_dropoff' || step === 'arrived' ? CUSTOMER_LOCATION.latitude : RESTAURANT_LOCATION.latitude]],
+          coordinates: [[displayLocation.longitude, displayLocation.latitude], [displayLocation.longitude + 0.002, displayLocation.latitude - 0.002]],
           color: Colors[theme].primary,
           width: 4,
         }}

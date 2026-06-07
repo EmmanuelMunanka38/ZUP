@@ -15,8 +15,6 @@ import { OrderStatus, Coordinate } from '@/types';
 import { MapboxMap } from '@/components/map/MapboxMap';
 import { MapControls } from '@/components/map/MapControls';
 
-const DAR_CENTER: Coordinate = { latitude: -6.7924, longitude: 39.2083 };
-
 const STATUS_STEPS = [
   { key: 'confirmed', label: 'Restaurant confirmed', icon: 'clipboard-check-outline' as const },
   { key: 'preparing', label: 'Preparing your order', icon: 'food-variant' as const },
@@ -70,7 +68,7 @@ export default function TrackOrderScreen() {
   } = useTrackingStore();
 
   const userLocation = useLocationStore((s) => s.currentLocation);
-  const deliveryCoord = userLocation || DAR_CENTER;
+  const deliveryCoord = userLocation || { latitude: -6.7924, longitude: 39.2083 };
 
   useEffect(() => {
     if (!id) return;
@@ -129,8 +127,8 @@ export default function TrackOrderScreen() {
   const handleRecenter = useCallback(() => {
     if (driverLocation) {
       mapRef.current?.flyTo(driverLocation, 15);
-    } else {
-      mapRef.current?.flyTo(DAR_CENTER, 14);
+    } else if (userLocation) {
+      mapRef.current?.flyTo(userLocation, 14);
     }
   }, [driverLocation]);
 
@@ -141,6 +139,12 @@ export default function TrackOrderScreen() {
       handleRecenter();
     }
   }, [userLocation, handleRecenter]);
+
+  useEffect(() => {
+    if (userLocation) {
+      mapRef.current?.flyTo(userLocation, 15);
+    }
+  }, [userLocation]);
 
   const handleCall = useCallback(() => {
     if (rider?.phone) {
@@ -178,11 +182,15 @@ export default function TrackOrderScreen() {
         {/* Full-screen Map */}
         <MapboxMap
           ref={mapRef}
-          initialCamera={{ latitude: DAR_CENTER.latitude, longitude: DAR_CENTER.longitude, zoom: 14 }}
+          initialCamera={{
+            latitude: userLocation?.latitude || deliveryCoord.latitude,
+            longitude: userLocation?.longitude || deliveryCoord.longitude,
+            zoom: 14,
+          }}
           showUserLocation
           style={StyleSheet.absoluteFillObject}
           markers={[
-            { id: 'restaurant', latitude: -6.7924, longitude: 39.2083, title: order.restaurant.name, icon: 'store', color: Colors[theme].primary },
+            { id: 'restaurant', latitude: deliveryCoord.latitude, longitude: deliveryCoord.longitude, title: order.restaurant.name, icon: 'store', color: Colors[theme].primary },
             ...(driverLocation ? [{ id: 'driver', latitude: driverLocation.latitude, longitude: driverLocation.longitude, title: 'Driver', icon: 'bike', color: Colors[theme].primary, rotation: driverHeading || 0 }] : []),
             { id: 'delivery', latitude: deliveryCoord.latitude, longitude: deliveryCoord.longitude, title: 'Delivery', icon: 'map-marker', color: Colors[theme]['secondary-container'] },
           ]}
