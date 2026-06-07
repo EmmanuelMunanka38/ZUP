@@ -63,6 +63,7 @@ export default function RootLayout() {
   useEffect(() => {
     useLocationStore.getState().initialize();
     useLocationStore.getState().startWatching();
+    useLocationStore.getState().reverseGeocodeCurrent();
   }, []);
 
   useEffect(() => {

@@ -74,6 +74,12 @@ export const useRestaurantStore = create<RestaurantState>((set) => ({
 
   setCurrentRestaurant: (restaurant) => set({ currentRestaurant: restaurant }),
 
+  createRestaurant: async (data: Partial<Restaurant>): Promise<Restaurant> => {
+    const restaurant = await restaurantsService.create(data);
+    set((state) => ({ restaurants: [...state.restaurants, restaurant] }));
+    return restaurant;
+  },
+
   addMenuItem: async (restaurantId: string, item: Partial<MenuItem>) => {
     const newItem = await restaurantsService.createMenuItem(restaurantId, item);
     set((state) => ({

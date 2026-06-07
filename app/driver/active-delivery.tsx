@@ -2,7 +2,7 @@ import { useRef, useCallback, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { useDriverStore } from '@/store/driverStore';
 import { useLocationStore } from '@/store/locationStore';
 import { useDriverTracking } from '@/hooks/use-driver-tracking';
@@ -94,9 +94,9 @@ export default function ActiveDeliveryScreen() {
         }}
       />
 
-      <View style={[styles.topBar, { backgroundColor: 'rgba(252,249,248,0.95)' }]}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={28} color={Colors[theme].primary} />
+      <View style={[styles.topBar, { backgroundColor: Colors[theme].surface, borderBottomColor: Colors[theme]['surface-container'] }]}>
+        <TouchableOpacity onPress={() => router.back()} style={[styles.topBarBack, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+          <MaterialCommunityIcons name="arrow-left" size={22} color={Colors[theme]['on-surface']} />
         </TouchableOpacity>
         <View style={styles.topBarCenter}>
           <Text style={[styles.topBarLabel, { color: Colors[theme]['on-surface-variant'] }]}>
@@ -106,7 +106,7 @@ export default function ActiveDeliveryScreen() {
             Order #{activeDelivery?.orderId?.substring(0, 8) || 'N/A'}
           </Text>
         </View>
-        <TouchableOpacity style={[styles.reportBtn, { backgroundColor: Colors[theme]['error-container'] }]}>
+        <TouchableOpacity style={[styles.topBarBack, { backgroundColor: Colors[theme]['error-container'] }]}>
           <MaterialCommunityIcons name="alert-circle" size={22} color={Colors[theme].error} />
         </TouchableOpacity>
       </View>
@@ -234,7 +234,7 @@ export default function ActiveDeliveryScreen() {
           </View>
         </View>
 
-        <View style={[styles.itemsCard, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+        <View style={[styles.itemsCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
           <View style={styles.itemsLeft}>
             <View style={[styles.itemsIcon, { backgroundColor: 'rgba(15,169,88,0.15)' }]}>
               <MaterialCommunityIcons name="shopping-outline" size={20} color={Colors[theme]['on-primary-container']} />
@@ -330,12 +330,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing['container-padding'],
     paddingTop: 56,
     paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
     zIndex: 10,
   },
   topBarCenter: { flex: 1, alignItems: 'center' },
   topBarLabel: { ...Typography['label-sm'], textTransform: 'uppercase', letterSpacing: 0.5 },
   topBarOrder: { ...Typography.h2 },
-  reportBtn: {
+  topBarBack: {
     width: 40,
     height: 40,
     borderRadius: BorderRadius.full,
@@ -355,7 +356,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
+    shadowColor: '#0fa958',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -382,7 +383,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing['container-padding'],
     paddingTop: Spacing.sm,
     paddingBottom: 40,
-    shadowColor: '#000',
+    shadowColor: '#0fa958',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.08,
     shadowRadius: 24,
@@ -440,6 +441,9 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xl,
     padding: Spacing.md,
     marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.light['surface-variant'],
+    ...Shadows.sm,
   },
   itemsLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, flex: 1 },
   itemsIcon: {
