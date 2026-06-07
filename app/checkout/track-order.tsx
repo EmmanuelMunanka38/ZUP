@@ -16,8 +16,6 @@ import { OrderStatus, Coordinate } from '@/types';
 import { MapboxMap } from '@/components/map/MapboxMap';
 import { MapControls } from '@/components/map/MapControls';
 
-const DAR_CENTER: Coordinate = { latitude: -6.7924, longitude: 39.2083 };
-
 const STATUS_STEPS = [
   { key: 'confirmed', label: 'Restaurant confirmed', icon: 'clipboard-check-outline' as const },
   { key: 'preparing', label: 'Preparing your order', icon: 'food-variant' as const },
@@ -44,6 +42,8 @@ const STATUS_COLORS: Record<string, string> = {
   delivered: '#0fa958',
   cancelled: '#ba1a1a',
 };
+
+const DAR_CENTER = { latitude: -6.7924, longitude: 39.2083 };
 
 export default function TrackOrderScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -212,8 +212,8 @@ export default function TrackOrderScreen() {
   const handleRecenter = useCallback(() => {
     if (driverLocation) {
       mapRef.current?.flyTo(driverLocation, 15);
-    } else {
-      mapRef.current?.flyTo(DAR_CENTER, 14);
+    } else if (userLocation) {
+      mapRef.current?.flyTo(userLocation, 14);
     }
   }, [driverLocation]);
 
@@ -224,6 +224,12 @@ export default function TrackOrderScreen() {
       handleRecenter();
     }
   }, [userLocation, handleRecenter]);
+
+  useEffect(() => {
+    if (userLocation) {
+      mapRef.current?.flyTo(userLocation, 15);
+    }
+  }, [userLocation]);
 
   const handleCall = useCallback(() => {
     if (rider?.phone) {
@@ -261,7 +267,11 @@ export default function TrackOrderScreen() {
         {/* Full-screen Map */}
         <MapboxMap
           ref={mapRef}
-          initialCamera={{ latitude: DAR_CENTER.latitude, longitude: DAR_CENTER.longitude, zoom: 14 }}
+          initialCamera={{
+            latitude: userLocation?.latitude || DAR_CENTER.latitude,
+            longitude: userLocation?.longitude || DAR_CENTER.longitude,
+            zoom: 14,
+          }}
           showUserLocation
           onMapLoaded={handleMapLoaded}
           style={StyleSheet.absoluteFillObject}

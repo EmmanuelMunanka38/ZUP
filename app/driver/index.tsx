@@ -8,9 +8,6 @@ import { useDriverStore } from '@/store/driverStore';
 import { useLocationStore } from '@/store/locationStore';
 import { MapboxMap } from '@/components/map/MapboxMap';
 import { MapControls } from '@/components/map/MapControls';
-import { Coordinate } from '@/types';
-
-const DAR_CENTER: Coordinate = { latitude: -6.7924, longitude: 39.2083 };
 
 export default function DriverDashboardScreen() {
   const theme = 'light';
@@ -29,8 +26,6 @@ export default function DriverDashboardScreen() {
   const handleRecenter = useCallback(() => {
     if (currentLocation) {
       mapRef.current?.flyTo(currentLocation, 15);
-    } else {
-      mapRef.current?.flyTo(DAR_CENTER, 14);
     }
   }, [currentLocation]);
 
@@ -44,11 +39,15 @@ export default function DriverDashboardScreen() {
     <View style={styles.container}>
       <MapboxMap
         ref={mapRef}
-        initialCamera={{ latitude: (currentLocation || DAR_CENTER).latitude, longitude: (currentLocation || DAR_CENTER).longitude, zoom: 14 }}
+        initialCamera={{
+          latitude: currentLocation?.latitude || -6.7924,
+          longitude: currentLocation?.longitude || 39.2083,
+          zoom: 14,
+        }}
         style={styles.mapBg}
         markers={[
-          ...(request ? [{ id: 'restaurant', latitude: -6.789, longitude: 39.205, title: request.restaurant.name, icon: 'store' as const, color: Colors[theme].primary }] : []),
-          { id: 'driver', latitude: (currentLocation || DAR_CENTER).latitude, longitude: (currentLocation || DAR_CENTER).longitude, title: 'Driver', icon: 'bike' as const, color: Colors[theme].primary },
+          ...(request ? [{ id: 'restaurant', latitude: currentLocation?.latitude || -6.7924, longitude: currentLocation?.longitude || 39.2083, title: request.restaurant.name, icon: 'store' as const, color: Colors[theme].primary }] : []),
+          { id: 'driver', latitude: currentLocation?.latitude || -6.7924, longitude: currentLocation?.longitude || 39.2083, title: 'Driver', icon: 'bike' as const, color: Colors[theme].primary },
         ]}
       />
 
@@ -57,33 +56,35 @@ export default function DriverDashboardScreen() {
         onMyLocation={handleMyLocation}
       />
 
-      <View style={[styles.header, { backgroundColor: 'rgba(252,249,248,0.9)' }]}>
+      <View style={[styles.header, { backgroundColor: Colors[theme].surface, borderBottomColor: Colors[theme]['surface-container'] }]}>
         <View style={styles.headerLeft}>
           <View style={[styles.logoIcon, { backgroundColor: Colors[theme]['primary-container'] }]}>
-            <MaterialCommunityIcons name="map-marker" size={20} color="#ffffff" />
+            <MaterialCommunityIcons name="bike" size={22} color="#ffffff" />
           </View>
           <View>
-            <Text style={[styles.brandName, { color: Colors[theme].primary }]}>Piki Food</Text>
-            <Text style={[styles.brandLocation, { color: Colors[theme]['on-surface-variant'] }]}>Active in Masaki</Text>
+            <Text style={[styles.greeting, { color: Colors[theme]['on-surface-variant'] }]}>Good to see you</Text>
+            <Text style={[styles.driverName, { color: Colors[theme]['on-surface'] }]}>Driver</Text>
           </View>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={[styles.cartBtn, { backgroundColor: Colors[theme]['surface-container'] }]}>
-            <MaterialCommunityIcons name="cart-outline" size={20} color={Colors[theme]['on-surface-variant']} />
+          <TouchableOpacity style={[styles.iconBtn, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+            <MaterialCommunityIcons name="bell-outline" size={22} color={Colors[theme]['on-surface']} />
           </TouchableOpacity>
           <View style={[styles.avatar, { borderColor: Colors[theme].primary }]}>
-            <Image source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCb_P9ii4YMd3i5GC8138VkEwDWoiR8SqN3y0TDOWqOgbFuhbhvWq85_q7AijGwf76uwF__wkDDLxowmYBEv3RaLf8M-mcwZfMdAatZuPEQms2JuuCdNon9IurSHLnUHya27zhoEBy83Tdc8NSzE2HUsBtOPZIDbIWwL1qTDz_cuaq95EdBEdsxKk8NzQdhtftEsyf5griWw_ysHOPwMvkKhPvpQwE8zyd_weF0Y-hljbfi6usGS7Z1Mi7HWiwZGcLg29zYIL5pc0s' }} style={styles.avatarImage} />
+            <View style={[styles.avatarPlaceholder, { backgroundColor: Colors[theme]['surface-container'] }]}>
+              <MaterialCommunityIcons name="account" size={20} color={Colors[theme]['on-surface-variant']} />
+            </View>
           </View>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={[styles.statusCard, { backgroundColor: Colors[theme]['surface'] }]}>
+        <View style={[styles.statusCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
           <View style={styles.statusTop}>
             <View style={styles.statusLeft}>
               <View style={[styles.statusDot, { backgroundColor: isOnline ? Colors[theme].primary : Colors[theme]['on-surface-variant'] }]} />
               <Text style={[styles.statusText, { color: isOnline ? Colors[theme].primary : Colors[theme]['on-surface-variant'] }]}>
-                {isOnline ? 'ONLINE' : 'OFFLINE'}
+                {isOnline ? 'Online' : 'Offline'}
               </Text>
             </View>
             <TouchableOpacity
@@ -94,11 +95,11 @@ export default function DriverDashboardScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.earningsGrid}>
-            <View style={[styles.earningBox, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
-              <Text style={[styles.earningLabel, { color: Colors[theme]['on-surface-variant'] }]}>Today\x27s Earnings</Text>
+            <View style={[styles.earningBox, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+              <Text style={[styles.earningLabel, { color: Colors[theme]['on-surface-variant'] }]}>Today's Earnings</Text>
               <Text style={[styles.earningValue, { color: Colors[theme].primary }]}>{formatPrice(earnings)}</Text>
             </View>
-            <View style={[styles.earningBox, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+            <View style={[styles.earningBox, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
               <Text style={[styles.earningLabel, { color: Colors[theme]['on-surface-variant'] }]}>Total Orders</Text>
               <Text style={[styles.earningValueLg, { color: Colors[theme]['on-surface'] }]}>{totalDeliveries}</Text>
             </View>
@@ -107,8 +108,8 @@ export default function DriverDashboardScreen() {
 
         {request ? (
           <View style={[styles.requestCard, { backgroundColor: Colors[theme]['surface'] }]}>
-            <View style={[styles.requestHeader, { backgroundColor: 'rgba(15,169,88,0.05)', borderBottomColor: 'rgba(0,0,0,0.05)' }]}>
-              <Text style={[styles.requestTitle, { color: Colors[theme].primary }]}>NEW REQUEST AVAILABLE</Text>
+            <View style={[styles.requestHeader, { backgroundColor: Colors[theme]['surface-container-low'], borderBottomColor: Colors[theme]['surface-container'] }]}>
+              <Text style={[styles.requestTitle, { color: Colors[theme].primary }]}>New Request Available</Text>
               <Text style={[styles.requestTimer, { color: Colors[theme]['on-surface-variant'] }]}>
                 {`${String(Math.floor(request.timeLeft / 60)).padStart(2, '0')}:${String(request.timeLeft % 60).padStart(2, '0')} min left`}
               </Text>
@@ -177,22 +178,22 @@ export default function DriverDashboardScreen() {
       </ScrollView>
 
       <View style={[styles.bottomNav, { backgroundColor: Colors[theme].surface }]}>
-        <View style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem}>
           <MaterialCommunityIcons name="home" size={24} color={Colors[theme].primary} />
           <Text style={[styles.navLabel, { color: Colors[theme].primary }]}>Home</Text>
-        </View>
-        <View style={styles.navItem}>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
           <MaterialCommunityIcons name="magnify" size={24} color={Colors[theme]['on-surface-variant']} />
           <Text style={[styles.navLabel, { color: Colors[theme]['on-surface-variant'] }]}>Search</Text>
-        </View>
-        <View style={styles.navItem}>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
           <MaterialCommunityIcons name="receipt" size={24} color={Colors[theme]['on-surface-variant']} />
           <Text style={[styles.navLabel, { color: Colors[theme]['on-surface-variant'] }]}>Orders</Text>
-        </View>
-        <View style={styles.navItem}>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
           <MaterialCommunityIcons name="account" size={24} color={Colors[theme]['on-surface-variant']} />
           <Text style={[styles.navLabel, { color: Colors[theme]['on-surface-variant'] }]}>Profile</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={[styles.chatFab, { backgroundColor: Colors[theme]['secondary-container'] }]}>
@@ -208,17 +209,18 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: Spacing['container-padding'], paddingTop: 56, paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   logoIcon: {
     width: 40, height: 40, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center',
   },
-  brandName: { ...Typography.h2 },
-  brandLocation: { ...Typography['label-sm'] },
+  greeting: { ...Typography['label-sm'] },
+  driverName: { ...Typography.h2 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  cartBtn: { width: 40, height: 40, borderRadius: BorderRadius.md, alignItems: 'center', justifyContent: 'center' },
+  iconBtn: { width: 40, height: 40, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center' },
   avatar: { width: 40, height: 40, borderRadius: BorderRadius.full, borderWidth: 2, overflow: 'hidden' },
-  avatarImage: { width: '100%', height: '100%' },
+  avatarPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   scrollContent: { padding: Spacing['container-padding'], paddingTop: 0, paddingBottom: 200 },
   statusCard: {
     borderRadius: BorderRadius.xl, padding: Spacing.md, marginBottom: Spacing.lg, ...Shadows.sm,
@@ -264,7 +266,7 @@ const styles = StyleSheet.create({
   routeAddress: { ...Typography['body-md'] },
   requestActions: {
     flexDirection: 'row', gap: Spacing.md, padding: Spacing.md,
-    borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)',
+    borderTopWidth: 1, borderTopColor: Colors.light['surface-container'],
   },
   ignoreBtn: { flex: 1, paddingVertical: Spacing.md, borderRadius: BorderRadius.xl, borderWidth: 1.5, alignItems: 'center' },
   ignoreBtnText: { ...Typography['label-md'] },
