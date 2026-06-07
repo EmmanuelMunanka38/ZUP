@@ -18,21 +18,21 @@ const { width } = Dimensions.get('window');
 const slides = [
   {
     id: '1',
-    image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600',
-    title: 'Premium Dining at Home',
-    subtitle: 'Explore a curated selection of the finest restaurants across Dar es Salaam and Arusha.',
+    image: require('@/assets/images/fast-food-bro.png'),
+    title: 'Delicious Fast Food',
+    subtitle: 'Enjoy a wide variety of burgers, fries, and your favorite fast food meals, all in one place. From classic beef burgers to crispy chicken wraps, we have something for every craving. Satisfy your hunger with our quickly prepared and freshly served meals that bring the taste of your favorite fast food joints straight to you.',
   },
   {
     id: '2',
-    image: 'https://images.unsplash.com/photo-1550304943-4f24f54ddde9?w=600',
-    title: 'Fast delivery across Tanzania',
-    subtitle: 'Your favorite local delicacies delivered to your doorstep in record time, every day.',
+    image: require('@/assets/images/Take-Away-pana.png'),
+    title: 'Easy Take Away',
+    subtitle: 'Order your favorite meals and pick them up on the go, quickly and conveniently. Skip the wait and enjoy restaurant-quality food wherever you are. With just a few taps, you can browse menus, place your order, and have your food ready for pickup at your convenience, making your busy schedule a little easier to manage.',
   },
   {
     id: '3',
-    image: 'https://images.unsplash.com/photo-1526367790999-0150786686a2?w=600',
-    title: 'Real-time tracking',
-    subtitle: "Watch your meal's journey from the kitchen to your hand with precision GPS tracking.",
+    image: require('@/assets/images/Chef-bro.png'),
+    title: 'Prepared by Expert Chefs',
+    subtitle: 'Every dish is carefully prepared by skilled chefs using the freshest ingredients sourced from local markets. From traditional Tanzanian flavors to international cuisine, our chefs bring passion and expertise to every plate. Taste the difference that professional culinary craftsmanship makes in every single bite you take.',
   },
 ];
 
@@ -56,8 +56,8 @@ export default function OnboardingScreen() {
 
   const renderSlide = ({ item }: { item: typeof slides[0] }) => (
     <View style={styles.slide}>
-      <View style={styles.imageContainer}>
-        <Image source={{ uri: item.image }} style={styles.image} />
+      <View style={styles.imageWrapper}>
+        <Image source={item.image} style={styles.image} resizeMode="contain" />
       </View>
       <View style={styles.slideContent}>
         <Text style={[styles.title, { color: Colors[theme]['on-surface'] }]}>
@@ -146,13 +146,14 @@ const styles = StyleSheet.create({
   slide: {
     width,
     flex: 1,
+    justifyContent: 'center',
+    paddingTop: 60,
   },
-  imageContainer: {
-    flex: 1,
-    marginHorizontal: Spacing['container-padding'],
-    marginTop: 100,
-    borderRadius: BorderRadius.xl,
-    overflow: 'hidden',
+  imageWrapper: {
+    width: 220,
+    height: 220,
+    alignSelf: 'center',
+    marginBottom: Spacing.md,
   },
   image: {
     width: '100%',
@@ -160,7 +161,6 @@ const styles = StyleSheet.create({
   },
   slideContent: {
     paddingHorizontal: Spacing['container-padding'],
-    paddingTop: Spacing.lg,
     paddingBottom: Spacing.xl,
     alignItems: 'center',
   },

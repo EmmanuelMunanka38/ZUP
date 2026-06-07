@@ -95,6 +95,7 @@ export interface Address {
   street: string;
   area: string;
   city: string;
+  coordinate?: Coordinate;
   isDefault: boolean;
 }
 

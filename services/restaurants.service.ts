@@ -2,6 +2,11 @@ import { api } from './api';
 import { Restaurant, MenuItem, Category, ApiResponse } from '@/types';
 
 export const restaurantsService = {
+  async create(data: Partial<Restaurant>): Promise<Restaurant> {
+    const { data: res } = await api.post<ApiResponse<Restaurant>>('/restaurants', data);
+    return res.data;
+  },
+
   async getAll(): Promise<Restaurant[]> {
     const { data } = await api.get<ApiResponse<Restaurant[]>>('/restaurants');
     return data.data;

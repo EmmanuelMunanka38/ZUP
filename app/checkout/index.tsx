@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { formatPrice } from '@/utils/format';
 import { useCartStore } from '@/store/cartStore';
+import { useLocationStore } from '@/store/locationStore';
 import { ordersService } from '@/services/orders.service';
 import { useAuthStore } from '@/store/authStore';
 
@@ -40,6 +41,15 @@ export default function CheckoutScreen() {
   const [isPlacing, setIsPlacing] = useState(false);
 
   const { items, restaurantId, restaurantName, subtotal, clearCart } = useCartStore();
+  const { currentAddress, savedAddresses, reverseGeocodeCurrent, currentLocation } = useLocationStore();
+
+  const deliveryAddress = currentAddress || savedAddresses.find((a) => a.isDefault);
+
+  useEffect(() => {
+    if (!currentAddress && currentLocation) {
+      reverseGeocodeCurrent();
+    }
+  }, [currentLocation]);
 
   const deliveryFee = 2500;
   const serviceFee = 500;
@@ -54,25 +64,36 @@ export default function CheckoutScreen() {
     setIsPlacing(true);
     try {
       const user = useAuthStore.getState().user;
+      const address = deliveryAddress || {
+        id: 'current',
+        label: 'Current Location',
+        street: currentLocation
+          ? `${currentLocation.latitude.toFixed(4)}, ${currentLocation.longitude.toFixed(4)}`
+          : 'Chole Road',
+        area: 'Masaki',
+        city: 'Dar es Salaam',
+        isDefault: true,
+      };
       const order = await ordersService.placeOrder({
         restaurantId,
         items: items,
         paymentMethod: PAYMENT_MAP[selectedPayment] as any,
         deliveryAddress: {
-          id: 'a1',
-          label: 'Home',
-          street: 'Chole Road',
-          area: 'Masaki',
-          city: 'Dar es Salaam',
-          isDefault: true,
+          id: address.id,
+          label: address.label,
+          street: address.street,
+          area: address.area || 'Masaki',
+          city: address.city || 'Dar es Salaam',
+          isDefault: address.isDefault,
         },
       });
 
       clearCart();
       router.replace(`/checkout/track-order?id=${order.id}`);
     } catch (err: any) {
-      const message = err?.response?.data?.message || 'Failed to place order';
-      Alert.alert('Order Failed', message);
+      const message = err?.response?.data?.message || err?.message || 'Failed to place order';
+      const details = err?.response?.data ? JSON.stringify(err.response.data).substring(0, 200) : '';
+      Alert.alert('Order Failed', `${message}${details ? '\n\n' + details : ''}`);
     } finally {
       setIsPlacing(false);
     }
@@ -94,19 +115,29 @@ export default function CheckoutScreen() {
         <Text style={[styles.sectionTitle, { color: Colors[theme]['on-surface'] }]}>
           Delivery Address
         </Text>
-        <View style={[styles.addressCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+        <TouchableOpacity
+          style={[styles.addressCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
+          onPress={() => router.push('/saved-addresses')}
+        >
           <View style={styles.addressRow}>
             <View style={[styles.addressIcon, { backgroundColor: Colors[theme]['primary-container'] }]}>
-              <MaterialCommunityIcons name="map-marker" size={24} color={Colors[theme].primary} />
+              <MaterialCommunityIcons name="crosshairs-gps" size={24} color={Colors[theme].primary} />
             </View>
             <View style={styles.addressInfo}>
-              <Text style={[styles.addressLabel, { color: Colors[theme]['on-surface'] }]}>Home</Text>
+              <Text style={[styles.addressLabel, { color: Colors[theme]['on-surface'] }]}>
+                {deliveryAddress?.label || 'Current Location'}
+              </Text>
               <Text style={[styles.addressText, { color: Colors[theme]['on-surface-variant'] }]}>
-                Chole Road, Masaki, Dar es Salaam
+                {deliveryAddress
+                  ? [deliveryAddress.street, deliveryAddress.area, deliveryAddress.city].filter(Boolean).join(', ')
+                  : currentLocation
+                    ? `${currentLocation.latitude.toFixed(4)}, ${currentLocation.longitude.toFixed(4)}`
+                    : 'Detecting your location...'}
               </Text>
             </View>
+            <MaterialCommunityIcons name="chevron-right" size={22} color={Colors[theme].outline} />
           </View>
-        </View>
+        </TouchableOpacity>
 
         {restaurantName && (
           <>
