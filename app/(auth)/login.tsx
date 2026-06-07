@@ -25,7 +25,16 @@ export default function AuthScreen() {
   const canSubmit = isEmailValid && isPhoneValid && isNameValid && !isSubmitting;
 
   const handleSendOtp = useCallback(async () => {
-    if (!canSubmit) return;
+    if (!canSubmit) {
+      if (!isEmailValid) {
+        setError('Please enter a valid email address');
+      } else if (!isPhoneValid) {
+        setError('Please enter a valid phone number (e.g. +2557XXXXXXXX)');
+      } else if (mode === 'sign-up' && !isNameValid) {
+        setError('Name must be at least 2 characters');
+      }
+      return;
+    }
     setError('');
     setIsSubmitting(true);
 

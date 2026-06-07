@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { formatPrice } from '@/utils/format';
 import { useRestaurantStore } from '@/store/restaurantStore';
 import { MenuItem } from '@/types';
@@ -155,12 +155,14 @@ export default function MenuManagementScreen() {
         {categories.map((cat) => (
           <TouchableOpacity
             key={cat}
-            style={[
-              styles.categoryChip,
-              {
-                backgroundColor: activeCategory === cat ? Colors[theme].primary : Colors[theme]['surface-container-high'],
-              },
-            ]}
+              style={[
+                  styles.categoryChip,
+                  {
+                    backgroundColor: activeCategory === cat ? Colors[theme].primary : Colors[theme]['surface-container-low'],
+                    borderWidth: activeCategory === cat ? 0 : 1,
+                    borderColor: Colors[theme]['outline-variant'],
+                  },
+                ]}
             onPress={() => setActiveCategory(cat)}
           >
             <Text
@@ -323,8 +325,9 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', gap: Spacing.sm, marginTop: 60 },
   emptyText: { ...Typography['body-md'] },
   menuCard: {
-    flexDirection: 'row', borderRadius: BorderRadius.xl, overflow: 'hidden',
+    flexDirection: 'row', borderRadius: BorderRadius.xl,
     borderWidth: 1, borderColor: Colors.light['surface-variant'],
+    ...Shadows.sm,
   },
   menuImage: { width: 100, height: 100 },
   menuInfo: { flex: 1, padding: Spacing.md, justifyContent: 'space-between' },
@@ -343,6 +346,8 @@ const styles = StyleSheet.create({
     padding: Spacing['container-padding'],
     paddingBottom: 40,
     maxHeight: '85%',
+    borderWidth: 1,
+    borderColor: Colors.light['outline-variant'],
   },
   modalHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
@@ -352,7 +357,7 @@ const styles = StyleSheet.create({
   modalForm: { gap: Spacing.md },
   inputLabel: { ...Typography['label-md'], fontWeight: '600' },
   input: {
-    borderWidth: 1, borderRadius: BorderRadius.md,
+    borderWidth: 1, borderRadius: BorderRadius.xl,
     padding: Spacing.md, ...Typography['body-md'],
   },
   inputMultiline: { minHeight: 80, textAlignVertical: 'top' },
@@ -361,6 +366,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.xl,
     alignItems: 'center',
+    ...Shadows.sm,
   },
   addBtnText: { ...Typography['body-md'], color: '#ffffff', fontWeight: '700' },
 });
