@@ -21,11 +21,12 @@ function routeByRole(role: string) {
 }
 
 export default function VerifyOTPScreen() {
-  const { email, phone, mode, name } = useLocalSearchParams<{
+  const { email, phone, mode, name, role } = useLocalSearchParams<{
     email: string;
     phone: string;
     mode?: string;
     name?: string;
+    role?: string;
   }>();
 
   const theme = 'light';
@@ -66,7 +67,7 @@ export default function VerifyOTPScreen() {
     verifyingRef.current = true;
     try {
       const code = otp.join('');
-      await verifyOTP(email, code, mode === 'sign-up' ? name : undefined);
+      await verifyOTP(email, code, mode === 'sign-up' ? name : undefined, role);
       const { user: u } = useAuthStore.getState();
       if (u) {
         routeByRole(u.role);
