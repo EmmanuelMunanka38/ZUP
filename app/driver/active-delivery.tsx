@@ -1,38 +1,93 @@
-import { useRef, useCallback, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { useRef, useCallback, useState, useEffect, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, Platform, Linking } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { useDriverStore } from '@/store/driverStore';
 import { useLocationStore } from '@/store/locationStore';
-import { useDriverTracking } from '@/hooks/use-driver-tracking';
 import { driverService } from '@/services/driver.service';
+import { driverSocketService } from '@/services/driver-socket.service';
+import { mapService } from '@/services/map.service';
 import { MapboxMap } from '@/components/map/MapboxMap';
 import { MapControls } from '@/components/map/MapControls';
 import { Coordinate } from '@/types';
 
 type DriverStep = 'to_pickup' | 'picked_up' | 'to_dropoff' | 'arrived' | 'completed';
 
+const DAR_CENTER = { latitude: -6.7924, longitude: 39.2083 };
+
 export default function ActiveDeliveryScreen() {
   const theme = 'light';
   const mapRef = useRef<any>(null);
+  const bottomSheetRef = useRef<BottomSheet>(null);
   const currentLocation = useLocationStore((s) => s.currentLocation);
   const { activeDelivery, completeDelivery } = useDriverStore();
   const [updating, setUpdating] = useState(false);
   const [step, setStep] = useState<DriverStep>('to_pickup');
+  const [routeCoords, setRouteCoords] = useState<[number, number][] | null>(null);
+  const [isLoadingRoute, setIsLoadingRoute] = useState(true);
+  const [hasFittedBounds, setHasFittedBounds] = useState(false);
 
-  const {
-    driverLocation,
-    driverHeading,
-    route,
-    estimatedMinutes,
-  } = useDriverTracking(activeDelivery?.orderId || 'o1');
+  const restaurantLocation = activeDelivery?.restaurant.location || DAR_CENTER;
+  const customerLocation = activeDelivery?.customer.location || DAR_CENTER;
+  const displayLocation = currentLocation || DAR_CENTER;
 
-  const displayLocation = driverLocation || currentLocation || { latitude: -6.7924, longitude: 39.2083 };
+  const destination = useMemo(() => {
+    if (step === 'to_pickup' || step === 'picked_up') return restaurantLocation;
+    return customerLocation;
+  }, [step, restaurantLocation, customerLocation]);
+
+  const statusLabel = step === 'to_pickup' ? 'On the way to pickup'
+    : step === 'picked_up' ? 'Picked up, heading to customer'
+    : step === 'to_dropoff' ? 'Heading to drop-off'
+    : step === 'arrived' ? 'Arrived at destination'
+    : 'Completed';
+
+  useEffect(() => {
+    if (!currentLocation) return;
+    setIsLoadingRoute(true);
+    let cancelled = false;
+    const fetchRoute = async () => {
+      try {
+        const result = await mapService.fetchRoute(
+          [currentLocation.longitude, currentLocation.latitude],
+          [destination.longitude, destination.latitude],
+        );
+        if (result && !cancelled) {
+          setRouteCoords(result.coordinates);
+        }
+      } catch {
+        // route fetch failed
+      } finally {
+        if (!cancelled) setIsLoadingRoute(false);
+      }
+    };
+    fetchRoute();
+    return () => { cancelled = true; };
+  }, [currentLocation?.latitude, currentLocation?.longitude, destination.latitude, destination.longitude]);
+
+  useEffect(() => {
+    if (currentLocation) {
+      driverSocketService.sendLocation(currentLocation);
+    }
+    if (currentLocation && !hasFittedBounds) {
+      const points = [currentLocation, restaurantLocation, customerLocation];
+      const lats = points.map((p) => p.latitude);
+      const lngs = points.map((p) => p.longitude);
+      mapRef.current?.fitBounds(
+        { latitude: Math.max(...lats), longitude: Math.max(...lngs) },
+        { latitude: Math.min(...lats), longitude: Math.min(...lngs) },
+        100,
+      );
+      setHasFittedBounds(true);
+    }
+  }, [currentLocation?.latitude, currentLocation?.longitude]);
 
   const handleRecenter = useCallback(() => {
-    mapRef.current?.flyTo(displayLocation, 15);
-  }, [displayLocation]);
+    mapRef.current?.flyTo(currentLocation || destination, 15);
+  }, [currentLocation, destination]);
 
   const handleMyLocation = useCallback(() => {
     if (currentLocation) {
@@ -44,7 +99,19 @@ export default function ActiveDeliveryScreen() {
     if (currentLocation) {
       mapRef.current?.flyTo(currentLocation, 15);
     }
-  }, [currentLocation]);
+  }, [currentLocation?.latitude, currentLocation?.longitude]);
+
+  const handleCall = useCallback((phone?: string) => {
+    if (phone) {
+      Linking.openURL(`tel:${phone}`);
+    }
+  }, []);
+
+  const handleMessage = useCallback((phone?: string) => {
+    if (phone) {
+      Linking.openURL(`sms:${phone}`);
+    }
+  }, []);
 
   const handleStatusUpdate = useCallback(async (newStatus: string, nextStep: DriverStep) => {
     if (!activeDelivery) return;
@@ -53,7 +120,7 @@ export default function ActiveDeliveryScreen() {
       await driverService.updateOrderStatus(activeDelivery.orderId, newStatus);
       setStep(nextStep);
     } catch {
-      // fallback
+      // status update failed
     } finally {
       setUpdating(false);
     }
@@ -70,410 +137,286 @@ export default function ActiveDeliveryScreen() {
     }
   }, [activeDelivery, completeDelivery]);
 
-  const statusLabel = step === 'to_pickup' ? 'On the way to pickup'
-    : step === 'picked_up' ? 'Picked up, heading to customer'
-    : step === 'to_dropoff' ? 'Heading to drop-off'
-    : step === 'arrived' ? 'Arrived at destination'
-    : 'Completed';
+  const snapPoints = useMemo(() => ['30%', '65%'], []);
+
+  const markers = useMemo(() => [
+    { id: 'restaurant', latitude: restaurantLocation.latitude, longitude: restaurantLocation.longitude, title: activeDelivery?.restaurant.name || 'Restaurant', icon: 'store' as const, color: Colors[theme].primary },
+    { id: 'customer', latitude: customerLocation.latitude, longitude: customerLocation.longitude, title: 'Customer', icon: 'map-marker' as const, color: Colors[theme]['secondary-container'] },
+    { id: 'driver', latitude: displayLocation.latitude, longitude: displayLocation.longitude, title: 'Driver', icon: 'bike' as const, color: Colors[theme].primary, rotation: 0 },
+  ], [restaurantLocation, customerLocation, displayLocation, activeDelivery?.restaurant.name]);
 
   return (
-    <View style={styles.container}>
-      <MapboxMap
-        ref={mapRef}
-        initialCamera={{ latitude: displayLocation.latitude, longitude: displayLocation.longitude, zoom: 15 }}
-        style={styles.mapFull}
-        markers={[
-          { id: 'restaurant', latitude: displayLocation.latitude + 0.002, longitude: displayLocation.longitude - 0.002, title: activeDelivery?.restaurant.name || 'Restaurant', icon: 'store', color: Colors[theme].primary },
-          { id: 'customer', latitude: displayLocation.latitude - 0.002, longitude: displayLocation.longitude + 0.002, title: 'Customer', icon: 'map-marker', color: Colors[theme]['secondary-container'] },
-          { id: 'driver', latitude: displayLocation.latitude, longitude: displayLocation.longitude, title: 'Driver', icon: 'bike', color: Colors[theme].primary, rotation: driverHeading || 0 },
-        ]}
-        routePolyline={{
-          coordinates: [[displayLocation.longitude, displayLocation.latitude], [displayLocation.longitude + 0.002, displayLocation.latitude - 0.002]],
-          color: Colors[theme].primary,
-          width: 4,
-        }}
-      />
+    <GestureHandlerRootView style={styles.container}>
+      <View style={styles.container}>
+        <MapboxMap
+          ref={mapRef}
+          initialCamera={{ latitude: displayLocation.latitude, longitude: displayLocation.longitude, zoom: 14 }}
+          style={StyleSheet.absoluteFillObject}
+          markers={markers}
+          routePolyline={routeCoords && routeCoords.length >= 2 ? {
+            coordinates: routeCoords,
+            color: Colors[theme].primary,
+            width: 4,
+          } : undefined}
+        />
 
-      <View style={[styles.topBar, { backgroundColor: Colors[theme].surface, borderBottomColor: Colors[theme]['surface-container'] }]}>
-        <TouchableOpacity onPress={() => router.back()} style={[styles.topBarBack, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
-          <MaterialCommunityIcons name="arrow-left" size={22} color={Colors[theme]['on-surface']} />
-        </TouchableOpacity>
-        <View style={styles.topBarCenter}>
-          <Text style={[styles.topBarLabel, { color: Colors[theme]['on-surface-variant'] }]}>
-            Active Delivery
-          </Text>
-          <Text style={[styles.topBarOrder, { color: Colors[theme]['on-surface'] }]}>
-            Order #{activeDelivery?.orderId?.substring(0, 8) || 'N/A'}
-          </Text>
+        <View style={styles.headerOverlay}>
+          <TouchableOpacity onPress={() => router.back()} style={[styles.headerBtn, { backgroundColor: 'rgba(0,0,0,0.4)' }]}>
+            <MaterialCommunityIcons name="arrow-left" size={22} color="#ffffff" />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerLabel}>Active Delivery</Text>
+            <Text style={styles.headerOrder}>#{activeDelivery?.orderId?.substring(0, 8) || '---'}</Text>
+          </View>
+          <TouchableOpacity style={[styles.headerBtn, { backgroundColor: 'rgba(186,26,26,0.8)' }]}>
+            <MaterialCommunityIcons name="alert-circle" size={22} color="#ffffff" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={[styles.topBarBack, { backgroundColor: Colors[theme]['error-container'] }]}>
-          <MaterialCommunityIcons name="alert-circle" size={22} color={Colors[theme].error} />
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.navOverlay}>
-        <View style={[styles.navCard, { backgroundColor: Colors[theme].primary }]}>
-          <View style={styles.navCardLeft}>
-            <View style={styles.navTurnIcon}>
-              <MaterialCommunityIcons name="arrow-right-bold" size={28} color="rgba(255,255,255,0.9)" />
-            </View>
-            <View>
-              <Text style={styles.navTurnLabel}>
-                {step === 'to_pickup' ? 'Proceed to pickup' :
-                 step === 'picked_up' || step === 'to_dropoff' ? 'Deliver to customer' :
-                 'Destination'}
-              </Text>
-              <Text style={styles.navTurnStreet}>
-                {step === 'to_pickup'
-                  ? (activeDelivery?.restaurant.address || 'Head to restaurant')
-                  : (activeDelivery?.customer.address || 'Deliver to customer')}
-              </Text>
-              {estimatedMinutes > 0 && (
-                <Text style={styles.navEta}>{estimatedMinutes} min away</Text>
+        {isLoadingRoute && (
+          <View style={styles.routeLoadingOverlay}>
+            <ActivityIndicator size="small" color="#ffffff" />
+          </View>
+        )}
+
+        <MapControls
+          onRecenter={handleRecenter}
+          onMyLocation={handleMyLocation}
+        />
+
+        <BottomSheet
+          ref={bottomSheetRef}
+          index={0}
+          snapPoints={snapPoints}
+          handleIndicatorStyle={styles.handleIndicator}
+          handleStyle={styles.handleContainer}
+          backgroundStyle={[styles.sheetBackground, { backgroundColor: Colors[theme].surface }]}
+          enablePanDownToClose={false}
+          animateOnMount
+        >
+          <BottomSheetScrollView
+            contentContainerStyle={styles.sheetScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Status row */}
+            <View style={styles.statusRow}>
+              <View style={[styles.statusDot, { backgroundColor: Colors[theme]['secondary-container'] }]} />
+              <Text style={[styles.statusText, { color: Colors[theme]['secondary'] }]}>{statusLabel}</Text>
+              {activeDelivery?.distance && (
+                <View style={[styles.distanceBadge, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+                  <Text style={[styles.distanceBadgeText, { color: Colors[theme]['on-surface-variant'] }]}>{activeDelivery.distance} km</Text>
+                </View>
               )}
             </View>
-          </View>
-          <View style={[styles.navDistance, { borderLeftColor: 'rgba(255,255,255,0.2)' }]}>
-            <Text style={styles.navDistanceValue}>{activeDelivery?.distance || '0'}</Text>
-            <Text style={styles.navDistanceUnit}>km</Text>
-          </View>
-        </View>
-      </View>
 
-      <MapControls
-        onRecenter={handleRecenter}
-        onMyLocation={handleMyLocation}
-      />
-
-      <View style={[styles.bottomSheet, { backgroundColor: Colors[theme].surface }]}>
-        <View style={[styles.pullHandle, { backgroundColor: Colors[theme]['surface-container-highest'] }]} />
-
-        <View style={styles.statusRow}>
-          <View style={[styles.statusDot, { backgroundColor: Colors[theme]['secondary-container'] }]} />
-          <Text style={[styles.statusText, { color: Colors[theme]['secondary'] }]}>
-            {statusLabel}
-          </Text>
-          <View style={styles.avatarStack}>
-            <View style={styles.avatarMini}>
-              <Image source={{ uri: activeDelivery?.restaurant.image || '' }} style={styles.avatarMiniImg} />
-            </View>
-            <View style={[styles.avatarMini, { marginLeft: -12 }]}>
-              <Image source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCjy6E5I4XwK9jG2KOF62ZuOL4JRv-ybFaR_x6-oPen6hTVJoo4rSw3-H9Ul_3c8ybX2LsIAdpptAmHsk_1we3xQmMqN9FKHRdlgNe7DTSBUf65PAQXc4ZXeUvw3ZARN7mRY6KQy19RzfBXFojbJh8_SkbxpXh5B8bVXEw6eJBn3mDfWh_3DY8V2_LhMmW2Cw6dAdV99q816STuMkdmcNaYehvQLhumQCUAmq7k0V9L-jV8Gu8grR4BJyCkmTTXJk_WfB8FRXLP7rw' }} style={styles.avatarMiniImg} />
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.stopsSection}>
-          <View style={styles.stopRow}>
-            <View style={styles.stopIndicator}>
-              <MaterialCommunityIcons name="store" size={20} color={Colors[theme].primary} />
-              <View style={[styles.stopLine, { backgroundColor: Colors[theme]['surface-container-highest'] }]} />
-            </View>
-            <View style={styles.stopInfo}>
-              <View style={styles.stopTop}>
-                <View>
-                  <View style={styles.stopLabel}>
-                    <Text style={[styles.stopLabelText, { color: Colors[theme]['on-surface-variant'] }]}>
-                      Pickup from
-                    </Text>
-                    {step === 'picked_up' && (
-                      <MaterialCommunityIcons name="check-circle" size={16} color={Colors[theme].primary} />
-                    )}
-                  </View>
+            {/* Stops */}
+            <View style={styles.stopsSection}>
+              <View style={styles.stopRow}>
+                <View style={styles.stopIndicator}>
+                  <MaterialCommunityIcons name="store" size={20} color={Colors[theme].primary} />
+                  <View style={[styles.stopLine, { backgroundColor: Colors[theme]['surface-container-highest'] }]} />
+                </View>
+                <View style={styles.stopInfo}>
+                  <Text style={[styles.stopLabel, { color: Colors[theme]['on-surface-variant'] }]}>Pickup from</Text>
                   <Text style={[styles.stopName, { color: Colors[theme]['on-surface'] }]}>
-                    {activeDelivery?.restaurant.name || 'Mama Ntilie Gourmet'}
+                    {activeDelivery?.restaurant.name || 'Restaurant'}
                   </Text>
                   <Text style={[styles.stopAddress, { color: Colors[theme]['on-surface-variant'] }]}>
-                    {activeDelivery?.restaurant.address || 'Msasani Peninsula, Plot 12'}
+                    {activeDelivery?.restaurant.address || activeDelivery?.pickup || ''}
                   </Text>
                 </View>
                 <View style={styles.stopActions}>
-                  <TouchableOpacity style={[styles.stopActionBtn, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+                  <TouchableOpacity
+                    style={[styles.stopActionBtn, { backgroundColor: Colors[theme]['surface-container-low'] }]}
+                    onPress={() => activeDelivery?.restaurant.phone && Linking.openURL(`tel:${activeDelivery.restaurant.phone}`)}
+                  >
                     <MaterialCommunityIcons name="phone" size={18} color={Colors[theme].primary} />
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.stopActionBtn, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+                  <TouchableOpacity
+                    style={[styles.stopActionBtn, { backgroundColor: Colors[theme]['surface-container-low'] }]}
+                    onPress={() => activeDelivery?.restaurant.phone && Linking.openURL(`sms:${activeDelivery.restaurant.phone}`)}
+                  >
                     <MaterialCommunityIcons name="chat-outline" size={18} color={Colors[theme].primary} />
                   </TouchableOpacity>
                 </View>
               </View>
-            </View>
-          </View>
 
-          <View style={styles.stopRow}>
-            <View style={styles.stopIndicator}>
-              <MaterialCommunityIcons name="map-marker" size={20} color={Colors[theme]['secondary']} />
-            </View>
-            <View style={styles.stopInfo}>
-              <View style={styles.stopTop}>
-                <View>
-                  <View style={styles.stopLabel}>
-                    <Text style={[styles.stopLabelText, { color: Colors[theme]['on-surface-variant'] }]}>
-                      Deliver to
-                    </Text>
-                    {(step === 'arrived' || step === 'completed') && (
-                      <MaterialCommunityIcons name="check-circle" size={16} color={Colors[theme].primary} />
-                    )}
-                  </View>
+              <View style={styles.stopRow}>
+                <View style={styles.stopIndicator}>
+                  <MaterialCommunityIcons name="map-marker" size={20} color={Colors[theme]['secondary']} />
+                </View>
+                <View style={styles.stopInfo}>
+                  <Text style={[styles.stopLabel, { color: Colors[theme]['on-surface-variant'] }]}>Deliver to</Text>
                   <Text style={[styles.stopName, { color: Colors[theme]['on-surface'] }]}>
-                    {activeDelivery?.customer.name || 'John Doe'}
+                    {activeDelivery?.customer.name || 'Customer'}
                   </Text>
                   <Text style={[styles.stopAddress, { color: Colors[theme]['on-surface-variant'] }]}>
-                    {activeDelivery?.customer.address || 'Masaki Towers, Appt 4B'}
+                    {activeDelivery?.customer.address || activeDelivery?.dropoff || ''}
                   </Text>
                 </View>
                 <View style={styles.stopActions}>
-                  <TouchableOpacity style={[styles.stopActionBtn, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+                  <TouchableOpacity
+                    style={[styles.stopActionBtn, { backgroundColor: Colors[theme]['surface-container-low'] }]}
+                    onPress={() => activeDelivery?.customer.phone && Linking.openURL(`tel:${activeDelivery.customer.phone}`)}
+                  >
                     <MaterialCommunityIcons name="phone" size={18} color={Colors[theme]['secondary']} />
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.stopActionBtn, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+                  <TouchableOpacity
+                    style={[styles.stopActionBtn, { backgroundColor: Colors[theme]['surface-container-low'] }]}
+                    onPress={() => activeDelivery?.customer.phone && Linking.openURL(`sms:${activeDelivery.customer.phone}`)}
+                  >
                     <MaterialCommunityIcons name="chat-outline" size={18} color={Colors[theme]['secondary']} />
                   </TouchableOpacity>
                 </View>
               </View>
             </View>
-          </View>
-        </View>
 
-        <View style={[styles.itemsCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
-          <View style={styles.itemsLeft}>
-            <View style={[styles.itemsIcon, { backgroundColor: 'rgba(15,169,88,0.15)' }]}>
-              <MaterialCommunityIcons name="shopping-outline" size={20} color={Colors[theme]['on-primary-container']} />
+            {/* Items card */}
+            <View style={[styles.itemsCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+              <View style={styles.itemsLeft}>
+                <View style={[styles.itemsIcon, { backgroundColor: 'rgba(15,169,88,0.15)' }]}>
+                  <MaterialCommunityIcons name="shopping-outline" size={20} color={Colors[theme]['on-primary-container']} />
+                </View>
+                <View>
+                  <Text style={[styles.itemsTitle, { color: Colors[theme]['on-surface'] }]}>
+                    {activeDelivery?.items.length || 0} Items to collect
+                  </Text>
+                  <Text style={[styles.itemsList, { color: Colors[theme]['on-surface-variant'] }]} numberOfLines={2}>
+                    {activeDelivery?.items.join(', ') || ''}
+                  </Text>
+                </View>
+              </View>
             </View>
-            <View>
-              <Text style={[styles.itemsTitle, { color: Colors[theme]['on-surface'] }]}>
-                {activeDelivery?.items.length || 0} Items to collect
-              </Text>
-              <Text style={[styles.itemsList, { color: Colors[theme]['on-surface-variant'] }]}>
-                {activeDelivery?.items.join(', ').substring(0, 30) || 'Pilau Kuku, Wali wa Nazi, Juice...'}
-              </Text>
-            </View>
-          </View>
-        </View>
 
-        <View style={styles.actionGrid}>
-          {step === 'to_pickup' && (
-            <TouchableOpacity
-              style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
-              onPress={() => handleStatusUpdate('on_the_way', 'picked_up')}
-              disabled={updating}
-            >
-              {updating ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" />
-                  <Text style={styles.actionPrimaryText}>Picked Up</Text>
-                </>
+            {/* Action buttons */}
+            <View style={styles.actionGrid}>
+              {step === 'to_pickup' && (
+                <TouchableOpacity
+                  style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
+                  onPress={() => handleStatusUpdate('on_the_way', 'picked_up')}
+                  disabled={updating}
+                >
+                  {updating ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <><MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" /><Text style={styles.actionPrimaryText}>Picked Up</Text></>
+                  )}
+                </TouchableOpacity>
               )}
-            </TouchableOpacity>
-          )}
-          {step === 'picked_up' && (
-            <TouchableOpacity
-              style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
-              onPress={() => handleStatusUpdate('arrived', 'arrived')}
-              disabled={updating}
-            >
-              {updating ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" />
-                  <Text style={styles.actionPrimaryText}>Arrived</Text>
-                </>
+              {step === 'picked_up' && (
+                <TouchableOpacity
+                  style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
+                  onPress={() => handleStatusUpdate('arrived', 'arrived')}
+                  disabled={updating}
+                >
+                  {updating ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <><MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" /><Text style={styles.actionPrimaryText}>Arrived</Text></>
+                  )}
+                </TouchableOpacity>
               )}
-            </TouchableOpacity>
-          )}
-          {step === 'arrived' && (
-            <TouchableOpacity
-              style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
-              onPress={handleComplete}
-              disabled={updating}
-            >
-              {updating ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" />
-                  <Text style={styles.actionPrimaryText}>Delivered</Text>
-                </>
+              {step === 'arrived' && (
+                <TouchableOpacity
+                  style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
+                  onPress={handleComplete}
+                  disabled={updating}
+                >
+                  {updating ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <><MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" /><Text style={styles.actionPrimaryText}>Delivered</Text></>
+                  )}
+                </TouchableOpacity>
               )}
-            </TouchableOpacity>
-          )}
-          {(step === 'to_pickup' || step === 'picked_up') && (
-            <TouchableOpacity
-              style={[styles.actionSecondary, { backgroundColor: Colors[theme]['secondary-fixed'] }]}
-              onPress={handleMyLocation}
-            >
-              <MaterialCommunityIcons name="crosshairs-gps" size={20} color={Colors[theme]['on-secondary-fixed']} />
-              <Text style={[styles.actionSecondaryText, { color: Colors[theme]['on-secondary-fixed'] }]}>
-                Navigate
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
+              {(step === 'to_pickup' || step === 'picked_up') && (
+                <TouchableOpacity
+                  style={[styles.actionSecondary, { backgroundColor: Colors[theme]['secondary-fixed'] }]}
+                  onPress={handleMyLocation}
+                >
+                  <MaterialCommunityIcons name="crosshairs-gps" size={20} color={Colors[theme]['on-secondary-fixed']} />
+                  <Text style={[styles.actionSecondaryText, { color: Colors[theme]['on-secondary-fixed'] }]}>Navigate</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View style={{ height: 32 }} />
+          </BottomSheetScrollView>
+        </BottomSheet>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  mapFull: { flex: 1, position: 'relative' },
-  topBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing['container-padding'],
-    paddingTop: 56,
-    paddingBottom: Spacing.md,
-    borderBottomWidth: 1,
-    zIndex: 10,
+  handleContainer: { paddingTop: Spacing.sm },
+  handleIndicator: {
+    width: 40, height: 5, borderRadius: 3,
+    backgroundColor: Colors.light['surface-container-highest'],
   },
-  topBarCenter: { flex: 1, alignItems: 'center' },
-  topBarLabel: { ...Typography['label-sm'], textTransform: 'uppercase', letterSpacing: 0.5 },
-  topBarOrder: { ...Typography.h2 },
-  topBarBack: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
+  sheetBackground: {
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1, shadowRadius: 24, elevation: 16,
   },
-  navOverlay: {
-    position: 'absolute',
-    top: 100,
-    left: Spacing['container-padding'],
-    right: Spacing['container-padding'],
-    zIndex: 10,
+  sheetScrollContent: { paddingHorizontal: Spacing['container-padding'], paddingTop: Spacing.sm },
+
+  headerOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: Spacing['container-padding'], paddingTop: 54, paddingBottom: Spacing.md,
   },
-  navCard: {
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: '#0fa958',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+  headerBtn: { width: 40, height: 40, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center' },
+  headerCenter: { alignItems: 'center', flex: 1 },
+  headerLabel: { ...Typography['label-sm'], color: 'rgba(255,255,255,0.8)' },
+  headerOrder: { ...Typography.h2, color: '#ffffff' },
+
+  routeLoadingOverlay: {
+    position: 'absolute', top: 100, alignSelf: 'center', zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.4)', borderRadius: BorderRadius.full,
+    padding: Spacing.sm,
   },
-  navCardLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, flex: 1 },
-  navTurnIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: BorderRadius.md,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  navTurnLabel: { ...Typography['label-sm'], color: 'rgba(255,255,255,0.8)' },
-  navTurnStreet: { ...Typography['body-md'], color: '#ffffff', fontWeight: '600' },
-  navEta: { ...Typography['label-sm'], color: 'rgba(255,255,255,0.8)', marginTop: 2 },
-  navDistance: { alignItems: 'center', paddingLeft: Spacing.md, borderLeftWidth: 1 },
-  navDistanceValue: { ...Typography.display, color: '#ffffff', fontSize: 24 },
-  navDistanceUnit: { ...Typography['label-sm'], color: 'rgba(255,255,255,0.8)' },
-  bottomSheet: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: Spacing['container-padding'],
-    paddingTop: Spacing.sm,
-    paddingBottom: 40,
-    shadowColor: '#0fa958',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 24,
-    elevation: 16,
-  },
-  pullHandle: {
-    width: 48,
-    height: 4,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: Spacing.md,
-  },
+
   statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.lg,
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
+    paddingVertical: Spacing.sm, marginBottom: Spacing.lg,
   },
   statusDot: { width: 12, height: 12, borderRadius: 6 },
   statusText: { ...Typography['label-md'], fontWeight: '600', flex: 1 },
-  avatarStack: { flexDirection: 'row' },
-  avatarMini: {
-    width: 32,
-    height: 32,
-    borderRadius: BorderRadius.full,
-    borderWidth: 2,
-    borderColor: '#ffffff',
-    backgroundColor: '#e8f5e9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarMiniImg: { width: 28, height: 28, borderRadius: 14 },
+  distanceBadge: { paddingHorizontal: Spacing.sm, paddingVertical: 3, borderRadius: BorderRadius.full },
+  distanceBadgeText: { ...Typography['label-sm'] },
+
   stopsSection: { gap: Spacing.sm, marginBottom: Spacing.md },
   stopRow: { flexDirection: 'row', gap: Spacing.md },
   stopIndicator: { alignItems: 'center', width: 24 },
   stopLine: { width: 2, flex: 1, marginVertical: 4 },
   stopInfo: { flex: 1 },
-  stopTop: { flexDirection: 'row', justifyContent: 'space-between' },
-  stopLabel: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  stopLabelText: { ...Typography['label-sm'] },
+  stopLabel: { ...Typography['label-sm'] },
   stopName: { ...Typography.h2 },
   stopAddress: { ...Typography['body-sm'] },
-  stopActions: { flexDirection: 'row', gap: Spacing.xs },
-  stopActionBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  stopActions: { flexDirection: 'row', gap: Spacing.xs, alignItems: 'flex-start' },
+  stopActionBtn: { width: 40, height: 40, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center' },
+
   itemsCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.light['surface-variant'],
-    ...Shadows.sm,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderRadius: BorderRadius.xl, padding: Spacing.md, marginBottom: Spacing.md,
+    borderWidth: 1, borderColor: Colors.light['surface-variant'], ...Shadows.sm,
   },
   itemsLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, flex: 1 },
-  itemsIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  itemsIcon: { width: 40, height: 40, borderRadius: BorderRadius.md, alignItems: 'center', justifyContent: 'center' },
   itemsTitle: { ...Typography['label-md'] },
   itemsList: { ...Typography['body-sm'] },
+
   actionGrid: { flexDirection: 'row', gap: Spacing.md },
   actionSecondary: {
-    flex: 1,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.xl,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
+    flex: 1, paddingVertical: Spacing.md, borderRadius: BorderRadius.xl,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm,
   },
   actionSecondaryText: { ...Typography['label-md'] },
   actionPrimary: {
-    flex: 1,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.xl,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
+    flex: 1, paddingVertical: Spacing.md, borderRadius: BorderRadius.xl,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm,
   },
   actionPrimaryText: { ...Typography['label-md'], color: '#ffffff' },
 });
