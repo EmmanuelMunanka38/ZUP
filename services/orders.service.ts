@@ -44,6 +44,10 @@ export const ordersService = {
     await api.post(`/orders/${id}/cancel`);
   },
 
+  async updateOrderStatus(orderId: string, status: string): Promise<void> {
+    await api.put(`/orders/${orderId}/status`, { status });
+  },
+
   async reorder(orderId: string): Promise<Order> {
     const { data } = await api.post<ApiResponse<Order>>(`/orders/${orderId}/reorder`);
     return data.data;
