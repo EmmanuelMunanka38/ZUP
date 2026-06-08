@@ -2,8 +2,7 @@ import { useRef, useCallback, useImperativeHandle, forwardRef, useMemo, useEffec
 import { View, StyleSheet, Platform, ViewStyle } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { generateMapHTML } from '@/services/mapbox-html';
-import { Coordinate } from '@/types';
-import { MAPBOX_STYLES } from '@/types';
+import { Coordinate, MAPBOX_STYLES } from '@/types';
 
 const MAPBOX_ACCESS_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
 
@@ -37,12 +36,6 @@ interface MapboxMapProps {
   onMapLoaded?: () => void;
   onMarkerPress?: (markerId: string) => void;
 }
-
-const DAR_CENTER: Coordinate & { zoom: number } = {
-  latitude: -6.7924,
-  longitude: 39.2083,
-  zoom: 14,
-};
 
 export const MapboxMap = forwardRef<MapboxMapRef, MapboxMapProps>(function MapboxMap({
   style,
@@ -156,7 +149,9 @@ export const MapboxMap = forwardRef<MapboxMapRef, MapboxMapProps>(function Mapbo
           onMarkerPress?.(msg.markerId);
           break;
       }
-    } catch {}
+    } catch (e) {
+      console.error('Mapbox message parse error:', e);
+    }
   }, [onMapLoaded, onMapPress, onMarkerPress, initialCamera, markers, routePolyline, postMessage]);
 
   if (Platform.OS === 'web') {

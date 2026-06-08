@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   KeyboardAvoidingView, Platform, TextInput, ActivityIndicator,
@@ -7,6 +7,19 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { useAuthStore } from '@/store/authStore';
+
+function detectRole(phone: string): { role: 'customer' | 'driver' | 'restaurant_owner'; prefix: string; number: string } {
+  const clean = phone.replace(/[\s-]/g, '');
+  if (clean.startsWith('D')) return { role: 'driver', prefix: 'D', number: clean.slice(1) };
+  if (clean.startsWith('R')) return { role: 'restaurant_owner', prefix: 'R', number: clean.slice(1) };
+  return { role: 'customer', prefix: '', number: clean };
+}
+
+const roleConfig = {
+  customer: { label: 'Customer', icon: 'account', color: '#0fa958' },
+  driver: { label: 'Driver', icon: 'bike', color: '#1a73e8' },
+  restaurant_owner: { label: 'Restaurant Owner', icon: 'store', color: '#e37400' },
+} as const;
 
 export default function AuthScreen() {
   const { mode: modeParam, type } = useLocalSearchParams<{ mode?: string; type?: string }>();
@@ -19,8 +32,12 @@ export default function AuthScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { sendOtp } = useAuthStore();
 
+  const detected = useMemo(() => detectRole(phone), [phone]);
+  const roleInfo = roleConfig[detected.role];
+
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isPhoneValid = /^\+?\d{7,15}$/.test(phone.replace(/[\s-]/g, ''));
+  const numberPart = detected.number;
+  const isPhoneValid = /^\+?\d{7,15}$/.test(numberPart);
   const isNameValid = mode === 'sign-up' ? name.trim().length >= 2 : true;
   const canSubmit = isEmailValid && isPhoneValid && isNameValid && !isSubmitting;
 
@@ -29,7 +46,7 @@ export default function AuthScreen() {
       if (!isEmailValid) {
         setError('Please enter a valid email address');
       } else if (!isPhoneValid) {
-        setError('Please enter a valid phone number (e.g. +2557XXXXXXXX)');
+        setError('Enter D or R prefix followed by your number (e.g. D+2557XXXXXXXX)');
       } else if (mode === 'sign-up' && !isNameValid) {
         setError('Name must be at least 2 characters');
       }
@@ -39,14 +56,16 @@ export default function AuthScreen() {
     setIsSubmitting(true);
 
     const cleanEmail = email.trim().toLowerCase();
-    const cleanPhone = phone.trim().replace(/[\s-]/g, '');
+    const cleanPhone = numberPart;
+    const displayPhone = phone.trim();
 
     try {
-      await sendOtp(cleanEmail, cleanPhone);
+      await sendOtp(cleanEmail, cleanPhone, detected.role);
       const params = new URLSearchParams({
         email: cleanEmail,
         phone: cleanPhone,
         mode,
+        role: detected.role,
       });
       if (mode === 'sign-up') params.set('name', name.trim());
       router.push(`/verify-otp?${params.toString()}`);
@@ -55,7 +74,7 @@ export default function AuthScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [canSubmit, email, phone, mode, name, sendOtp]);
+  }, [canSubmit, email, phone, mode, name, sendOtp, detected]);
 
   const switchMode = useCallback(() => {
     setMode((m) => (m === 'sign-in' ? 'sign-up' : 'sign-in'));
@@ -189,10 +208,20 @@ export default function AuthScreen() {
                 placeholderTextColor={Colors[theme]['on-surface-variant'] + '80'}
                 value={phone}
                 onChangeText={setPhone}
-                keyboardType="phone-pad"
+                keyboardType="default"
                 autoCapitalize="none"
+                autoCorrect={false}
               />
             </View>
+            {phone.length > 0 && detected.role !== 'customer' && (
+              <View style={[styles.roleBadge, { backgroundColor: roleInfo.color + '15' }]}>
+                <MaterialCommunityIcons name={roleInfo.icon as any} size={14} color={roleInfo.color} />
+                <Text style={[styles.roleBadgeText, { color: roleInfo.color }]}>{roleInfo.label}</Text>
+              </View>
+            )}
+            <Text style={[styles.phoneHint, { color: Colors[theme]['on-surface-variant'] }]}>
+              Prefix with D for Driver, R for Restaurant Owner, or just your number for Customer
+            </Text>
           </View>
 
           <TouchableOpacity
@@ -258,5 +287,12 @@ const styles = StyleSheet.create({
   switchRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Spacing.xs, marginTop: Spacing.lg },
   switchText: { ...Typography['body-md'] },
   switchLink: { ...Typography['label-md'], fontWeight: '700' },
+  roleBadge: {
+    flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4,
+    paddingHorizontal: Spacing.sm, paddingVertical: 3, borderRadius: BorderRadius.full,
+    marginTop: Spacing.sm,
+  },
+  roleBadgeText: { ...Typography['label-sm'], fontWeight: '600' },
+  phoneHint: { ...Typography['label-sm'], marginTop: 4, marginLeft: 4, lineHeight: 16 },
   terms: { ...Typography['body-sm'], textAlign: 'center', marginTop: Spacing.lg, lineHeight: 18, paddingHorizontal: Spacing.md },
 });

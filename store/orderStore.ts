@@ -27,7 +27,8 @@ export const useOrderStore = create<OrderState>((set) => ({
     try {
       const orders = await ordersService.getHistory();
       set({ orders, isLoading: false });
-    } catch {
+    } catch (error) {
+      console.error('Failed to load orders:', error);
       set({ isLoading: false });
     }
   },
@@ -37,8 +38,10 @@ export const useOrderStore = create<OrderState>((set) => ({
     try {
       const order = await ordersService.getById(id);
       set({ currentOrder: order, isLoading: false });
-    } catch {
+    } catch (error) {
+      console.error('Failed to load order:', error);
       set({ isLoading: false });
+      throw error;
     }
   },
 
@@ -46,7 +49,9 @@ export const useOrderStore = create<OrderState>((set) => ({
     try {
       const tracked = await ordersService.trackOrder(id);
       set({ trackedOrder: tracked });
-    } catch {}
+    } catch (error) {
+      console.error('Failed to track order:', error);
+    }
   },
 
   cancelOrder: async (id) => {
