@@ -1,109 +1,90 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { useAuthStore } from '@/store/authStore';
-import { restaurantsService } from '@/services/restaurants.service';
-import { useState } from 'react';
+import { useOrderStore } from '@/store/orderStore';
+import { formatPrice } from '@/utils/format';
 
 const menuItems = [
-  { icon: 'home-map-marker', label: 'Saved Addresses' },
-  { icon: 'receipt', label: 'Order History' },
-  { icon: 'credit-card-outline', label: 'Payment Methods' },
-  { icon: 'bell-outline', label: 'Notifications' },
+  { icon: 'home-map-marker', label: 'Saved Addresses', route: '/saved-addresses' },
+  { icon: 'receipt', label: 'Order History', route: '/(tabs)/orders' },
+  { icon: 'credit-card-outline', label: 'Payment Methods', route: '/saved-addresses' },
+  { icon: 'bell-outline', label: 'Notifications', route: '' },
   { icon: 'weather-night', label: 'Dark Mode', hasToggle: true },
-  { icon: 'help-circle', label: 'Help Center' },
+  { icon: 'help-circle', label: 'Help Center', route: '' },
 ];
 
 export default function ProfileScreen() {
   const theme = 'light';
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
-  const [creating, setCreating] = useState(false);
+  const { orders, loadOrders } = useOrderStore();
+
+  useEffect(() => {
+    loadOrders();
+  }, []);
+
+  const totalSpent = orders.reduce((sum, o) => sum + o.total, 0);
+  const orderCount = orders.length;
 
   const handleLogout = () => {
-    logout();
-    router.replace('/onboarding');
-  };
-
-  const handleCreateTestData = async () => {
-    setCreating(true);
-    try {
-      const restaurant = await restaurantsService.create({
-        name: 'kk',
-        cuisine: 'Local',
-        image: 'https://images.unsplash.com/photo-1552566626-52f8b828add9',
-        address: 'Mbeya City Center',
-        categories: ['Local'],
-        isOpen: true,
-        deliveryFee: 2000,
-        deliveryTime: '15-25 min',
-        distance: '0.5 km',
-        openingHours: '08:00 AM',
-        closingHours: '10:00 PM',
-        rating: 5,
-        ratingCount: 1,
-      });
-      await restaurantsService.createMenuItem(restaurant.id, {
-        name: 'togwa',
-        price: 3000,
-        image: '',
-        description: 'Traditional fermented beverage made from maize',
-        category: 'Drinks',
-        isAvailable: true,
-      });
-      Alert.alert('Success', `Restaurant "kk" and item "togwa" created!\n\nNow go to the restaurant and place an order.`);
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Failed to create test data';
-      Alert.alert('Error', msg);
-    } finally {
-      setCreating(false);
-    }
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Logout', style: 'destructive', onPress: () => { logout(); router.replace('/onboarding'); } },
+    ]);
   };
 
   return (
     <View style={[styles.container, { backgroundColor: Colors[theme].background }]}>
       <View style={[styles.header, { backgroundColor: Colors[theme].surface, borderBottomColor: Colors[theme]['surface-container'] }]}>
         <View style={styles.headerLeft}>
-          <MaterialCommunityIcons name="map-marker" size={24} color={Colors[theme].primary} />
-          <Text style={[styles.headerTitle, { color: Colors[theme].primary }]}>Deliver to Current Location</Text>
+          <MaterialCommunityIcons name="account-circle" size={24} color={Colors[theme].primary} />
+          <Text style={[styles.headerTitle, { color: Colors[theme].primary }]}>My Profile</Text>
         </View>
-        <TouchableOpacity style={[styles.cartButton, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
-          <MaterialCommunityIcons name="cart-outline" size={20} color={Colors[theme].primary} />
-        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={[styles.profileHeader, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+        <TouchableOpacity activeOpacity={0.8} style={[styles.profileHeader, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
           <View style={styles.avatarWrap}>
             <View style={[styles.avatar, { backgroundColor: Colors[theme]['surface-container'] }]}>
-              <MaterialCommunityIcons name="account" size={36} color={Colors[theme]['on-surface']} />
+              {user?.avatar ? (
+                <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
+              ) : (
+                <MaterialCommunityIcons name="account" size={36} color={Colors[theme]['on-surface']} />
+              )}
             </View>
             <View style={[styles.editBadge, { backgroundColor: Colors[theme].primary }]}>
-              <MaterialCommunityIcons name="pencil" size={12} color="#ffffff" />
+              <MaterialCommunityIcons name="camera" size={12} color="#ffffff" />
             </View>
           </View>
-          <View>
-            <Text style={[styles.profileName, { color: Colors[theme]['on-surface'] }]}>{user?.name}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.profileName, { color: Colors[theme]['on-surface'] }]}>{user?.name || 'User'}</Text>
             <Text style={[styles.profileEmail, { color: Colors[theme]['on-surface-variant'] }]}>
-              {user?.email ? `Platinum Member • ${user.email}` : 'Platinum Member'}
+              {user?.email || 'No email'}
             </Text>
+            <View style={styles.memberBadge}>
+              <MaterialCommunityIcons name="crown" size={14} color={Colors[theme].secondary} />
+              <Text style={[styles.memberText, { color: Colors[theme].secondary }]}>Platinum Member</Text>
+            </View>
           </View>
-        </View>
+          <MaterialCommunityIcons name="chevron-right" size={24} color={Colors[theme].outline} />
+        </TouchableOpacity>
 
         <View style={styles.quickStats}>
           <View style={[styles.statCard, { backgroundColor: Colors[theme]['primary-container'] }]}>
-            <MaterialCommunityIcons name="wallet" size={32} color={Colors[theme]['on-primary-container']} />
+            <MaterialCommunityIcons name="wallet" size={28} color={Colors[theme]['on-primary-container']} />
             <View>
-              <Text style={[styles.statLabel, { color: Colors[theme]['on-primary-container'] }]}>Balance</Text>
-              <Text style={[styles.statValue, { color: Colors[theme]['on-primary-container'] }]}>TSh 45,000</Text>
+              <Text style={[styles.statLabel, { color: Colors[theme]['on-primary-container'] }]}>Total Spent</Text>
+              <Text style={[styles.statValue, { color: Colors[theme]['on-primary-container'] }]}>{formatPrice(totalSpent)}</Text>
             </View>
           </View>
           <View style={[styles.statCard, { backgroundColor: Colors[theme]['secondary-container'] }]}>
-            <MaterialCommunityIcons name="cards-heart" size={32} color={Colors[theme]['on-secondary-container']} />
+            <MaterialCommunityIcons name="receipt" size={28} color={Colors[theme]['on-secondary-container']} />
             <View>
-              <Text style={[styles.statLabel, { color: Colors[theme]['on-secondary-container'] }]}>Points</Text>
-              <Text style={[styles.statValue, { color: Colors[theme]['on-secondary-container'] }]}>1,240</Text>
+              <Text style={[styles.statLabel, { color: Colors[theme]['on-secondary-container'] }]}>Orders</Text>
+              <Text style={[styles.statValue, { color: Colors[theme]['on-secondary-container'] }]}>{orderCount}</Text>
             </View>
           </View>
         </View>
@@ -117,8 +98,7 @@ export default function ProfileScreen() {
                 { borderBottomWidth: index < menuItems.length - 1 ? 1 : 0, borderBottomColor: Colors[theme]['surface-variant'] },
               ]}
               onPress={() => {
-                if (item.label === 'Saved Addresses') router.push('/saved-addresses');
-                if (item.label === 'Order History') router.push('/checkout/track-order?id=o1');
+                if (item.route) router.push(item.route as any);
               }}
             >
               <View style={[styles.menuIconWrap, { backgroundColor: Colors[theme]['surface-container'] }]}>
@@ -135,21 +115,6 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           ))}
         </View>
-
-        <TouchableOpacity
-          style={[styles.testBtn, { backgroundColor: Colors[theme]['primary-container'] }]}
-          onPress={handleCreateTestData}
-          disabled={creating}
-        >
-          {creating ? (
-            <ActivityIndicator size="small" color={Colors[theme]['on-primary-container']} />
-          ) : (
-            <>
-              <MaterialCommunityIcons name="flask" size={20} color={Colors[theme]['on-primary-container']} />
-              <Text style={[styles.testBtnText, { color: Colors[theme]['on-primary-container'] }]}>Create Test Data</Text>
-            </>
-          )}
-        </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.logoutBtn, { backgroundColor: Colors[theme]['surface-container-highest'] }]}
@@ -217,6 +182,9 @@ const styles = StyleSheet.create({
   },
   profileName: { ...Typography.h1 },
   profileEmail: { ...Typography['body-sm'], marginTop: 2 },
+  avatarImage: { width: '100%', height: '100%', borderRadius: BorderRadius.full },
+  memberBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  memberText: { ...Typography['label-sm'], fontWeight: '600' },
   quickStats: {
     flexDirection: 'row',
     gap: Spacing.md,
@@ -272,14 +240,4 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   logoutText: { ...Typography['label-md'] },
-  testBtn: {
-    marginTop: Spacing.lg,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-  },
-  testBtnText: { ...Typography['label-md'] },
 });
