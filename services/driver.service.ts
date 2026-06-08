@@ -1,5 +1,5 @@
 import { api } from './api';
-import { DeliveryRequest, ApiResponse } from '@/types';
+import { DeliveryRequest, ApiResponse, Coordinate } from '@/types';
 
 interface DriverDashboardData {
   todayOrders: number;
@@ -33,5 +33,11 @@ export const driverService = {
 
   async updateOrderStatus(orderId: string, status: string): Promise<void> {
     await api.put(`/orders/${orderId}/status`, { status });
+  },
+
+  async sendLocation(location: Coordinate): Promise<void> {
+    try {
+      await api.post('/driver/location', location);
+    } catch {}
   },
 };

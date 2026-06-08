@@ -137,8 +137,8 @@ export const mockDashboardStats: DashboardStats = {
 export const mockDeliveryRequests: DeliveryRequest[] = [
   {
     id: 'dr1', orderId: 'o5',
-    restaurant: { name: 'Mamboz BBQ', address: 'City Center', image: Images.driverDashboard.request },
-    customer: { name: 'Sarah J.', address: 'Regency Apartments, Oysterbay' },
+    restaurant: { name: 'Mamboz BBQ', address: 'City Center', image: Images.driverDashboard.request, location: { latitude: -6.7882, longitude: 39.2064 }, phone: '+255712345680' },
+    customer: { name: 'Sarah J.', address: 'Regency Apartments, Oysterbay', location: { latitude: -6.8024, longitude: 39.2183 }, phone: '+255712345681' },
     pickup: 'Mamboz BBQ, City Center',
     dropoff: 'Regency Apartments, Oysterbay',
     distance: 1.2, deliveryFee: 3500,
