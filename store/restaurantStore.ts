@@ -36,7 +36,8 @@ export const useRestaurantStore = create<RestaurantState>((set) => ({
     try {
       const restaurants = await restaurantsService.getAll();
       set({ restaurants, isLoading: false });
-    } catch {
+    } catch (error) {
+      console.error('Failed to load restaurants:', error);
       set({ isLoading: false });
     }
   },
@@ -45,7 +46,9 @@ export const useRestaurantStore = create<RestaurantState>((set) => ({
     try {
       const featured = await restaurantsService.getFeatured();
       set({ featured });
-    } catch {}
+    } catch (error) {
+      console.error('Failed to load featured:', error);
+    }
   },
 
   loadCurrentRestaurant: async (id) => {
@@ -53,7 +56,8 @@ export const useRestaurantStore = create<RestaurantState>((set) => ({
     try {
       const restaurant = await restaurantsService.getById(id);
       set({ currentRestaurant: restaurant, isLoading: false });
-    } catch {
+    } catch (error) {
+      console.error('Failed to load restaurant:', error);
       set({ isLoading: false });
     }
   },
@@ -62,14 +66,18 @@ export const useRestaurantStore = create<RestaurantState>((set) => ({
     try {
       const menu = await restaurantsService.getMenu(restaurantId);
       set({ currentMenu: menu });
-    } catch {}
+    } catch (error) {
+      console.error('Failed to load menu:', error);
+    }
   },
 
   loadCategories: async () => {
     try {
       const categories = await restaurantsService.getCategories();
       set({ categories });
-    } catch {}
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    }
   },
 
   setCurrentRestaurant: (restaurant) => set({ currentRestaurant: restaurant }),
