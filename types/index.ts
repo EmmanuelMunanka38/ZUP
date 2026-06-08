@@ -78,6 +78,7 @@ export type OrderStatus =
   | 'pending'
   | 'confirmed'
   | 'preparing'
+  | 'ready'
   | 'on_the_way'
   | 'arrived'
   | 'delivered'
@@ -136,10 +137,14 @@ export interface DeliveryRequest {
     name: string;
     address: string;
     image: string;
+    location?: Coordinate;
+    phone?: string;
   };
   customer: {
     name: string;
     address: string;
+    location?: Coordinate;
+    phone?: string;
   };
   pickup: string;
   dropoff: string;
