@@ -7,6 +7,7 @@ import { formatPrice, formatTime } from '@/utils/format';
 import { useOrderStore } from '@/store/orderStore';
 import { useAuthStore } from '@/store/authStore';
 import { useRestaurantStore } from '@/store/restaurantStore';
+import { ordersService } from '@/services/orders.service';
 
 const { width } = Dimensions.get('window');
 
@@ -156,25 +157,25 @@ export default function RestaurantDashboardScreen() {
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <TouchableOpacity style={[styles.quickAction, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+          <TouchableOpacity style={[styles.quickAction, { backgroundColor: Colors[theme]['surface-container-lowest'] }]} onPress={() => router.push('/restaurant/menu-management')}>
             <View style={[styles.qaIcon, { backgroundColor: 'rgba(15, 169, 88, 0.1)' }]}>
               <MaterialCommunityIcons name="food" size={22} color={Colors[theme].primary} />
             </View>
             <Text style={[styles.qaText, { color: Colors[theme]['on-surface'] }]}>Menu</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.quickAction, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+          <TouchableOpacity style={[styles.quickAction, { backgroundColor: Colors[theme]['surface-container-lowest'] }]} onPress={() => router.push('/restaurant/orders')}>
             <View style={[styles.qaIcon, { backgroundColor: 'rgba(253, 192, 3, 0.15)' }]}>
               <MaterialCommunityIcons name="chart-box-outline" size={22} color={Colors[theme].secondary} />
             </View>
             <Text style={[styles.qaText, { color: Colors[theme]['on-surface'] }]}>Analytics</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.quickAction, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+          <TouchableOpacity style={[styles.quickAction, { backgroundColor: Colors[theme]['surface-container-lowest'] }]} onPress={() => router.push('/restaurant/riders')}>
             <View style={[styles.qaIcon, { backgroundColor: 'rgba(15, 169, 88, 0.1)' }]}>
               <MaterialCommunityIcons name="truck-outline" size={22} color={Colors[theme].primary} />
             </View>
             <Text style={[styles.qaText, { color: Colors[theme]['on-surface'] }]}>Riders</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.quickAction, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+          <TouchableOpacity style={[styles.quickAction, { backgroundColor: Colors[theme]['surface-container-lowest'] }]} onPress={() => router.push('/restaurant/settings')}>
             <View style={[styles.qaIcon, { backgroundColor: 'rgba(253, 192, 3, 0.15)' }]}>
               <MaterialCommunityIcons name="cog-outline" size={22} color={Colors[theme].secondary} />
             </View>
@@ -185,7 +186,7 @@ export default function RestaurantDashboardScreen() {
         {/* Orders Section */}
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: Colors[theme]['on-surface'] }]}>Orders</Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/restaurant/orders')}>
             <Text style={[styles.seeAll, { color: Colors[theme].primary }]}>See All</Text>
           </TouchableOpacity>
         </View>
@@ -269,12 +270,28 @@ export default function RestaurantDashboardScreen() {
                       </Text>
                     </View>
                     {(order.status === 'pending' || order.status === 'confirmed') && (
-                      <TouchableOpacity style={[styles.acceptBtn, { backgroundColor: Colors[theme].primary }]}>
+                      <TouchableOpacity
+                        style={[styles.acceptBtn, { backgroundColor: Colors[theme].primary }]}
+                        onPress={async () => {
+                          try {
+                            await ordersService.updateOrderStatus(order.id, 'preparing');
+                            await loadOrders();
+                          } catch {}
+                        }}
+                      >
                         <Text style={styles.acceptBtnText}>Accept</Text>
                       </TouchableOpacity>
                     )}
                     {order.status === 'preparing' && (
-                      <TouchableOpacity style={[styles.acceptBtn, { backgroundColor: Colors[theme].secondary }]}>
+                      <TouchableOpacity
+                        style={[styles.acceptBtn, { backgroundColor: Colors[theme].secondary }]}
+                        onPress={async () => {
+                          try {
+                            await ordersService.updateOrderStatus(order.id, 'ready');
+                            await loadOrders();
+                          } catch {}
+                        }}
+                      >
                         <Text style={styles.acceptBtnText}>Ready</Text>
                       </TouchableOpacity>
                     )}
@@ -322,18 +339,18 @@ export default function RestaurantDashboardScreen() {
           <MaterialCommunityIcons name="food" size={24} color={Colors[theme]['on-surface-variant']} />
           <Text style={[styles.navLabel, { color: Colors[theme]['on-surface-variant'] }]}>Menu</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => setActiveTab('new')}>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/restaurant/orders')}>
           <MaterialCommunityIcons name="receipt" size={24} color={Colors[theme]['on-surface-variant']} />
           <Text style={[styles.navLabel, { color: Colors[theme]['on-surface-variant'] }]}>Orders</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/restaurant/profile')}>
           <MaterialCommunityIcons name="account" size={24} color={Colors[theme]['on-surface-variant']} />
           <Text style={[styles.navLabel, { color: Colors[theme]['on-surface-variant'] }]}>Profile</Text>
         </TouchableOpacity>
       </View>
 
       {/* FAB */}
-      <TouchableOpacity style={[styles.fab, { backgroundColor: Colors[theme].primary }]}>
+      <TouchableOpacity style={[styles.fab, { backgroundColor: Colors[theme].primary }]} onPress={() => router.push('/restaurant/menu-management')}>
         <MaterialCommunityIcons name="plus" size={28} color="#ffffff" />
       </TouchableOpacity>
     </View>
