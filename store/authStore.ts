@@ -11,8 +11,8 @@ interface AuthState {
   setUser: (user: User) => void;
   setToken: (token: string) => void;
   setRefreshToken: (token: string) => void;
-  sendOtp: (email: string, phone: string) => Promise<void>;
-  verifyOTP: (email: string, code: string, name?: string) => Promise<void>;
+  sendOtp: (email: string, phone: string, role?: string) => Promise<void>;
+  verifyOTP: (email: string, code: string, name?: string, role?: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -28,11 +28,11 @@ export const useAuthStore = create<AuthState>()(
       setToken: (token) => set({ token }),
       setRefreshToken: (refreshToken) => set({ refreshToken }),
 
-      sendOtp: async (email: string, phone: string) => {
+      sendOtp: async (email: string, phone: string, role?: string) => {
         set({ isLoading: true });
         try {
           const { authService } = await import('@/services/auth.service');
-          await authService.sendOtp(email, phone);
+          await authService.sendOtp(email, phone, role);
           set({ isLoading: false });
         } catch (err: any) {
           set({ isLoading: false });
@@ -44,11 +44,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      verifyOTP: async (email: string, code: string, name?: string) => {
+      verifyOTP: async (email: string, code: string, name?: string, role?: string) => {
         set({ isLoading: true });
         try {
           const { authService } = await import('@/services/auth.service');
-          const { user, accessToken, refreshToken } = await authService.verifyOTP(email, code, name);
+          const { user, accessToken, refreshToken } = await authService.verifyOTP(email, code, name, role);
           set({ user, token: accessToken, refreshToken, isLoading: false });
           const { useCartStore } = await import('@/store/cartStore');
           useCartStore.getState().loadCart();
