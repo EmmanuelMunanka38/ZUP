@@ -3,6 +3,8 @@ import { Coordinate, DriverLocation, DeliveryRoute, TrackingUpdate, OrderTrackin
 import { mapService } from './map.service';
 import { useAuthStore } from '@/store/authStore';
 
+const ENABLE_SIMULATION = process.env.EXPO_PUBLIC_ENABLE_TRACKING_SIMULATION === 'true';
+
 type TrackingCallback = (update: TrackingUpdate) => void;
 type ConnectionCallback = (connected: boolean) => void;
 
@@ -118,11 +120,17 @@ class TrackingService {
         }
       });
 
-      this.socket.on('connect_error', () => {
-        this.startSimulation().catch(() => {});
+      this.socket.on('connect_error', (err) => {
+        console.error('Tracking socket connect error:', err.message);
+        if (ENABLE_SIMULATION) {
+          this.startSimulation().catch(() => {});
+        }
       });
-    } catch {
-      this.startSimulation().catch(() => {});
+    } catch (err) {
+      console.error('Tracking socket setup error:', err);
+      if (ENABLE_SIMULATION) {
+        this.startSimulation().catch(() => {});
+      }
     }
   }
 
