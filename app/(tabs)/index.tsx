@@ -362,11 +362,28 @@ export default function HomeScreen() {
 
         <View style={styles.recommendedGrid}>
           {(() => {
-            const popular = restaurants
-              .flatMap((r) => (r.menu || []).filter((m) => m.isPopular));
-            const big = popular[0];
-            const small1 = popular[1];
-            const small2 = popular[2];
+            const allItems = restaurants.flatMap((r) => (r.menu || []).map((m) => ({ ...m, restaurantId: r.id })));
+            const shuffled = allItems.sort(() => Math.random() - 0.5);
+            const selected: typeof shuffled = [];
+            const seen = new Set<string>();
+            for (const item of shuffled) {
+              if (selected.length >= 3) break;
+              if (!seen.has(item.category)) {
+                selected.push(item);
+                seen.add(item.category);
+              }
+            }
+            if (selected.length < 3) {
+              for (const item of shuffled) {
+                if (selected.length >= 3) break;
+                if (!selected.find((s) => s.id === item.id)) {
+                  selected.push(item);
+                }
+              }
+            }
+            const big = selected[0];
+            const small1 = selected[1];
+            const small2 = selected[2];
             if (!big) return null;
             return (
               <>
