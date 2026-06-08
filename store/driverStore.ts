@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { DeliveryRequest, Rider } from '@/types';
 import { driverService } from '@/services/driver.service';
-import { mockRider } from '@/services/mock-data';
+import { driverSocketService } from '@/services/driver-socket.service';
 
 interface DriverState {
   isOnline: boolean;
@@ -19,13 +19,14 @@ interface DriverState {
   completeDelivery: () => Promise<void>;
   setRider: (rider: Rider) => void;
   fetchActiveDelivery: () => Promise<void>;
+  addRequest: (request: DeliveryRequest) => void;
 }
 
 export const useDriverStore = create<DriverState>((set, get) => ({
-  isOnline: true,
-  earnings: 42500,
-  totalDeliveries: 14,
-  rider: mockRider,
+  isOnline: false,
+  earnings: 0,
+  totalDeliveries: 0,
+  rider: null,
   requests: [],
   activeDelivery: null,
   isLoading: false,
@@ -67,7 +68,9 @@ export const useDriverStore = create<DriverState>((set, get) => ({
         earnings: get().earnings + delivery.deliveryFee,
         totalDeliveries: get().totalDeliveries + 1,
       });
-    } catch {}
+    } catch (error) {
+      console.error('Failed to complete delivery:', error);
+    }
   },
 
   setRider: (rider) => set({ rider }),
@@ -76,6 +79,15 @@ export const useDriverStore = create<DriverState>((set, get) => ({
     try {
       const active = await driverService.getActive();
       set({ activeDelivery: active });
-    } catch {}
+    } catch (error) {
+      console.error('Failed to fetch active delivery:', error);
+    }
+  },
+
+  addRequest: (request) => {
+    const existing = get().requests.find((r) => r.id === request.id);
+    if (!existing) {
+      set({ requests: [...get().requests, request] });
+    }
   },
 }));
