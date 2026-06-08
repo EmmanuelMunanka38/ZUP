@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Image, Animated, Platform,
+  View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Image, Animated, Platform, Linking,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -233,7 +233,13 @@ export default function TrackOrderScreen() {
 
   const handleCall = useCallback(() => {
     if (rider?.phone) {
-      // Linking.openURL(`tel:${rider.phone}`);
+      Linking.openURL(`tel:${rider.phone}`);
+    }
+  }, [rider]);
+
+  const handleMessage = useCallback(() => {
+    if (rider?.phone) {
+      Linking.openURL(`sms:${rider.phone}`);
     }
   }, [rider]);
 
@@ -435,7 +441,7 @@ export default function TrackOrderScreen() {
                   <TouchableOpacity onPress={handleCall} style={[styles.driverActionBtn, { backgroundColor: Colors[theme].primary }]}>
                     <MaterialCommunityIcons name="phone" size={20} color="#ffffff" />
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.driverActionBtn, { backgroundColor: Colors[theme]['surface-container-high'] }]}>
+                  <TouchableOpacity onPress={handleMessage} style={[styles.driverActionBtn, { backgroundColor: Colors[theme]['surface-container-high'] }]}>
                     <MaterialCommunityIcons name="message-text" size={20} color={Colors[theme].primary} />
                   </TouchableOpacity>
                 </View>
