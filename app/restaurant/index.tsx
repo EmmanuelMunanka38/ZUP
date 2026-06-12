@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Dimensions } from 'react-native';
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Dimensions, AppState, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
@@ -8,6 +8,10 @@ import { useOrderStore } from '@/store/orderStore';
 import { useAuthStore } from '@/store/authStore';
 import { useRestaurantStore } from '@/store/restaurantStore';
 import { ordersService } from '@/services/orders.service';
+<<<<<<< HEAD
+import { restaurantSocketService } from '@/services/restaurant-socket.service';
+=======
+>>>>>>> main
 
 const { width } = Dimensions.get('window');
 
@@ -15,16 +19,64 @@ export default function RestaurantDashboardScreen() {
   const theme = 'light';
   const user = useAuthStore((s) => s.user);
   const { orders, isLoading: ordersLoading, loadOrders } = useOrderStore();
-  const { restaurants, loadRestaurants } = useRestaurantStore();
+  const { restaurants, loadRestaurants, loadMyRestaurant } = useRestaurantStore();
   const [status, setStatus] = useState<'active' | 'busy'>('active');
   const [activeTab, setActiveTab] = useState<'new' | 'active' | 'history'>('new');
+  const [newOrderAlert, setNewOrderAlert] = useState(false);
 
   useEffect(() => {
     loadOrders();
-    loadRestaurants();
+    if (user?.id) {
+      loadMyRestaurant(user.id);
+    } else {
+      loadRestaurants();
+    }
+  }, []);
+
+  useEffect(() => {
+    restaurantSocketService.connect();
+    const unsub = restaurantSocketService.onOrderNotification((data) => {
+      if (data.status === 'pending') {
+        setNewOrderAlert(true);
+      }
+      loadOrders();
+    });
+    return () => {
+      unsub();
+      restaurantSocketService.disconnect();
+    };
   }, []);
 
   const myRestaurant = restaurants[0];
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createForm, setCreateForm] = useState({ name: '', cuisine: '', address: '', deliveryFee: '', deliveryTime: '' });
+
+  const handleCreateRestaurant = async () => {
+    if (!createForm.name || !createForm.cuisine || !createForm.address) {
+      Alert.alert('Required', 'Name, cuisine, and address are required');
+      return;
+    }
+    setCreating(true);
+    try {
+      const { restaurantsService } = await import('@/services/restaurants.service');
+      await restaurantsService.create({
+        name: createForm.name,
+        image: 'https://placehold.co/400x300/eee/999?text=Restaurant',
+        cuisine: createForm.cuisine,
+        deliveryFee: parseFloat(createForm.deliveryFee) || 2500,
+        deliveryTime: createForm.deliveryTime || '30-40 min',
+        distance: '0 km',
+        address: createForm.address,
+      });
+      setShowCreateForm(false);
+      if (user?.id) await loadMyRestaurant(user.id);
+    } catch {
+      Alert.alert('Error', 'Failed to create restaurant');
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const todayOrders = useMemo(() => {
     const today = new Date();
@@ -53,8 +105,8 @@ export default function RestaurantDashboardScreen() {
     ? Math.round(((dailyRevenue - (prevMonthOrders.reduce((s, o) => s + o.total, 0) / 2)) / (prevMonthOrders.reduce((s, o) => s + o.total, 0) / 2)) * 100)
     : 8;
 
-  const newOrders = orders.filter((o) => o.status === 'pending' || o.status === 'confirmed');
-  const activeOrders = orders.filter((o) => ['preparing', 'on_the_way'].includes(o.status));
+  const newOrders = orders.filter((o) => o.status === 'pending' || o.status === 'restaurant_accepted');
+  const activeOrders = orders.filter((o) => ['preparing', 'ready_for_pickup', 'driver_assigned', 'picked_up', 'on_the_way', 'arrived'].includes(o.status));
   const historyOrders = orders.filter((o) => ['delivered', 'cancelled'].includes(o.status));
 
   const displayOrders = activeTab === 'new' ? newOrders : activeTab === 'active' ? activeOrders : historyOrders;
@@ -73,6 +125,62 @@ export default function RestaurantDashboardScreen() {
   const totalEarnings = orders.reduce((sum, o) => sum + o.total, 0);
   const avgOrderValue = orders.length > 0 ? Math.round(totalEarnings / orders.length) : 0;
 
+  if (!myRestaurant && !showCreateForm) {
+    return (
+      <View style={[styles.container, { backgroundColor: Colors[theme].background, justifyContent: 'center', alignItems: 'center', padding: Spacing['container-padding'] }]}>
+        <View style={[styles.createCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+          <MaterialCommunityIcons name="store-plus-outline" size={64} color={Colors[theme].primary} style={{ marginBottom: Spacing.md }} />
+          <Text style={[styles.createTitle, { color: Colors[theme]['on-surface'] }]}>You don't have a restaurant yet</Text>
+          <Text style={[styles.createDesc, { color: Colors[theme]['on-surface-variant'] }]}>Create your restaurant to start receiving orders</Text>
+          <TouchableOpacity
+            style={[styles.createBtn, { backgroundColor: Colors[theme].primary }]}
+            onPress={() => setShowCreateForm(true)}
+          >
+            <MaterialCommunityIcons name="plus" size={20} color="#ffffff" />
+            <Text style={styles.createBtnText}>Create Your Restaurant</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.logoutBtn, { marginTop: Spacing.md }]} onPress={() => { useAuthStore.getState().logout(); router.replace('/onboarding'); }}>
+            <Text style={[styles.logoutBtnText, { color: Colors[theme]['on-surface-variant'] }]}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  if (showCreateForm) {
+    return (
+      <KeyboardAvoidingView style={[styles.container, { backgroundColor: Colors[theme].background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={[styles.header, { backgroundColor: Colors[theme].surface }]}>
+          <TouchableOpacity onPress={() => setShowCreateForm(false)}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color={Colors[theme]['on-surface']} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: Colors[theme]['on-surface'] }]}>Create Restaurant</Text>
+          <View style={{ width: 24 }} />
+        </View>
+        <ScrollView contentContainerStyle={styles.createFormContent}>
+          <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>Restaurant Name *</Text>
+          <TextInput style={[styles.input, { backgroundColor: Colors[theme]['surface-container-low'], color: Colors[theme]['on-surface'], borderColor: Colors[theme]['outline-variant'] }]} value={createForm.name} onChangeText={(v) => setCreateForm((f) => ({ ...f, name: v }))} placeholder="e.g. Mama's Kitchen" placeholderTextColor={Colors[theme]['on-surface-variant']} />
+
+          <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>Cuisine *</Text>
+          <TextInput style={[styles.input, { backgroundColor: Colors[theme]['surface-container-low'], color: Colors[theme]['on-surface'], borderColor: Colors[theme]['outline-variant'] }]} value={createForm.cuisine} onChangeText={(v) => setCreateForm((f) => ({ ...f, cuisine: v }))} placeholder="e.g. Tanzanian, Indian, Fast Food" placeholderTextColor={Colors[theme]['on-surface-variant']} />
+
+          <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>Address *</Text>
+          <TextInput style={[styles.input, { backgroundColor: Colors[theme]['surface-container-low'], color: Colors[theme]['on-surface'], borderColor: Colors[theme]['outline-variant'] }]} value={createForm.address} onChangeText={(v) => setCreateForm((f) => ({ ...f, address: v }))} placeholder="e.g. 123 Mwai Kibaki Road, Dar es Salaam" placeholderTextColor={Colors[theme]['on-surface-variant']} />
+
+          <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>Delivery Fee (TZS)</Text>
+          <TextInput style={[styles.input, { backgroundColor: Colors[theme]['surface-container-low'], color: Colors[theme]['on-surface'], borderColor: Colors[theme]['outline-variant'] }]} value={createForm.deliveryFee} onChangeText={(v) => setCreateForm((f) => ({ ...f, deliveryFee: v }))} placeholder="e.g. 2500" placeholderTextColor={Colors[theme]['on-surface-variant']} keyboardType="numeric" />
+
+          <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>Delivery Time</Text>
+          <TextInput style={[styles.input, { backgroundColor: Colors[theme]['surface-container-low'], color: Colors[theme]['on-surface'], borderColor: Colors[theme]['outline-variant'] }]} value={createForm.deliveryTime} onChangeText={(v) => setCreateForm((f) => ({ ...f, deliveryTime: v }))} placeholder="e.g. 30-40 min" placeholderTextColor={Colors[theme]['on-surface-variant']} />
+
+          <TouchableOpacity style={[styles.submitCreateBtn, { backgroundColor: Colors[theme].primary }]} onPress={handleCreateRestaurant} disabled={creating}>
+            {creating ? <ActivityIndicator size="small" color="#ffffff" /> : <Text style={styles.submitCreateBtnText}>Create Restaurant</Text>}
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: Colors[theme].background }]}>
       {/* Header */}
@@ -89,8 +197,14 @@ export default function RestaurantDashboardScreen() {
           </View>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={[styles.iconBtn, { backgroundColor: Colors[theme]['surface-container-low'] }]}>
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: Colors[theme]['surface-container-low'] }]}
+            onPress={() => setNewOrderAlert(false)}
+          >
             <MaterialCommunityIcons name="bell-outline" size={22} color={Colors[theme]['on-surface']} />
+            {newOrderAlert && (
+              <View style={styles.notificationDot} />
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -269,12 +383,20 @@ export default function RestaurantDashboardScreen() {
                           : 'Dar es Salaam'}
                       </Text>
                     </View>
+<<<<<<< HEAD
+                    {(order.status === 'pending' || order.status === 'restaurant_accepted') && (
+=======
                     {(order.status === 'pending' || order.status === 'confirmed') && (
+>>>>>>> main
                       <TouchableOpacity
                         style={[styles.acceptBtn, { backgroundColor: Colors[theme].primary }]}
                         onPress={async () => {
                           try {
+<<<<<<< HEAD
+                            await ordersService.updateOrderStatus(order.id, 'restaurant_accepted');
+=======
                             await ordersService.updateOrderStatus(order.id, 'preparing');
+>>>>>>> main
                             await loadOrders();
                           } catch {}
                         }}
@@ -287,7 +409,11 @@ export default function RestaurantDashboardScreen() {
                         style={[styles.acceptBtn, { backgroundColor: Colors[theme].secondary }]}
                         onPress={async () => {
                           try {
+<<<<<<< HEAD
+                            await ordersService.updateOrderStatus(order.id, 'ready_for_pickup');
+=======
                             await ordersService.updateOrderStatus(order.id, 'ready');
+>>>>>>> main
                             await loadOrders();
                           } catch {}
                         }}
@@ -369,6 +495,11 @@ const styles = StyleSheet.create({
   restaurantName: { ...Typography.h2 },
   headerRight: { flexDirection: 'row', gap: Spacing.sm },
   iconBtn: { width: 40, height: 40, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center' },
+  notificationDot: {
+    position: 'absolute', top: 6, right: 6,
+    width: 10, height: 10, borderRadius: 5,
+    backgroundColor: '#e5383b',
+  },
   scrollContent: { padding: Spacing['container-padding'], paddingBottom: 160 },
   statusRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.lg },
   statusBtn: {
@@ -467,4 +598,29 @@ const styles = StyleSheet.create({
     width: 56, height: 56, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center',
     shadowColor: '#0fa958', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 8,
   },
+  createCard: {
+    borderRadius: BorderRadius.xl, padding: Spacing.lg, alignItems: 'center', gap: Spacing.sm,
+    borderWidth: 1, borderColor: Colors.light['surface-variant'], ...Shadows.md,
+    width: '100%', maxWidth: 340,
+  },
+  createTitle: { ...Typography.h2, textAlign: 'center' },
+  createDesc: { ...Typography['body-sm'], textAlign: 'center' },
+  createBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginTop: Spacing.md,
+    paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, borderRadius: BorderRadius.full,
+  },
+  createBtnText: { ...Typography['label-md'], color: '#ffffff', fontWeight: '700' },
+  headerTitle: { ...Typography.h2 },
+  logoutBtn: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
+  logoutBtnText: { ...Typography['label-md'] },
+  createFormContent: { padding: Spacing['container-padding'], gap: Spacing.md, paddingTop: Spacing.lg },
+  inputLabel: { ...Typography['label-md'], fontWeight: '600' },
+  input: {
+    borderWidth: 1, borderRadius: BorderRadius.xl, padding: Spacing.md, ...Typography['body-md'],
+  },
+  submitCreateBtn: {
+    marginTop: Spacing.lg, paddingVertical: Spacing.md, borderRadius: BorderRadius.xl,
+    alignItems: 'center', ...Shadows.sm,
+  },
+  submitCreateBtnText: { ...Typography['body-md'], color: '#ffffff', fontWeight: '700' },
 });

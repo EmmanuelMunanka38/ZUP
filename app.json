@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "zup",
-    "slug": "zup",
+    "name": "Piki Food",
+    "slug": "piki-food",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "zup",
+    "icon": "./logo.png",
+    "scheme": "piki-food",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -28,7 +28,7 @@
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_LOCATION"
       ],
-      "package": "com.em_mafx12.zup"
+      "package": "com.em_mafx12.pikifood"
     },
     "web": {
       "output": "static",
@@ -51,8 +51,8 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Zup needs your location to show nearby restaurants and track deliveries.",
-          "locationAlwaysAndWhenInUsePermission": "Zup needs your location to provide real-time delivery tracking even when the app is in the background.",
+          "locationWhenInUsePermission": "Piki Food needs your location to show nearby restaurants and track deliveries.",
+          "locationAlwaysAndWhenInUsePermission": "Piki Food needs your location to provide real-time delivery tracking even when the app is in the background.",
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true
         }

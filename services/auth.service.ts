@@ -32,6 +32,11 @@ export const authService = {
     return data.data;
   },
 
+  async updateProfile(data: { name?: string; email?: string; avatar?: string }): Promise<any> {
+    const { data: res } = await api.put('/auth/profile', data);
+    return res.data;
+  },
+
   async logout(): Promise<void> {
     try {
       await api.post('/auth/logout');

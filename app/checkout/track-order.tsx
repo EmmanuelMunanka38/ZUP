@@ -17,8 +17,11 @@ import { MapboxMap } from '@/components/map/MapboxMap';
 import { MapControls } from '@/components/map/MapControls';
 
 const STATUS_STEPS = [
-  { key: 'confirmed', label: 'Restaurant confirmed', icon: 'clipboard-check-outline' as const },
+  { key: 'restaurant_accepted', label: 'Restaurant confirmed', icon: 'clipboard-check-outline' as const },
   { key: 'preparing', label: 'Preparing your order', icon: 'food-variant' as const },
+  { key: 'ready_for_pickup', label: 'Ready for pickup', icon: 'package-variant-closed' as const },
+  { key: 'driver_assigned', label: 'Driver assigned', icon: 'bike' as const },
+  { key: 'picked_up', label: 'Picked up', icon: 'bike-fast' as const },
   { key: 'on_the_way', label: 'On the way', icon: 'bike-fast' as const },
   { key: 'arrived', label: 'Arrived', icon: 'map-marker-check' as const },
   { key: 'delivered', label: 'Delivered', icon: 'check-circle-outline' as const },
@@ -26,17 +29,23 @@ const STATUS_STEPS = [
 
 const ORDER_STATUS_MAP: Record<string, number> = {
   pending: -1,
-  confirmed: 0,
+  restaurant_accepted: 0,
   preparing: 1,
-  on_the_way: 2,
-  arrived: 3,
-  delivered: 4,
+  ready_for_pickup: 2,
+  driver_assigned: 3,
+  picked_up: 4,
+  on_the_way: 5,
+  arrived: 6,
+  delivered: 7,
 };
 
 const STATUS_COLORS: Record<string, string> = {
   pending: '#fdc003',
-  confirmed: '#0fa958',
+  restaurant_accepted: '#0fa958',
   preparing: '#0fa958',
+  ready_for_pickup: '#0fa958',
+  driver_assigned: '#0fa958',
+  picked_up: '#0fa958',
   on_the_way: '#0fa958',
   arrived: '#0fa958',
   delivered: '#0fa958',
@@ -138,7 +147,7 @@ export default function TrackOrderScreen() {
   const isCancelled = order?.status === 'cancelled';
   const isDelivered = order?.status === 'delivered';
   const isActive = !isCancelled && !isDelivered;
-  const canCancel = order && ['pending', 'confirmed'].includes(order.status);
+  const canCancel = order && ['pending', 'restaurant_accepted'].includes(order.status);
   const rider = order?.rider;
 
   const statusIndex = order ? ORDER_STATUS_MAP[order.status] ?? -1 : -1;
@@ -198,7 +207,7 @@ export default function TrackOrderScreen() {
 
   const handleMapLoaded = useCallback(() => {
     if (!hasFittedBounds) {
-      const points = [restaurantLocation || DAR_CENTER, userLocation, driverLocation].filter(Boolean) as Coordinate[];
+      const points = [restaurantLocation, userLocation, driverLocation].filter(Boolean) as Coordinate[];
       if (points.length < 2) return;
       const lats = points.map((p) => p.latitude);
       const lngs = points.map((p) => p.longitude);
@@ -274,22 +283,27 @@ export default function TrackOrderScreen() {
         <MapboxMap
           ref={mapRef}
           initialCamera={{
+<<<<<<< HEAD
+            latitude: userLocation?.latitude || restaurantLocation?.latitude || 0,
+            longitude: userLocation?.longitude || restaurantLocation?.longitude || 0,
+=======
             latitude: userLocation?.latitude || DAR_CENTER.latitude,
             longitude: userLocation?.longitude || DAR_CENTER.longitude,
+>>>>>>> main
             zoom: 14,
           }}
           showUserLocation
           onMapLoaded={handleMapLoaded}
           style={StyleSheet.absoluteFillObject}
           markers={[
-            {
+            ...(restaurantLocation ? [{
               id: 'restaurant',
-              latitude: restaurantLocation?.latitude || DAR_CENTER.latitude,
-              longitude: restaurantLocation?.longitude || DAR_CENTER.longitude,
+              latitude: restaurantLocation.latitude,
+              longitude: restaurantLocation.longitude,
               title: order.restaurant.name,
               icon: 'store',
               color: Colors[theme].primary,
-            },
+            }] : []),
             ...(driverLocation
               ? [{
                   id: 'driver',
