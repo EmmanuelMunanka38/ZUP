@@ -27,12 +27,15 @@ export function formatDateTime(dateString: string): string {
 export function getStatusLabel(status: string): string {
   const labels: Record<string, string> = {
     pending: 'Pending',
-    confirmed: 'Confirmed',
+    restaurant_accepted: 'Restaurant Accepted',
     preparing: 'Preparing',
+    ready_for_pickup: 'Ready for Pickup',
+    driver_assigned: 'Driver Assigned',
+    picked_up: 'Picked Up',
     on_the_way: 'On the Way',
     arrived: 'Arrived',
     delivered: 'Delivered',
     cancelled: 'Cancelled',
   };
-  return labels[status] || status;
+  return labels[status] || status.replace(/_/g, ' ');
 }
