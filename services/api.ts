@@ -2,7 +2,8 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
 
-const BASE_URL = (process.env.EXPO_PUBLIC_API_URL || 'https://zup-backend-dhkw.onrender.com') + '/api';
+export const API_ORIGIN = process.env.EXPO_PUBLIC_API_URL || 'https://zup-backend-dhkw.onrender.com';
+export const BASE_URL = `${API_ORIGIN}/api`;
 
 export const api = axios.create({
   baseURL: BASE_URL,
