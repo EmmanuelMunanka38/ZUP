@@ -76,9 +76,11 @@ export interface Order {
 
 export type OrderStatus =
   | 'pending'
-  | 'confirmed'
+  | 'restaurant_accepted'
   | 'preparing'
-  | 'ready'
+  | 'ready_for_pickup'
+  | 'driver_assigned'
+  | 'picked_up'
   | 'on_the_way'
   | 'arrived'
   | 'delivered'
