@@ -13,12 +13,13 @@ interface AuthState {
   setRefreshToken: (token: string) => void;
   sendOtp: (email: string, phone: string, role?: string) => Promise<void>;
   verifyOTP: (email: string, code: string, name?: string, role?: string) => Promise<void>;
+  updateProfile: (data: { name?: string; email?: string; avatar?: string }) => Promise<void>;
   logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
       refreshToken: null,
@@ -27,6 +28,17 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user }),
       setToken: (token) => set({ token }),
       setRefreshToken: (refreshToken) => set({ refreshToken }),
+
+      updateProfile: async (data: { name?: string; email?: string; avatar?: string }) => {
+        try {
+          const { authService } = await import('@/services/auth.service');
+          const updated = await authService.updateProfile(data);
+          set({ user: { ...get().user, ...updated } as any });
+        } catch (err: any) {
+          const message = err?.response?.data?.message || 'Failed to update profile';
+          throw new Error(message);
+        }
+      },
 
       sendOtp: async (email: string, phone: string, role?: string) => {
         set({ isLoading: true });
