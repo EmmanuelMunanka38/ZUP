@@ -12,6 +12,7 @@ interface RestaurantState {
   isLoading: boolean;
 
   loadRestaurants: () => Promise<void>;
+  loadMyRestaurant: (ownerId: string) => Promise<void>;
   loadFeatured: () => Promise<void>;
   loadCurrentRestaurant: (id: string) => Promise<void>;
   loadMenu: (restaurantId: string) => Promise<void>;
@@ -39,6 +40,15 @@ export const useRestaurantStore = create<RestaurantState>((set) => ({
     } catch (error) {
       console.error('Failed to load restaurants:', error);
       set({ isLoading: false });
+    }
+  },
+
+  loadMyRestaurant: async (ownerId: string) => {
+    try {
+      const restaurants = await restaurantsService.getByOwner(ownerId);
+      set({ restaurants });
+    } catch (error) {
+      console.error('Failed to load my restaurant:', error);
     }
   },
 
