@@ -14,9 +14,7 @@ import { MapboxMap } from '@/components/map/MapboxMap';
 import { MapControls } from '@/components/map/MapControls';
 import { Coordinate } from '@/types';
 
-type DriverStep = 'to_pickup' | 'picked_up' | 'to_dropoff' | 'arrived' | 'completed';
-
-const DAR_CENTER = { latitude: -6.7924, longitude: 39.2083 };
+type DriverStep = 'to_pickup' | 'picked_up' | 'on_the_way' | 'arrived' | 'completed';
 
 export default function ActiveDeliveryScreen() {
   const theme = 'light';
@@ -30,9 +28,8 @@ export default function ActiveDeliveryScreen() {
   const [isLoadingRoute, setIsLoadingRoute] = useState(true);
   const [hasFittedBounds, setHasFittedBounds] = useState(false);
 
-  const restaurantLocation = activeDelivery?.restaurant.location || DAR_CENTER;
-  const customerLocation = activeDelivery?.customer.location || DAR_CENTER;
-  const displayLocation = currentLocation || DAR_CENTER;
+  const restaurantLocation = activeDelivery?.restaurant.location;
+  const customerLocation = activeDelivery?.customer.location;
 
   const destination = useMemo(() => {
     if (step === 'to_pickup' || step === 'picked_up') return restaurantLocation;
@@ -40,8 +37,8 @@ export default function ActiveDeliveryScreen() {
   }, [step, restaurantLocation, customerLocation]);
 
   const statusLabel = step === 'to_pickup' ? 'On the way to pickup'
-    : step === 'picked_up' ? 'Picked up, heading to customer'
-    : step === 'to_dropoff' ? 'Heading to drop-off'
+    : step === 'picked_up' ? 'Picked up'
+    : step === 'on_the_way' ? 'Heading to drop-off'
     : step === 'arrived' ? 'Arrived at destination'
     : 'Completed';
 
@@ -293,7 +290,7 @@ export default function ActiveDeliveryScreen() {
               {step === 'to_pickup' && (
                 <TouchableOpacity
                   style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
-                  onPress={() => handleStatusUpdate('on_the_way', 'picked_up')}
+                  onPress={() => handleStatusUpdate('picked_up', 'picked_up')}
                   disabled={updating}
                 >
                   {updating ? (
@@ -304,6 +301,19 @@ export default function ActiveDeliveryScreen() {
                 </TouchableOpacity>
               )}
               {step === 'picked_up' && (
+                <TouchableOpacity
+                  style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
+                  onPress={() => handleStatusUpdate('on_the_way', 'on_the_way')}
+                  disabled={updating}
+                >
+                  {updating ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <><MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" /><Text style={styles.actionPrimaryText}>On the Way</Text></>
+                  )}
+                </TouchableOpacity>
+              )}
+              {step === 'on_the_way' && (
                 <TouchableOpacity
                   style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
                   onPress={() => handleStatusUpdate('arrived', 'arrived')}
