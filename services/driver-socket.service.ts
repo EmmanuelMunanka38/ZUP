@@ -53,7 +53,7 @@ class DriverSocketService {
         this.stopLocationPublishing();
       });
 
-      this.socket.on('driver:new_request', (data: DeliveryRequest) => {
+      this.socket.on('delivery:available', (data: any) => {
         this.newRequestListeners.forEach((cb) => cb(data));
       });
 
