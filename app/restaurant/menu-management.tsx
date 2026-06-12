@@ -13,18 +13,19 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { formatPrice } from '@/utils/format';
 import { useRestaurantStore } from '@/store/restaurantStore';
+import { useAuthStore } from '@/store/authStore';
 import { uploadService } from '@/services/upload.service';
 import { MenuItem } from '@/types';
 
 export default function MenuManagementScreen() {
   const theme = 'light';
-  const { restaurants, currentMenu, loadMenu, categories: storeCategories, loadCategories, isLoading, addMenuItem, updateMenuItem, removeMenuItem } = useRestaurantStore();
+  const user = useAuthStore((s) => s.user);
+  const { restaurants, currentMenu, loadMyRestaurant, loadMenu, categories: storeCategories, loadCategories, isLoading, addMenuItem, updateMenuItem, removeMenuItem } = useRestaurantStore();
   const [activeCategory, setActiveCategory] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -43,16 +44,23 @@ export default function MenuManagementScreen() {
   const myRestaurant = restaurants.length > 0 ? restaurants[0] : null;
 
   useEffect(() => {
+    loadCategories();
+    if (user?.id) {
+      loadMyRestaurant(user.id);
+    }
+  }, [loadCategories, loadMyRestaurant, user?.id]);
+
+  useEffect(() => {
     if (myRestaurant) {
       loadMenu(myRestaurant.id);
-      loadCategories();
     }
-  }, [myRestaurant?.id]);
+  }, [loadMenu, myRestaurant?.id]);
 
   const menuCategoryNames = useMemo(() => {
     const cats = new Set(currentMenu.map((m) => m.category));
+    storeCategories.forEach((c) => cats.add(c.name));
     return Array.from(cats);
-  }, [currentMenu]);
+  }, [currentMenu, storeCategories]);
 
   useEffect(() => {
     if (menuCategoryNames.length > 0 && !activeCategory) {
@@ -115,12 +123,33 @@ export default function MenuManagementScreen() {
   };
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
+    let ImagePicker: typeof import('expo-image-picker');
+    try {
+      ImagePicker = await import('expo-image-picker');
+    } catch {
+      Alert.alert(
+        'Image picker unavailable',
+        'The current app build does not include image picking. Rebuild the app after installing expo-image-picker.'
+      );
+      return;
+    }
+
+    let result;
+    try {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+    } catch {
+      Alert.alert(
+        'Image picker unavailable',
+        'The current app build does not include image picking. Rebuild the app after installing expo-image-picker.'
+      );
+      return;
+    }
+
     if (!result.canceled && result.assets[0]) {
       setUploadingImage(true);
       try {
@@ -137,10 +166,6 @@ export default function MenuManagementScreen() {
   const handleAdd = async () => {
     if (!form.name || !form.price || !form.category || !myRestaurant) {
       Alert.alert('Required', 'Name, price, and category are required');
-      return;
-    }
-    if (!form.image) {
-      Alert.alert('Required', 'Please add a photo for the menu item');
       return;
     }
     try {
@@ -207,20 +232,25 @@ export default function MenuManagementScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoriesRow}
       >
-        {storeCategories.filter((c) => menuCategoryNames.includes(c.name)).map((cat) => {
-          const catCount = currentMenu.filter((m) => m.category === cat.name && !m.isAvailable).length;
-          const isSelected = activeCategory === cat.name;
+        {menuCategoryNames.map((categoryName) => {
+          const cat = storeCategories.find((c) => c.name === categoryName);
+          const catCount = currentMenu.filter((m) => m.category === categoryName && !m.isAvailable).length;
+          const isSelected = activeCategory === categoryName;
           return (
             <TouchableOpacity
-              key={cat.id}
+              key={cat?.id || categoryName}
               style={styles.categoryItem}
-              onPress={() => setActiveCategory(cat.name)}
+              onPress={() => setActiveCategory(categoryName)}
             >
               <View style={[styles.categoryIcon, { borderColor: isSelected ? Colors[theme].primary : Colors[theme]['surface-container-high'] }]}>
-                <Image source={{ uri: cat.image }} style={styles.categoryFoodImage} />
+                {cat?.image ? (
+                  <Image source={{ uri: cat.image }} style={styles.categoryFoodImage} />
+                ) : (
+                  <MaterialCommunityIcons name="food" size={28} color={Colors[theme]['on-surface-variant']} />
+                )}
               </View>
               <Text style={[styles.categoryName, { color: isSelected ? Colors[theme].primary : Colors[theme]['on-surface'], fontWeight: isSelected ? '700' : '400' }]}>
-                {cat.name}
+                {categoryName}
               </Text>
               {catCount > 0 && (
                 <View style={[styles.unavailableDot, { backgroundColor: Colors[theme].error }]}>
@@ -266,10 +296,13 @@ export default function MenuManagementScreen() {
                   },
                 ]}
               >
-                <Image
-                  source={{ uri: item.image }}
-                  style={[styles.menuImage, isUnavailable && styles.menuImageUnavailable]}
-                />
+                {item.image ? (
+                  <Image source={{ uri: item.image }} style={[styles.menuImage, isUnavailable && styles.menuImageUnavailable]} />
+                ) : (
+                  <View style={[styles.menuImage, { backgroundColor: Colors[theme]['surface-container'], alignItems: 'center', justifyContent: 'center' }]}>
+                    <MaterialCommunityIcons name="food" size={32} color={Colors[theme]['on-surface-variant']} />
+                  </View>
+                )}
                 {isUnavailable && (
                   <View style={styles.unavailableOverlay}>
                     <MaterialCommunityIcons name="close-circle" size={20} color={Colors[theme].error} />
@@ -400,7 +433,7 @@ export default function MenuManagementScreen() {
                 />
               </View>
 
-              <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>Image</Text>
+              <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>Image (optional)</Text>
               <TouchableOpacity
                 style={[styles.imagePickerBtn, { backgroundColor: Colors[theme]['surface-container-low'], borderColor: Colors[theme]['outline-variant'] }]}
                 onPress={pickImage}
