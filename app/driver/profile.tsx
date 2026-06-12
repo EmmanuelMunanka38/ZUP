@@ -1,20 +1,80 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, Modal, Image, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { useAuthStore } from '@/store/authStore';
-import { formatPrice } from '@/utils/format';
 import { useDriverStore } from '@/store/driverStore';
+import { formatPrice } from '@/utils/format';
+import { uploadService } from '@/services/upload.service';
 
 export default function DriverProfileScreen() {
   const theme = 'light';
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const updateProfile = useAuthStore((s) => s.updateProfile);
   const { earnings, totalDeliveries } = useDriverStore();
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const handleLogout = () => {
     logout();
     router.replace('/onboarding');
+  };
+
+  const openEditModal = () => {
+    setEditName(user?.name || '');
+    setEditEmail(user?.email || '');
+    setShowEditModal(true);
+  };
+
+  const pickAvatar = async () => {
+    let ImagePicker: typeof import('expo-image-picker');
+    try {
+      ImagePicker = await import('expo-image-picker');
+    } catch {
+      Alert.alert('Unavailable', 'Image picker is not available');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setUploadingAvatar(true);
+      try {
+        const url = await uploadService.uploadImage(result.assets[0].uri);
+        await updateProfile({ avatar: url });
+      } catch {
+        Alert.alert('Error', 'Failed to upload avatar');
+      } finally {
+        setUploadingAvatar(false);
+      }
+    }
+  };
+
+  const handleSave = async () => {
+    if (!editName.trim()) {
+      Alert.alert('Required', 'Name cannot be empty');
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateProfile({ name: editName.trim(), email: editEmail.trim() });
+      setShowEditModal(false);
+    } catch (err: any) {
+      Alert.alert('Error', err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -24,14 +84,27 @@ export default function DriverProfileScreen() {
           <MaterialCommunityIcons name="arrow-left" size={24} color={Colors[theme]['on-surface']} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: Colors[theme]['on-surface'] }]}>Driver Profile</Text>
-        <View style={{ width: 24 }} />
+        <TouchableOpacity onPress={openEditModal}>
+          <MaterialCommunityIcons name="account-edit" size={24} color={Colors[theme].primary} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={[styles.profileCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
-          <View style={[styles.avatar, { backgroundColor: Colors[theme]['primary-container'] }]}>
-            <MaterialCommunityIcons name="bike" size={32} color="#ffffff" />
-          </View>
+          <TouchableOpacity onPress={pickAvatar} disabled={uploadingAvatar} style={styles.avatarWrap}>
+            <View style={[styles.avatar, { backgroundColor: Colors[theme]['primary-container'] }]}>
+              {uploadingAvatar ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : user?.avatar ? (
+                <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
+              ) : (
+                <MaterialCommunityIcons name="bike" size={32} color="#ffffff" />
+              )}
+            </View>
+            <View style={[styles.editBadge, { backgroundColor: Colors[theme].primary }]}>
+              <MaterialCommunityIcons name="camera" size={12} color="#ffffff" />
+            </View>
+          </TouchableOpacity>
           <Text style={[styles.name, { color: Colors[theme]['on-surface'] }]}>{user?.name || 'Driver'}</Text>
           <Text style={[styles.email, { color: Colors[theme]['on-surface-variant'] }]}>{user?.email || ''}</Text>
           <View style={styles.statsRow}>
@@ -83,6 +156,51 @@ export default function DriverProfileScreen() {
           <Text style={[styles.logoutText, { color: Colors[theme].error }]}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal visible={showEditModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: Colors[theme].surface }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: Colors[theme]['on-surface'] }]}>Edit Profile</Text>
+              <TouchableOpacity onPress={() => setShowEditModal(false)}>
+                <MaterialCommunityIcons name="close" size={24} color={Colors[theme]['on-surface-variant']} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>Full Name</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: Colors[theme]['surface-container-low'], color: Colors[theme]['on-surface'], borderColor: Colors[theme]['outline-variant'] }]}
+              value={editName}
+              onChangeText={setEditName}
+              placeholder="Your name"
+              placeholderTextColor={Colors[theme]['on-surface-variant']}
+            />
+
+            <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'], marginTop: Spacing.md }]}>Email</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: Colors[theme]['surface-container-low'], color: Colors[theme]['on-surface'], borderColor: Colors[theme]['outline-variant'] }]}
+              value={editEmail}
+              onChangeText={setEditEmail}
+              placeholder="your@email.com"
+              placeholderTextColor={Colors[theme]['on-surface-variant']}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            <TouchableOpacity
+              style={[styles.saveBtn, { backgroundColor: Colors[theme].primary, opacity: saving ? 0.7 : 1 }]}
+              onPress={handleSave}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <Text style={styles.saveBtnText}>Save Changes</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -99,7 +217,15 @@ const styles = StyleSheet.create({
     alignItems: 'center', borderRadius: BorderRadius.xl, padding: Spacing.lg,
     marginBottom: Spacing.lg, ...Shadows.sm,
   },
-  avatar: { width: 72, height: 72, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md },
+  avatarWrap: { position: 'relative', marginBottom: Spacing.md },
+  avatar: { width: 72, height: 72, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  editBadge: {
+    position: 'absolute', bottom: 0, right: 0,
+    width: 24, height: 24, borderRadius: BorderRadius.full,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: '#ffffff',
+  },
+  avatarImage: { width: '100%', height: '100%' },
   name: { ...Typography.h1 },
   email: { ...Typography['body-sm'], marginTop: 2 },
   statsRow: { flexDirection: 'row', marginTop: Spacing.lg, alignItems: 'center' },
@@ -119,4 +245,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm,
   },
   logoutText: { ...Typography['label-md'] },
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: Spacing['container-padding'],
+    paddingBottom: 40,
+    maxHeight: '90%',
+    borderWidth: 1, borderColor: Colors.light['outline-variant'],
+  },
+  modalHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  modalTitle: { ...Typography.h1 },
+  inputLabel: { ...Typography['label-md'], fontWeight: '600' },
+  input: {
+    borderWidth: 1, borderRadius: BorderRadius.xl,
+    padding: Spacing.md, ...Typography['body-md'],
+  },
+  saveBtn: {
+    marginTop: Spacing.lg, paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.xl, alignItems: 'center', ...Shadows.sm,
+  },
+  saveBtnText: { ...Typography['body-md'], color: '#ffffff', fontWeight: '700' },
 });
