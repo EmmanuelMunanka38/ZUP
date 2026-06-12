@@ -8,7 +8,10 @@ import { useOrderStore } from '@/store/orderStore';
 import { useAuthStore } from '@/store/authStore';
 import { useRestaurantStore } from '@/store/restaurantStore';
 import { ordersService } from '@/services/orders.service';
+<<<<<<< HEAD
 import { restaurantSocketService } from '@/services/restaurant-socket.service';
+=======
+>>>>>>> main
 
 const { width } = Dimensions.get('window');
 
@@ -380,12 +383,20 @@ export default function RestaurantDashboardScreen() {
                           : 'Dar es Salaam'}
                       </Text>
                     </View>
+<<<<<<< HEAD
                     {(order.status === 'pending' || order.status === 'restaurant_accepted') && (
+=======
+                    {(order.status === 'pending' || order.status === 'confirmed') && (
+>>>>>>> main
                       <TouchableOpacity
                         style={[styles.acceptBtn, { backgroundColor: Colors[theme].primary }]}
                         onPress={async () => {
                           try {
+<<<<<<< HEAD
                             await ordersService.updateOrderStatus(order.id, 'restaurant_accepted');
+=======
+                            await ordersService.updateOrderStatus(order.id, 'preparing');
+>>>>>>> main
                             await loadOrders();
                           } catch {}
                         }}
@@ -398,7 +409,11 @@ export default function RestaurantDashboardScreen() {
                         style={[styles.acceptBtn, { backgroundColor: Colors[theme].secondary }]}
                         onPress={async () => {
                           try {
+<<<<<<< HEAD
                             await ordersService.updateOrderStatus(order.id, 'ready_for_pickup');
+=======
+                            await ordersService.updateOrderStatus(order.id, 'ready');
+>>>>>>> main
                             await loadOrders();
                           } catch {}
                         }}

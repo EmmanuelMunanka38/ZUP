@@ -13,19 +13,27 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { formatPrice } from '@/utils/format';
 import { useRestaurantStore } from '@/store/restaurantStore';
+<<<<<<< HEAD
 import { useAuthStore } from '@/store/authStore';
+=======
+>>>>>>> main
 import { uploadService } from '@/services/upload.service';
 import { MenuItem } from '@/types';
 
 export default function MenuManagementScreen() {
   const theme = 'light';
+<<<<<<< HEAD
   const user = useAuthStore((s) => s.user);
   const { restaurants, currentMenu, loadMyRestaurant, loadMenu, categories: storeCategories, loadCategories, isLoading, addMenuItem, updateMenuItem, removeMenuItem } = useRestaurantStore();
+=======
+  const { restaurants, currentMenu, loadMenu, categories: storeCategories, loadCategories, isLoading, addMenuItem, updateMenuItem, removeMenuItem } = useRestaurantStore();
+>>>>>>> main
   const [activeCategory, setActiveCategory] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -53,6 +61,7 @@ export default function MenuManagementScreen() {
   useEffect(() => {
     if (myRestaurant) {
       loadMenu(myRestaurant.id);
+      loadCategories();
     }
   }, [loadMenu, myRestaurant?.id]);
 
@@ -123,6 +132,7 @@ export default function MenuManagementScreen() {
   };
 
   const pickImage = async () => {
+<<<<<<< HEAD
     let ImagePicker: typeof import('expo-image-picker');
     try {
       ImagePicker = await import('expo-image-picker');
@@ -150,6 +160,14 @@ export default function MenuManagementScreen() {
       return;
     }
 
+=======
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+>>>>>>> main
     if (!result.canceled && result.assets[0]) {
       setUploadingImage(true);
       try {
@@ -168,6 +186,13 @@ export default function MenuManagementScreen() {
       Alert.alert('Required', 'Name, price, and category are required');
       return;
     }
+<<<<<<< HEAD
+=======
+    if (!form.image) {
+      Alert.alert('Required', 'Please add a photo for the menu item');
+      return;
+    }
+>>>>>>> main
     try {
       await addMenuItem(myRestaurant.id, {
         name: form.name,
@@ -232,6 +257,7 @@ export default function MenuManagementScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoriesRow}
       >
+<<<<<<< HEAD
         {menuCategoryNames.map((categoryName) => {
           const cat = storeCategories.find((c) => c.name === categoryName);
           const catCount = currentMenu.filter((m) => m.category === categoryName && !m.isAvailable).length;
@@ -251,6 +277,22 @@ export default function MenuManagementScreen() {
               </View>
               <Text style={[styles.categoryName, { color: isSelected ? Colors[theme].primary : Colors[theme]['on-surface'], fontWeight: isSelected ? '700' : '400' }]}>
                 {categoryName}
+=======
+        {storeCategories.filter((c) => menuCategoryNames.includes(c.name)).map((cat) => {
+          const catCount = currentMenu.filter((m) => m.category === cat.name && !m.isAvailable).length;
+          const isSelected = activeCategory === cat.name;
+          return (
+            <TouchableOpacity
+              key={cat.id}
+              style={styles.categoryItem}
+              onPress={() => setActiveCategory(cat.name)}
+            >
+              <View style={[styles.categoryIcon, { borderColor: isSelected ? Colors[theme].primary : Colors[theme]['surface-container-high'] }]}>
+                <Image source={{ uri: cat.image }} style={styles.categoryFoodImage} />
+              </View>
+              <Text style={[styles.categoryName, { color: isSelected ? Colors[theme].primary : Colors[theme]['on-surface'], fontWeight: isSelected ? '700' : '400' }]}>
+                {cat.name}
+>>>>>>> main
               </Text>
               {catCount > 0 && (
                 <View style={[styles.unavailableDot, { backgroundColor: Colors[theme].error }]}>
@@ -296,6 +338,7 @@ export default function MenuManagementScreen() {
                   },
                 ]}
               >
+<<<<<<< HEAD
                 {item.image ? (
                   <Image source={{ uri: item.image }} style={[styles.menuImage, isUnavailable && styles.menuImageUnavailable]} />
                 ) : (
@@ -303,6 +346,12 @@ export default function MenuManagementScreen() {
                     <MaterialCommunityIcons name="food" size={32} color={Colors[theme]['on-surface-variant']} />
                   </View>
                 )}
+=======
+                <Image
+                  source={{ uri: item.image }}
+                  style={[styles.menuImage, isUnavailable && styles.menuImageUnavailable]}
+                />
+>>>>>>> main
                 {isUnavailable && (
                   <View style={styles.unavailableOverlay}>
                     <MaterialCommunityIcons name="close-circle" size={20} color={Colors[theme].error} />
@@ -433,7 +482,11 @@ export default function MenuManagementScreen() {
                 />
               </View>
 
+<<<<<<< HEAD
               <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>Image (optional)</Text>
+=======
+              <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>Image</Text>
+>>>>>>> main
               <TouchableOpacity
                 style={[styles.imagePickerBtn, { backgroundColor: Colors[theme]['surface-container-low'], borderColor: Colors[theme]['outline-variant'] }]}
                 onPress={pickImage}

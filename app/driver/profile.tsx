@@ -1,17 +1,27 @@
+<<<<<<< HEAD
 import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, Modal, Image, ActivityIndicator } from 'react-native';
+=======
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+>>>>>>> main
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { useAuthStore } from '@/store/authStore';
+<<<<<<< HEAD
 import { useDriverStore } from '@/store/driverStore';
 import { formatPrice } from '@/utils/format';
 import { uploadService } from '@/services/upload.service';
+=======
+import { formatPrice } from '@/utils/format';
+import { useDriverStore } from '@/store/driverStore';
+>>>>>>> main
 
 export default function DriverProfileScreen() {
   const theme = 'light';
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+<<<<<<< HEAD
   const updateProfile = useAuthStore((s) => s.updateProfile);
   const { earnings, totalDeliveries } = useDriverStore();
 
@@ -21,11 +31,16 @@ export default function DriverProfileScreen() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
 
+=======
+  const { earnings, totalDeliveries } = useDriverStore();
+
+>>>>>>> main
   const handleLogout = () => {
     logout();
     router.replace('/onboarding');
   };
 
+<<<<<<< HEAD
   const openEditModal = () => {
     setEditName(user?.name || '');
     setEditEmail(user?.email || '');
@@ -77,6 +92,8 @@ export default function DriverProfileScreen() {
     }
   };
 
+=======
+>>>>>>> main
   return (
     <View style={[styles.container, { backgroundColor: Colors[theme].background }]}>
       <View style={[styles.header, { backgroundColor: Colors[theme].surface }]}>
@@ -84,13 +101,18 @@ export default function DriverProfileScreen() {
           <MaterialCommunityIcons name="arrow-left" size={24} color={Colors[theme]['on-surface']} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: Colors[theme]['on-surface'] }]}>Driver Profile</Text>
+<<<<<<< HEAD
         <TouchableOpacity onPress={openEditModal}>
           <MaterialCommunityIcons name="account-edit" size={24} color={Colors[theme].primary} />
         </TouchableOpacity>
+=======
+        <View style={{ width: 24 }} />
+>>>>>>> main
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={[styles.profileCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+<<<<<<< HEAD
           <TouchableOpacity onPress={pickAvatar} disabled={uploadingAvatar} style={styles.avatarWrap}>
             <View style={[styles.avatar, { backgroundColor: Colors[theme]['primary-container'] }]}>
               {uploadingAvatar ? (
@@ -105,6 +127,11 @@ export default function DriverProfileScreen() {
               <MaterialCommunityIcons name="camera" size={12} color="#ffffff" />
             </View>
           </TouchableOpacity>
+=======
+          <View style={[styles.avatar, { backgroundColor: Colors[theme]['primary-container'] }]}>
+            <MaterialCommunityIcons name="bike" size={32} color="#ffffff" />
+          </View>
+>>>>>>> main
           <Text style={[styles.name, { color: Colors[theme]['on-surface'] }]}>{user?.name || 'Driver'}</Text>
           <Text style={[styles.email, { color: Colors[theme]['on-surface-variant'] }]}>{user?.email || ''}</Text>
           <View style={styles.statsRow}>
@@ -156,6 +183,7 @@ export default function DriverProfileScreen() {
           <Text style={[styles.logoutText, { color: Colors[theme].error }]}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
+<<<<<<< HEAD
 
       <Modal visible={showEditModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
@@ -201,6 +229,8 @@ export default function DriverProfileScreen() {
           </View>
         </View>
       </Modal>
+=======
+>>>>>>> main
     </View>
   );
 }
@@ -217,6 +247,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', borderRadius: BorderRadius.xl, padding: Spacing.lg,
     marginBottom: Spacing.lg, ...Shadows.sm,
   },
+<<<<<<< HEAD
   avatarWrap: { position: 'relative', marginBottom: Spacing.md },
   avatar: { width: 72, height: 72, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   editBadge: {
@@ -226,6 +257,9 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderColor: '#ffffff',
   },
   avatarImage: { width: '100%', height: '100%' },
+=======
+  avatar: { width: 72, height: 72, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md },
+>>>>>>> main
   name: { ...Typography.h1 },
   email: { ...Typography['body-sm'], marginTop: 2 },
   statsRow: { flexDirection: 'row', marginTop: Spacing.lg, alignItems: 'center' },
@@ -245,6 +279,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm,
   },
   logoutText: { ...Typography['label-md'] },
+<<<<<<< HEAD
   modalOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
@@ -271,4 +306,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xl, alignItems: 'center', ...Shadows.sm,
   },
   saveBtnText: { ...Typography['body-md'], color: '#ffffff', fontWeight: '700' },
+=======
+>>>>>>> main
 });

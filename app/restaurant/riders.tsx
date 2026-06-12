@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Alert } from 'react-native';
 import { router } from 'expo-router';
@@ -26,6 +27,15 @@ export default function RidersScreen() {
       setIsLoading(false);
     }
   };
+=======
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { router } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+
+export default function RidersScreen() {
+  const theme = 'light';
+>>>>>>> main
 
   return (
     <View style={[styles.container, { backgroundColor: Colors[theme].background }]}>
@@ -34,17 +44,38 @@ export default function RidersScreen() {
           <MaterialCommunityIcons name="arrow-left" size={24} color={Colors[theme]['on-surface']} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: Colors[theme]['on-surface'] }]}>Riders</Text>
+<<<<<<< HEAD
         <TouchableOpacity onPress={loadDrivers}>
           <MaterialCommunityIcons name="refresh" size={24} color={Colors[theme].primary} />
+=======
+        <TouchableOpacity>
+          <MaterialCommunityIcons name="plus" size={24} color={Colors[theme].primary} />
+>>>>>>> main
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+<<<<<<< HEAD
         <View style={[styles.statsCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
           <View style={styles.statRow}>
             <View style={styles.statItem}>
               <Text style={[styles.statValue, { color: Colors[theme].primary }]}>{drivers.length}</Text>
               <Text style={[styles.statLabel, { color: Colors[theme]['on-surface-variant'] }]}>Registered Drivers</Text>
+=======
+        <View style={[styles.infoCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+          <MaterialCommunityIcons name="truck" size={48} color={Colors[theme]['surface-variant']} />
+          <Text style={[styles.infoTitle, { color: Colors[theme]['on-surface'] }]}>Delivery Partners</Text>
+          <Text style={[styles.infoSubtitle, { color: Colors[theme]['on-surface-variant'] }]}>
+            Riders assigned to your restaurant will appear here. They handle deliveries to your customers.
+          </Text>
+        </View>
+
+        <View style={[styles.statsCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+          <View style={styles.statRow}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: Colors[theme].primary }]}>0</Text>
+              <Text style={[styles.statLabel, { color: Colors[theme]['on-surface-variant'] }]}>Active Riders</Text>
+>>>>>>> main
             </View>
             <View style={[styles.statDivider, { backgroundColor: Colors[theme]['surface-variant'] }]} />
             <View style={styles.statItem}>
@@ -60,6 +91,7 @@ export default function RidersScreen() {
         </View>
 
         <View style={styles.sectionHeader}>
+<<<<<<< HEAD
           <Text style={[styles.sectionTitle, { color: Colors[theme]['on-surface'] }]}>All Drivers</Text>
         </View>
 
@@ -96,13 +128,21 @@ export default function RidersScreen() {
         )}
 
         <View style={styles.sectionHeader}>
+=======
+>>>>>>> main
           <Text style={[styles.sectionTitle, { color: Colors[theme]['on-surface'] }]}>How it works</Text>
         </View>
 
         {[
+<<<<<<< HEAD
           { icon: 'account-plus', title: 'Drivers register on the platform', desc: 'Drivers sign up with D+255 prefix and become available for deliveries' },
           { icon: 'map-marker-path', title: 'Real-time tracking', desc: 'Track driver location and delivery progress from your dashboard' },
           { icon: 'check-circle', title: 'Automatic assignment', desc: 'When an order is placed, nearby available drivers receive the request' },
+=======
+          { icon: 'account-plus', title: 'Riders are assigned', desc: 'When an order is placed, a nearby rider is assigned automatically' },
+          { icon: 'map-marker-path', title: 'Real-time tracking', desc: 'Track rider location and delivery progress from your dashboard' },
+          { icon: 'check-circle', title: 'Delivery confirmation', desc: 'Get notified when orders are successfully delivered' },
+>>>>>>> main
         ].map((step, i) => (
           <View key={i} style={[styles.stepCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
             <View style={[styles.stepIcon, { backgroundColor: Colors[theme]['surface-container'] }]}>
@@ -127,6 +167,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: { ...Typography.h2 },
   scrollContent: { padding: Spacing['container-padding'], paddingBottom: 100 },
+<<<<<<< HEAD
+=======
+  infoCard: { alignItems: 'center', borderRadius: BorderRadius.xl, padding: Spacing.xl, marginBottom: Spacing.md, gap: Spacing.md, ...Shadows.sm },
+  infoTitle: { ...Typography.h2 },
+  infoSubtitle: { ...Typography['body-sm'], textAlign: 'center', lineHeight: 20, paddingHorizontal: Spacing.md },
+>>>>>>> main
   statsCard: { borderRadius: BorderRadius.xl, padding: Spacing.md, marginBottom: Spacing.lg, ...Shadows.sm },
   statRow: { flexDirection: 'row', alignItems: 'center' },
   statItem: { flex: 1, alignItems: 'center' },
@@ -135,6 +181,7 @@ const styles = StyleSheet.create({
   statDivider: { width: 1, height: 36, marginHorizontal: Spacing.md },
   sectionHeader: { marginBottom: Spacing.md },
   sectionTitle: { ...Typography.h2 },
+<<<<<<< HEAD
   emptyState: { alignItems: 'center', gap: Spacing.sm, marginTop: 40 },
   emptyTitle: { ...Typography['body-md'] },
   emptySubtitle: { ...Typography['label-sm'] },
@@ -151,6 +198,8 @@ const styles = StyleSheet.create({
   availableBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: Spacing.sm, paddingVertical: 4, borderRadius: BorderRadius.full },
   availableDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#0fa958' },
   availableText: { ...Typography['label-sm'], fontWeight: '600' },
+=======
+>>>>>>> main
   stepCard: { flexDirection: 'row', gap: Spacing.md, borderRadius: BorderRadius.xl, padding: Spacing.md, marginBottom: Spacing.sm, ...Shadows.sm },
   stepIcon: { width: 48, height: 48, borderRadius: BorderRadius.md, alignItems: 'center', justifyContent: 'center' },
   stepInfo: { flex: 1 },

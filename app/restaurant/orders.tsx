@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { useEffect, useState, useMemo, useCallback } from 'react';
+=======
+import { useEffect, useState, useMemo } from 'react';
+>>>>>>> main
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -6,7 +10,10 @@ import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/
 import { formatPrice } from '@/utils/format';
 import { useOrderStore } from '@/store/orderStore';
 import { ordersService } from '@/services/orders.service';
+<<<<<<< HEAD
 import { restaurantSocketService } from '@/services/restaurant-socket.service';
+=======
+>>>>>>> main
 
 export default function RestaurantOrdersScreen() {
   const theme = 'light';
@@ -16,6 +23,7 @@ export default function RestaurantOrdersScreen() {
 
   useEffect(() => {
     loadOrders();
+<<<<<<< HEAD
 
     const unsub = restaurantSocketService.onOrderNotification((data) => {
       loadOrders();
@@ -30,6 +38,12 @@ export default function RestaurantOrdersScreen() {
 
   const newOrders = orders.filter((o) => o.status === 'pending' || o.status === 'restaurant_accepted');
   const activeOrders = orders.filter((o) => ['preparing', 'ready_for_pickup', 'driver_assigned', 'picked_up', 'on_the_way', 'arrived'].includes(o.status));
+=======
+  }, []);
+
+  const newOrders = orders.filter((o) => o.status === 'pending' || o.status === 'confirmed');
+  const activeOrders = orders.filter((o) => ['preparing', 'ready', 'on_the_way', 'arrived'].includes(o.status));
+>>>>>>> main
   const historyOrders = orders.filter((o) => ['delivered', 'cancelled'].includes(o.status));
 
   const displayOrders = activeTab === 'new' ? newOrders : activeTab === 'active' ? activeOrders : historyOrders;
@@ -45,6 +59,7 @@ export default function RestaurantOrdersScreen() {
   const handleAccept = async (orderId: string) => {
     setUpdatingId(orderId);
     try {
+<<<<<<< HEAD
       await ordersService.updateOrderStatus(orderId, 'restaurant_accepted');
       await loadOrders();
     } catch {} finally {
@@ -55,6 +70,8 @@ export default function RestaurantOrdersScreen() {
   const handlePrepare = async (orderId: string) => {
     setUpdatingId(orderId);
     try {
+=======
+>>>>>>> main
       await ordersService.updateOrderStatus(orderId, 'preparing');
       await loadOrders();
     } catch {} finally {
@@ -65,7 +82,11 @@ export default function RestaurantOrdersScreen() {
   const handleReady = async (orderId: string) => {
     setUpdatingId(orderId);
     try {
+<<<<<<< HEAD
       await ordersService.updateOrderStatus(orderId, 'ready_for_pickup');
+=======
+      await ordersService.updateOrderStatus(orderId, 'ready');
+>>>>>>> main
       await loadOrders();
     } catch {} finally {
       setUpdatingId(null);
@@ -184,7 +205,11 @@ export default function RestaurantOrdersScreen() {
                 <View style={[styles.orderDivider, { backgroundColor: Colors[theme]['surface-variant'] }]} />
 
                 <View style={styles.orderActions}>
+<<<<<<< HEAD
                   {order.status === 'pending' && (
+=======
+                  {(order.status === 'pending' || order.status === 'confirmed') && (
+>>>>>>> main
                     <>
                       <TouchableOpacity
                         style={[styles.actionBtn, { backgroundColor: Colors[theme]['error-container'] }]}
@@ -208,6 +233,7 @@ export default function RestaurantOrdersScreen() {
                       </TouchableOpacity>
                     </>
                   )}
+<<<<<<< HEAD
                   {order.status === 'restaurant_accepted' && (
                     <TouchableOpacity
                       style={[styles.actionBtnFull, { backgroundColor: Colors[theme].secondary }]}
@@ -221,6 +247,8 @@ export default function RestaurantOrdersScreen() {
                       )}
                     </TouchableOpacity>
                   )}
+=======
+>>>>>>> main
                   {order.status === 'preparing' && (
                     <TouchableOpacity
                       style={[styles.actionBtnFull, { backgroundColor: Colors[theme].secondary }]}
@@ -234,6 +262,7 @@ export default function RestaurantOrdersScreen() {
                       )}
                     </TouchableOpacity>
                   )}
+<<<<<<< HEAD
                   {order.status === 'ready_for_pickup' && (
                     <View style={[styles.statusChip, { backgroundColor: 'rgba(15,169,88,0.1)' }]}>
                       <MaterialCommunityIcons name="package-variant-closed" size={16} color={Colors[theme].primary} />
@@ -250,6 +279,12 @@ export default function RestaurantOrdersScreen() {
                     <View style={[styles.statusChip, { backgroundColor: 'rgba(15,169,88,0.1)' }]}>
                       <MaterialCommunityIcons name="bike" size={16} color={Colors[theme].primary} />
                       <Text style={[styles.statusChipText, { color: Colors[theme].primary }]}>Picked up</Text>
+=======
+                  {order.status === 'ready' && (
+                    <View style={[styles.statusChip, { backgroundColor: 'rgba(15,169,88,0.1)' }]}>
+                      <MaterialCommunityIcons name="package-variant-closed" size={16} color={Colors[theme].primary} />
+                      <Text style={[styles.statusChipText, { color: Colors[theme].primary }]}>Ready for pickup</Text>
+>>>>>>> main
                     </View>
                   )}
                   {order.status === 'on_the_way' && (

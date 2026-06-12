@@ -52,6 +52,8 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: '#ba1a1a',
 };
 
+const DAR_CENTER = { latitude: -6.7924, longitude: 39.2083 };
+
 export default function TrackOrderScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = 'light';
@@ -281,8 +283,13 @@ export default function TrackOrderScreen() {
         <MapboxMap
           ref={mapRef}
           initialCamera={{
+<<<<<<< HEAD
             latitude: userLocation?.latitude || restaurantLocation?.latitude || 0,
             longitude: userLocation?.longitude || restaurantLocation?.longitude || 0,
+=======
+            latitude: userLocation?.latitude || DAR_CENTER.latitude,
+            longitude: userLocation?.longitude || DAR_CENTER.longitude,
+>>>>>>> main
             zoom: 14,
           }}
           showUserLocation

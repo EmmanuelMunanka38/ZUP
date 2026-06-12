@@ -14,7 +14,13 @@ import { MapboxMap } from '@/components/map/MapboxMap';
 import { MapControls } from '@/components/map/MapControls';
 import { Coordinate } from '@/types';
 
+<<<<<<< HEAD
 type DriverStep = 'to_pickup' | 'picked_up' | 'on_the_way' | 'arrived' | 'completed';
+=======
+type DriverStep = 'to_pickup' | 'picked_up' | 'to_dropoff' | 'arrived' | 'completed';
+>>>>>>> main
+
+const DAR_CENTER = { latitude: -6.7924, longitude: 39.2083 };
 
 export default function ActiveDeliveryScreen() {
   const theme = 'light';
@@ -28,8 +34,14 @@ export default function ActiveDeliveryScreen() {
   const [isLoadingRoute, setIsLoadingRoute] = useState(true);
   const [hasFittedBounds, setHasFittedBounds] = useState(false);
 
+<<<<<<< HEAD
   const restaurantLocation = activeDelivery?.restaurant.location;
   const customerLocation = activeDelivery?.customer.location;
+=======
+  const restaurantLocation = activeDelivery?.restaurant.location || DAR_CENTER;
+  const customerLocation = activeDelivery?.customer.location || DAR_CENTER;
+  const displayLocation = currentLocation || DAR_CENTER;
+>>>>>>> main
 
   const destination = useMemo(() => {
     if (step === 'to_pickup' || step === 'picked_up') return restaurantLocation;
@@ -37,8 +49,13 @@ export default function ActiveDeliveryScreen() {
   }, [step, restaurantLocation, customerLocation]);
 
   const statusLabel = step === 'to_pickup' ? 'On the way to pickup'
+<<<<<<< HEAD
     : step === 'picked_up' ? 'Picked up'
     : step === 'on_the_way' ? 'Heading to drop-off'
+=======
+    : step === 'picked_up' ? 'Picked up, heading to customer'
+    : step === 'to_dropoff' ? 'Heading to drop-off'
+>>>>>>> main
     : step === 'arrived' ? 'Arrived at destination'
     : 'Completed';
 
@@ -290,7 +307,11 @@ export default function ActiveDeliveryScreen() {
               {step === 'to_pickup' && (
                 <TouchableOpacity
                   style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
+<<<<<<< HEAD
                   onPress={() => handleStatusUpdate('picked_up', 'picked_up')}
+=======
+                  onPress={() => handleStatusUpdate('on_the_way', 'picked_up')}
+>>>>>>> main
                   disabled={updating}
                 >
                   {updating ? (
@@ -303,12 +324,17 @@ export default function ActiveDeliveryScreen() {
               {step === 'picked_up' && (
                 <TouchableOpacity
                   style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
+<<<<<<< HEAD
                   onPress={() => handleStatusUpdate('on_the_way', 'on_the_way')}
+=======
+                  onPress={() => handleStatusUpdate('arrived', 'arrived')}
+>>>>>>> main
                   disabled={updating}
                 >
                   {updating ? (
                     <ActivityIndicator size="small" color="#ffffff" />
                   ) : (
+<<<<<<< HEAD
                     <><MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" /><Text style={styles.actionPrimaryText}>On the Way</Text></>
                   )}
                 </TouchableOpacity>
@@ -317,11 +343,22 @@ export default function ActiveDeliveryScreen() {
                 <TouchableOpacity
                   style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
                   onPress={() => handleStatusUpdate('arrived', 'arrived')}
+=======
+                    <><MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" /><Text style={styles.actionPrimaryText}>Arrived</Text></>
+                  )}
+                </TouchableOpacity>
+              )}
+              {step === 'arrived' && (
+                <TouchableOpacity
+                  style={[styles.actionPrimary, { backgroundColor: Colors[theme].primary }]}
+                  onPress={handleComplete}
+>>>>>>> main
                   disabled={updating}
                 >
                   {updating ? (
                     <ActivityIndicator size="small" color="#ffffff" />
                   ) : (
+<<<<<<< HEAD
                     <><MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" /><Text style={styles.actionPrimaryText}>Arrived</Text></>
                   )}
                 </TouchableOpacity>
@@ -339,6 +376,12 @@ export default function ActiveDeliveryScreen() {
                   )}
                 </TouchableOpacity>
               )}
+=======
+                    <><MaterialCommunityIcons name="check-circle" size={20} color="#ffffff" /><Text style={styles.actionPrimaryText}>Delivered</Text></>
+                  )}
+                </TouchableOpacity>
+              )}
+>>>>>>> main
               {(step === 'to_pickup' || step === 'picked_up') && (
                 <TouchableOpacity
                   style={[styles.actionSecondary, { backgroundColor: Colors[theme]['secondary-fixed'] }]}
