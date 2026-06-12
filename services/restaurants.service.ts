@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Restaurant, MenuItem, Category, ApiResponse } from '@/types';
+import { Restaurant, MenuItem, Category, ApiResponse, User } from '@/types';
 
 export const restaurantsService = {
   async create(data: Partial<Restaurant>): Promise<Restaurant> {
@@ -9,6 +9,11 @@ export const restaurantsService = {
 
   async getAll(): Promise<Restaurant[]> {
     const { data } = await api.get<ApiResponse<Restaurant[]>>('/restaurants');
+    return data.data;
+  },
+
+  async getByOwner(ownerId: string): Promise<Restaurant[]> {
+    const { data } = await api.get<ApiResponse<Restaurant[]>>(`/restaurants?ownerId=${ownerId}`);
     return data.data;
   },
 
@@ -44,5 +49,10 @@ export const restaurantsService = {
 
   async deleteMenuItem(menuId: string): Promise<void> {
     await api.delete(`/restaurants/menu/${menuId}`);
+  },
+
+  async getDrivers(): Promise<User[]> {
+    const { data } = await api.get<ApiResponse<User[]>>('/users/drivers');
+    return data.data;
   },
 };
