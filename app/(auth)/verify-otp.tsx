@@ -69,9 +69,11 @@ export default function VerifyOTPScreen() {
       const code = otp.join('');
       await verifyOTP(email, code, mode === 'sign-up' ? name : undefined, role);
       const { user: u } = useAuthStore.getState();
-      if (u) {
-        routeByRole(u.role);
+      const effectiveRole = role || u?.role || 'customer';
+      if (u && role && role !== u.role) {
+        useAuthStore.getState().setUser({ ...u, role: role as 'customer' | 'driver' | 'restaurant_owner' });
       }
+      routeByRole(effectiveRole);
     } catch (err: any) {
       setError(err?.message || 'Verification failed. Please try again.');
     } finally {
