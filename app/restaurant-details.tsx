@@ -24,6 +24,7 @@ export default function RestaurantDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = 'light';
   const [activeCategory, setActiveCategory] = useState('All');
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const addItem = useCartStore((s) => s.addItem);
   const setRestaurantName = useCartStore((s) => s.setRestaurantName);
   const cartCount = useCartStore((s) => s.itemCount());
@@ -97,7 +98,7 @@ export default function RestaurantDetailsScreen() {
 
       <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
         <View style={styles.heroSection}>
-          <Image source={{ uri: restaurant.image }} style={styles.heroImage} />
+          <Image source={{ uri: restaurant.image }} style={styles.heroImage} onError={() => setImageErrors((prev) => ({ ...prev, hero: true }))} />
           <View style={styles.heroGradient} />
           <View style={styles.heroContent}>
             <View style={styles.heroBadges}>
@@ -210,7 +211,13 @@ export default function RestaurantDetailsScreen() {
             {filteredItems.map((item) => (
               <View key={item.id} style={[styles.menuCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
                 <View style={styles.menuImageContainer}>
-                  <Image source={{ uri: item.image }} style={styles.menuImage} />
+                  {item.image && !imageErrors[item.id] ? (
+                    <Image source={{ uri: item.image }} style={styles.menuImage} onError={() => setImageErrors((prev) => ({ ...prev, [item.id]: true }))} />
+                  ) : (
+                    <View style={[styles.menuImage, { backgroundColor: Colors[theme]['surface-container'], alignItems: 'center', justifyContent: 'center' }]}>
+                      <MaterialCommunityIcons name="food" size={40} color={Colors[theme]['on-surface-variant']} />
+                    </View>
+                  )}
                   <TouchableOpacity
                     style={[styles.addBtn, { backgroundColor: Colors[theme].primary }]}
                     onPress={() => addItem(item)}

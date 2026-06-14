@@ -3,8 +3,6 @@ import { Coordinate, DriverLocation, TrackingUpdate, OrderTrackingStatus } from 
 import { mapService } from './map.service';
 import { useAuthStore } from '@/store/authStore';
 
-const ENABLE_SIMULATION = process.env.EXPO_PUBLIC_ENABLE_TRACKING_SIMULATION === 'true';
-
 type TrackingCallback = (update: TrackingUpdate) => void;
 type ConnectionCallback = (connected: boolean) => void;
 
@@ -122,21 +120,9 @@ class TrackingService {
 
       this.socket.on('connect_error', (err) => {
         console.error('Tracking socket connect error:', err.message);
-<<<<<<< HEAD
       });
     } catch (err) {
       console.error('Tracking socket setup error:', err);
-=======
-        if (ENABLE_SIMULATION) {
-          this.startSimulation().catch(() => {});
-        }
-      });
-    } catch (err) {
-      console.error('Tracking socket setup error:', err);
-      if (ENABLE_SIMULATION) {
-        this.startSimulation().catch(() => {});
-      }
->>>>>>> main
     }
   }
 

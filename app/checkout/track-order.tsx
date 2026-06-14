@@ -98,10 +98,7 @@ export default function TrackOrderScreen() {
         const order = useOrderStore.getState().currentOrder;
         const restLoc = order?.restaurant?.location;
         const userLoc = useLocationStore.getState().currentLocation;
-        connectTracking(id, undefined, {
-          restaurantLocation: restLoc,
-          deliveryLocation: userLoc || undefined,
-        });
+        connectTracking(id);
       })
       .catch(() => setError('Failed to load order'))
       .finally(() => setIsLoading(false));
@@ -283,13 +280,8 @@ export default function TrackOrderScreen() {
         <MapboxMap
           ref={mapRef}
           initialCamera={{
-<<<<<<< HEAD
-            latitude: userLocation?.latitude || restaurantLocation?.latitude || 0,
-            longitude: userLocation?.longitude || restaurantLocation?.longitude || 0,
-=======
-            latitude: userLocation?.latitude || DAR_CENTER.latitude,
-            longitude: userLocation?.longitude || DAR_CENTER.longitude,
->>>>>>> main
+            latitude: userLocation?.latitude || restaurantLocation?.latitude || DAR_CENTER.latitude,
+            longitude: userLocation?.longitude || restaurantLocation?.longitude || DAR_CENTER.longitude,
             zoom: 14,
           }}
           showUserLocation
