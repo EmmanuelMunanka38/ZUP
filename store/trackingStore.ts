@@ -13,7 +13,7 @@ interface TrackingState {
   driverHeading: number;
   route: DeliveryRoute | null;
 
-  connect: (orderId: string, wsUrl?: string, options?: { restaurantLocation?: Coordinate; deliveryLocation?: Coordinate }) => void;
+  connect: (orderId: string, wsUrl?: string) => void;
   disconnect: () => void;
   clearTracking: () => void;
 }
@@ -29,7 +29,7 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
   driverHeading: 0,
   route: null,
 
-  connect: (orderId: string, wsUrl?: string, options?: { restaurantLocation?: Coordinate; deliveryLocation?: Coordinate }) => {
+  connect: (orderId: string, wsUrl?: string) => {
     const existing = get().currentOrderId;
     if (existing) {
       trackingService.disconnect();
@@ -64,10 +64,7 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
       set(newState);
     });
 
-    trackingService.connect(orderId, wsUrl, options ? {
-      restaurantLocation: options.restaurantLocation,
-      customerLocation: options.deliveryLocation,
-    } : undefined);
+    trackingService.connect(orderId, wsUrl);
   },
 
   disconnect: () => {
