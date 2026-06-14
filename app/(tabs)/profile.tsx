@@ -1,30 +1,18 @@
-<<<<<<< HEAD
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, TextInput, Modal, ActivityIndicator } from 'react-native';
-=======
-import { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
->>>>>>> main
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { useAuthStore } from '@/store/authStore';
 import { useOrderStore } from '@/store/orderStore';
 import { formatPrice } from '@/utils/format';
-<<<<<<< HEAD
 import { uploadService } from '@/services/upload.service';
-=======
->>>>>>> main
 
 const menuItems = [
   { icon: 'home-map-marker', label: 'Saved Addresses', route: '/saved-addresses' },
   { icon: 'receipt', label: 'Order History', route: '/(tabs)/orders' },
   { icon: 'credit-card-outline', label: 'Payment Methods', route: '/saved-addresses' },
   { icon: 'bell-outline', label: 'Notifications', route: '' },
-<<<<<<< HEAD
-=======
-  { icon: 'weather-night', label: 'Dark Mode', hasToggle: true },
->>>>>>> main
   { icon: 'help-circle', label: 'Help Center', route: '' },
 ];
 
@@ -32,7 +20,6 @@ export default function ProfileScreen() {
   const theme = 'light';
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
-<<<<<<< HEAD
   const updateProfile = useAuthStore((s) => s.updateProfile);
   const { orders, loadOrders } = useOrderStore();
 
@@ -42,10 +29,6 @@ export default function ProfileScreen() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
 
-=======
-  const { orders, loadOrders } = useOrderStore();
-
->>>>>>> main
   useEffect(() => {
     loadOrders();
   }, []);
@@ -58,7 +41,6 @@ export default function ProfileScreen() {
       { text: 'Cancel', style: 'cancel' },
       { text: 'Logout', style: 'destructive', onPress: () => { logout(); router.replace('/onboarding'); } },
     ]);
-<<<<<<< HEAD
   };
 
   const openEditModal = () => {
@@ -110,8 +92,6 @@ export default function ProfileScreen() {
     } finally {
       setSaving(false);
     }
-=======
->>>>>>> main
   };
 
   return (
@@ -125,17 +105,11 @@ export default function ProfileScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity activeOpacity={0.8} style={[styles.profileHeader, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
-<<<<<<< HEAD
           <TouchableOpacity style={styles.avatarWrap} onPress={pickAvatar} disabled={uploadingAvatar}>
             <View style={[styles.avatar, { backgroundColor: Colors[theme]['surface-container'] }]}>
               {uploadingAvatar ? (
                 <ActivityIndicator size="small" color={Colors[theme].primary} />
               ) : user?.avatar ? (
-=======
-          <View style={styles.avatarWrap}>
-            <View style={[styles.avatar, { backgroundColor: Colors[theme]['surface-container'] }]}>
-              {user?.avatar ? (
->>>>>>> main
                 <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
               ) : (
                 <MaterialCommunityIcons name="account" size={36} color={Colors[theme]['on-surface']} />
@@ -143,7 +117,6 @@ export default function ProfileScreen() {
             </View>
             <View style={[styles.editBadge, { backgroundColor: Colors[theme].primary }]}>
               <MaterialCommunityIcons name="camera" size={12} color="#ffffff" />
-<<<<<<< HEAD
             </View>
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
@@ -159,21 +132,6 @@ export default function ProfileScreen() {
           <TouchableOpacity onPress={openEditModal}>
             <MaterialCommunityIcons name="chevron-right" size={24} color={Colors[theme].outline} />
           </TouchableOpacity>
-=======
-            </View>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.profileName, { color: Colors[theme]['on-surface'] }]}>{user?.name || 'User'}</Text>
-            <Text style={[styles.profileEmail, { color: Colors[theme]['on-surface-variant'] }]}>
-              {user?.email || 'No email'}
-            </Text>
-            <View style={styles.memberBadge}>
-              <MaterialCommunityIcons name="crown" size={14} color={Colors[theme].secondary} />
-              <Text style={[styles.memberText, { color: Colors[theme].secondary }]}>Platinum Member</Text>
-            </View>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={24} color={Colors[theme].outline} />
->>>>>>> main
         </TouchableOpacity>
 
         <View style={styles.quickStats}>

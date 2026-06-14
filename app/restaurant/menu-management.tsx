@@ -19,27 +19,21 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { formatPrice } from '@/utils/format';
 import { useRestaurantStore } from '@/store/restaurantStore';
-<<<<<<< HEAD
 import { useAuthStore } from '@/store/authStore';
-=======
->>>>>>> main
 import { uploadService } from '@/services/upload.service';
 import { MenuItem } from '@/types';
 
 export default function MenuManagementScreen() {
   const theme = 'light';
-<<<<<<< HEAD
   const user = useAuthStore((s) => s.user);
   const { restaurants, currentMenu, loadMyRestaurant, loadMenu, categories: storeCategories, loadCategories, isLoading, addMenuItem, updateMenuItem, removeMenuItem } = useRestaurantStore();
-=======
-  const { restaurants, currentMenu, loadMenu, categories: storeCategories, loadCategories, isLoading, addMenuItem, updateMenuItem, removeMenuItem } = useRestaurantStore();
->>>>>>> main
   const [activeCategory, setActiveCategory] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   const [form, setForm] = useState({
     name: '',
@@ -132,18 +126,6 @@ export default function MenuManagementScreen() {
   };
 
   const pickImage = async () => {
-<<<<<<< HEAD
-    let ImagePicker: typeof import('expo-image-picker');
-    try {
-      ImagePicker = await import('expo-image-picker');
-    } catch {
-      Alert.alert(
-        'Image picker unavailable',
-        'The current app build does not include image picking. Rebuild the app after installing expo-image-picker.'
-      );
-      return;
-    }
-
     let result;
     try {
       result = await ImagePicker.launchImageLibraryAsync({
@@ -155,19 +137,10 @@ export default function MenuManagementScreen() {
     } catch {
       Alert.alert(
         'Image picker unavailable',
-        'The current app build does not include image picking. Rebuild the app after installing expo-image-picker.'
+        'Could not open the image picker. Please try again.'
       );
       return;
     }
-
-=======
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
->>>>>>> main
     if (!result.canceled && result.assets[0]) {
       setUploadingImage(true);
       try {
@@ -181,18 +154,43 @@ export default function MenuManagementScreen() {
     }
   };
 
+  const handleEdit = (item: MenuItem) => {
+    setForm({
+      name: item.name,
+      description: item.description || '',
+      price: String(item.price),
+      image: item.image || '',
+      category: item.category,
+    });
+    setEditingItem(item);
+    setShowAddModal(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editingItem || !form.name || !form.price || !form.category) {
+      Alert.alert('Required', 'Name, price, and category are required');
+      return;
+    }
+    try {
+      await updateMenuItem(editingItem.id, {
+        name: form.name,
+        description: form.description,
+        price: parseFloat(form.price),
+        image: form.image,
+        category: form.category,
+      });
+      resetForm();
+      setShowAddModal(false);
+    } catch {
+      Alert.alert('Error', 'Failed to update menu item');
+    }
+  };
+
   const handleAdd = async () => {
     if (!form.name || !form.price || !form.category || !myRestaurant) {
       Alert.alert('Required', 'Name, price, and category are required');
       return;
     }
-<<<<<<< HEAD
-=======
-    if (!form.image) {
-      Alert.alert('Required', 'Please add a photo for the menu item');
-      return;
-    }
->>>>>>> main
     try {
       await addMenuItem(myRestaurant.id, {
         name: form.name,
@@ -257,7 +255,6 @@ export default function MenuManagementScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoriesRow}
       >
-<<<<<<< HEAD
         {menuCategoryNames.map((categoryName) => {
           const cat = storeCategories.find((c) => c.name === categoryName);
           const catCount = currentMenu.filter((m) => m.category === categoryName && !m.isAvailable).length;
@@ -277,22 +274,6 @@ export default function MenuManagementScreen() {
               </View>
               <Text style={[styles.categoryName, { color: isSelected ? Colors[theme].primary : Colors[theme]['on-surface'], fontWeight: isSelected ? '700' : '400' }]}>
                 {categoryName}
-=======
-        {storeCategories.filter((c) => menuCategoryNames.includes(c.name)).map((cat) => {
-          const catCount = currentMenu.filter((m) => m.category === cat.name && !m.isAvailable).length;
-          const isSelected = activeCategory === cat.name;
-          return (
-            <TouchableOpacity
-              key={cat.id}
-              style={styles.categoryItem}
-              onPress={() => setActiveCategory(cat.name)}
-            >
-              <View style={[styles.categoryIcon, { borderColor: isSelected ? Colors[theme].primary : Colors[theme]['surface-container-high'] }]}>
-                <Image source={{ uri: cat.image }} style={styles.categoryFoodImage} />
-              </View>
-              <Text style={[styles.categoryName, { color: isSelected ? Colors[theme].primary : Colors[theme]['on-surface'], fontWeight: isSelected ? '700' : '400' }]}>
-                {cat.name}
->>>>>>> main
               </Text>
               {catCount > 0 && (
                 <View style={[styles.unavailableDot, { backgroundColor: Colors[theme].error }]}>
@@ -338,20 +319,17 @@ export default function MenuManagementScreen() {
                   },
                 ]}
               >
-<<<<<<< HEAD
-                {item.image ? (
-                  <Image source={{ uri: item.image }} style={[styles.menuImage, isUnavailable && styles.menuImageUnavailable]} />
+                {item.image && !imageErrors[item.id] ? (
+                  <Image
+                    source={{ uri: item.image }}
+                    style={[styles.menuImage, isUnavailable && styles.menuImageUnavailable]}
+                    onError={() => setImageErrors((prev) => ({ ...prev, [item.id]: true }))}
+                  />
                 ) : (
                   <View style={[styles.menuImage, { backgroundColor: Colors[theme]['surface-container'], alignItems: 'center', justifyContent: 'center' }]}>
                     <MaterialCommunityIcons name="food" size={32} color={Colors[theme]['on-surface-variant']} />
                   </View>
                 )}
-=======
-                <Image
-                  source={{ uri: item.image }}
-                  style={[styles.menuImage, isUnavailable && styles.menuImageUnavailable]}
-                />
->>>>>>> main
                 {isUnavailable && (
                   <View style={styles.unavailableOverlay}>
                     <MaterialCommunityIcons name="close-circle" size={20} color={Colors[theme].error} />
@@ -371,6 +349,12 @@ export default function MenuManagementScreen() {
                   <View style={styles.menuBottom}>
                     <Text style={[styles.menuPrice, { color: Colors[theme].primary }]}>{formatPrice(item.price)}</Text>
                     <View style={styles.menuActions}>
+                      <TouchableOpacity
+                        style={[styles.actionIcon, { backgroundColor: Colors[theme]['surface-container'] }]}
+                        onPress={() => handleEdit(item)}
+                      >
+                        <MaterialCommunityIcons name="pencil-outline" size={18} color={Colors[theme].primary} />
+                      </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.actionIcon, { backgroundColor: Colors[theme]['surface-container'] }]}
                         onPress={() => handleDelete(item)}
@@ -420,7 +404,7 @@ export default function MenuManagementScreen() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: Colors[theme].surface }]}>
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: Colors[theme]['on-surface'] }]}>Add Menu Item</Text>
+              <Text style={[styles.modalTitle, { color: Colors[theme]['on-surface'] }]}>{editingItem ? 'Edit Menu Item' : 'Add Menu Item'}</Text>
               <TouchableOpacity onPress={() => { resetForm(); setShowAddModal(false); }}>
                 <MaterialCommunityIcons name="close" size={24} color={Colors[theme]['on-surface-variant']} />
               </TouchableOpacity>
@@ -482,11 +466,7 @@ export default function MenuManagementScreen() {
                 />
               </View>
 
-<<<<<<< HEAD
               <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>Image (optional)</Text>
-=======
-              <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>Image</Text>
->>>>>>> main
               <TouchableOpacity
                 style={[styles.imagePickerBtn, { backgroundColor: Colors[theme]['surface-container-low'], borderColor: Colors[theme]['outline-variant'] }]}
                 onPress={pickImage}
@@ -507,9 +487,9 @@ export default function MenuManagementScreen() {
 
             <TouchableOpacity
               style={[styles.submitBtn, { backgroundColor: Colors[theme].primary }]}
-              onPress={handleAdd}
+              onPress={editingItem ? handleUpdate : handleAdd}
             >
-              <Text style={styles.submitBtnText}>Add to Menu</Text>
+              <Text style={styles.submitBtnText}>{editingItem ? 'Save Changes' : 'Add to Menu'}</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>

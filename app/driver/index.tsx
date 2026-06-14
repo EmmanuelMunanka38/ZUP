@@ -14,11 +14,9 @@ import { MapboxMap } from '@/components/map/MapboxMap';
 import { MapControls } from '@/components/map/MapControls';
 import { Coordinate } from '@/types';
 
-<<<<<<< HEAD
-=======
 const DAR_CENTER = { latitude: -6.7924, longitude: 39.2083 };
 
->>>>>>> main
+
 export default function DriverDashboardScreen() {
   const theme = 'light';
   const mapRef = useRef<any>(null);
@@ -79,12 +77,8 @@ export default function DriverDashboardScreen() {
   }, [currentLocation?.latitude, currentLocation?.longitude, restaurantLoc?.latitude, restaurantLoc?.longitude]);
 
   const handleRecenter = useCallback(() => {
-<<<<<<< HEAD
-    if (currentLocation) mapRef.current?.flyTo(currentLocation, 14);
-=======
     const target = currentLocation || DAR_CENTER;
     mapRef.current?.flyTo(target, 14);
->>>>>>> main
   }, [currentLocation]);
 
   const handleMyLocation = useCallback(() => {
@@ -97,11 +91,7 @@ export default function DriverDashboardScreen() {
     if (!currentLocation && !restaurantLoc) return;
     const points = [currentLocation, restaurantLoc].filter(Boolean) as Coordinate[];
     if (points.length < 2) {
-<<<<<<< HEAD
-      if (currentLocation) mapRef.current?.flyTo(currentLocation, 14);
-=======
       mapRef.current?.flyTo(currentLocation || DAR_CENTER, 14);
->>>>>>> main
       return;
     }
     const lats = points.map((p) => p.latitude);
@@ -124,22 +114,12 @@ export default function DriverDashboardScreen() {
     handleFitBounds();
   }, [restaurantLoc?.latitude, restaurantLoc?.longitude]);
 
-<<<<<<< HEAD
-  const displayLoc = currentLocation;
-
-  const markers = useMemo(() => {
-    const m: any[] = [];
-    if (displayLoc) {
-      m.push({ id: 'driver', latitude: displayLoc.latitude, longitude: displayLoc.longitude, title: 'Driver', icon: 'bike', color: Colors[theme].primary });
-    }
-=======
   const displayLoc = currentLocation || DAR_CENTER;
 
   const markers = useMemo(() => {
     const m: any[] = [
       { id: 'driver', latitude: displayLoc.latitude, longitude: displayLoc.longitude, title: 'Driver', icon: 'bike', color: Colors[theme].primary },
     ];
->>>>>>> main
     if (restaurantLoc) {
       m.push({ id: 'restaurant', latitude: restaurantLoc.latitude, longitude: restaurantLoc.longitude, title: request?.restaurant.name || 'Restaurant', icon: 'store', color: Colors[theme].primary });
     }
@@ -157,11 +137,7 @@ export default function DriverDashboardScreen() {
       <View style={styles.container}>
         <MapboxMap
           ref={mapRef}
-<<<<<<< HEAD
-          initialCamera={{ latitude: displayLoc?.latitude || 0, longitude: displayLoc?.longitude || 0, zoom: 14 }}
-=======
           initialCamera={{ latitude: displayLoc.latitude, longitude: displayLoc.longitude, zoom: 14 }}
->>>>>>> main
           style={StyleSheet.absoluteFillObject}
           markers={markers}
           routePolyline={routeCoords && routeCoords.length >= 2 ? {
