@@ -77,14 +77,12 @@ export interface Order {
 export type OrderStatus =
   | 'pending'
   | 'restaurant_accepted'
+  | 'confirmed'
   | 'preparing'
-<<<<<<< HEAD
   | 'ready_for_pickup'
   | 'driver_assigned'
   | 'picked_up'
-=======
   | 'ready'
->>>>>>> main
   | 'on_the_way'
   | 'arrived'
   | 'delivered'
