@@ -22,8 +22,9 @@ export const restaurantsService = {
     return data.data;
   },
 
-  async getMenu(restaurantId: string): Promise<MenuItem[]> {
-    const { data } = await api.get<ApiResponse<MenuItem[]>>(`/restaurants/${restaurantId}/menu`);
+  async getMenu(restaurantId: string, includeUnavailable = false): Promise<MenuItem[]> {
+    const params = includeUnavailable ? '?includeUnavailable=true' : '';
+    const { data } = await api.get<ApiResponse<MenuItem[]>>(`/restaurants/${restaurantId}/menu${params}`);
     return data.data;
   },
 

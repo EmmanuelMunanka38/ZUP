@@ -10,6 +10,7 @@ interface RestaurantState {
   categories: Category[];
   dashboardStats: DashboardStats | null;
   isLoading: boolean;
+  error: string | null;
 
   loadRestaurants: () => Promise<void>;
   loadMyRestaurant: (ownerId: string) => Promise<void>;
@@ -21,9 +22,10 @@ interface RestaurantState {
   addMenuItem: (restaurantId: string, item: Partial<MenuItem>) => Promise<MenuItem>;
   updateMenuItem: (menuId: string, updates: Partial<MenuItem>) => Promise<void>;
   removeMenuItem: (menuId: string) => Promise<void>;
+  clearError: () => void;
 }
 
-export const useRestaurantStore = create<RestaurantState>((set) => ({
+export const useRestaurantStore = create<RestaurantState>((set, get) => ({
   restaurants: [],
   featured: [],
   currentRestaurant: null,
@@ -31,57 +33,65 @@ export const useRestaurantStore = create<RestaurantState>((set) => ({
   categories: [],
   dashboardStats: null,
   isLoading: false,
+  error: null,
 
   loadRestaurants: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const restaurants = await restaurantsService.getAll();
       set({ restaurants, isLoading: false });
     } catch (error) {
       console.error('Failed to load restaurants:', error);
-      set({ isLoading: false });
+      set({ isLoading: false, error: 'Failed to load restaurants. Please check your connection and try again.' });
     }
   },
 
   loadMyRestaurant: async (ownerId: string) => {
+    set({ error: null });
     try {
       const restaurants = await restaurantsService.getByOwner(ownerId);
       set({ restaurants });
     } catch (error) {
       console.error('Failed to load my restaurant:', error);
+      set({ error: 'Failed to load your restaurant.' });
     }
   },
 
   loadFeatured: async () => {
+    set({ error: null });
     try {
       const featured = await restaurantsService.getFeatured();
       set({ featured });
     } catch (error) {
       console.error('Failed to load featured:', error);
+      set({ error: 'Failed to load featured restaurants.' });
     }
   },
 
   loadCurrentRestaurant: async (id) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const restaurant = await restaurantsService.getById(id);
       set({ currentRestaurant: restaurant, isLoading: false });
     } catch (error) {
       console.error('Failed to load restaurant:', error);
-      set({ isLoading: false });
+      set({ isLoading: false, error: 'Failed to load restaurant details.' });
     }
   },
 
   loadMenu: async (restaurantId) => {
+    set({ isLoading: true, error: null });
     try {
-      const menu = await restaurantsService.getMenu(restaurantId);
-      set({ currentMenu: menu });
+      const menu = await restaurantsService.getMenu(restaurantId, true);
+      set({ currentMenu: menu, isLoading: false });
     } catch (error) {
       console.error('Failed to load menu:', error);
+      set({ isLoading: false, error: 'Failed to load menu.' });
     }
   },
 
   loadCategories: async () => {
+    set({ error: null });
     try {
       const categories = await restaurantsService.getCategories();
       set({ categories });
@@ -91,6 +101,7 @@ export const useRestaurantStore = create<RestaurantState>((set) => ({
   },
 
   setCurrentRestaurant: (restaurant) => set({ currentRestaurant: restaurant }),
+  clearError: () => set({ error: null }),
 
   createRestaurant: async (data: Partial<Restaurant>): Promise<Restaurant> => {
     const restaurant = await restaurantsService.create(data);
@@ -107,18 +118,37 @@ export const useRestaurantStore = create<RestaurantState>((set) => ({
   },
 
   updateMenuItem: async (menuId: string, updates: Partial<MenuItem>) => {
-    const updated = await restaurantsService.updateMenuItem(menuId, updates);
+    const previous = get().currentMenu;
     set((state) => ({
       currentMenu: state.currentMenu.map((item) =>
-        item.id === menuId ? { ...item, ...updated } : item
+        item.id === menuId ? { ...item, ...updates } : item
       ),
     }));
+    try {
+      const updated = await restaurantsService.updateMenuItem(menuId, updates);
+      set((state) => ({
+        currentMenu: state.currentMenu.map((item) =>
+          item.id === menuId ? { ...item, ...updated } : item
+        ),
+      }));
+    } catch (error) {
+      set({ currentMenu: previous });
+      console.error('Failed to update menu item:', error);
+      throw error;
+    }
   },
 
   removeMenuItem: async (menuId: string) => {
-    await restaurantsService.deleteMenuItem(menuId);
+    const previous = get().currentMenu;
     set((state) => ({
       currentMenu: state.currentMenu.filter((item) => item.id !== menuId),
     }));
+    try {
+      await restaurantsService.deleteMenuItem(menuId);
+    } catch (error) {
+      set({ currentMenu: previous });
+      console.error('Failed to delete menu item:', error);
+      throw error;
+    }
   },
 }));

@@ -95,7 +95,7 @@ export default function MenuManagementScreen() {
     try {
       await updateMenuItem(item.id, { isAvailable: !item.isAvailable });
     } catch {
-      Alert.alert('Error', 'Failed to update item availability');
+      Alert.alert('Error', 'Failed to update item availability. Please try again.');
     } finally {
       setTogglingId(null);
     }
@@ -114,8 +114,9 @@ export default function MenuManagementScreen() {
             setDeletingId(item.id);
             try {
               await removeMenuItem(item.id);
+              Alert.alert('Deleted', `"${item.name}" has been removed from your menu.`);
             } catch {
-              Alert.alert('Error', 'Failed to delete item');
+              Alert.alert('Error', 'Failed to delete item. Please try again.');
             } finally {
               setDeletingId(null);
             }
