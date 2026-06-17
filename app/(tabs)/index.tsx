@@ -13,7 +13,6 @@ import {
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
-import { Images } from '@/constants/images';
 import { formatPrice } from '@/utils/format';
 import { useRestaurantStore } from '@/store/restaurantStore';
 import { useCartStore } from '@/store/cartStore';
@@ -294,7 +293,7 @@ export default function HomeScreen() {
                   {restaurant.name}
                 </Text>
                 <Text style={[styles.restaurantMeta, { color: Colors[theme]['on-surface-variant'] }]}>
-                  Swahili · BBQ · {restaurant.deliveryTime}
+                  {restaurant.cuisine} · {restaurant.deliveryTime}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -340,8 +339,10 @@ export default function HomeScreen() {
               onPress={() => router.push(`/restaurant-details?id=${item.restaurantId}`)}
             >
               <View style={[styles.drinkImageBg, { backgroundColor: Colors[theme]['surface-container'] }]}>
-                {Images.home.drinks[i % Images.home.drinks.length] && (
-                  <Image source={{ uri: Images.home.drinks[i % Images.home.drinks.length] }} style={styles.drinkImageStyle} />
+                {item.image ? (
+                  <Image source={{ uri: item.image }} style={styles.drinkImageStyle} />
+                ) : (
+                  <MaterialCommunityIcons name="food" size={32} color={Colors[theme]['on-surface-variant']} />
                 )}
               </View>
               <Text style={[styles.drinkName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
@@ -363,23 +364,29 @@ export default function HomeScreen() {
         <View style={styles.recommendedGrid}>
           {(() => {
             const allItems = restaurants.flatMap((r) => (r.menu || []).map((m) => ({ ...m, restaurantId: r.id })));
-            const shuffled = allItems.sort(() => Math.random() - 0.5);
-            const selected: typeof shuffled = [];
-            const seen = new Set<string>();
-            for (const item of shuffled) {
-              if (selected.length >= 3) break;
-              if (!seen.has(item.category)) {
+            const byCategory: Record<string, typeof allItems> = {};
+            allItems.forEach((m) => {
+              if (!byCategory[m.category]) byCategory[m.category] = [];
+              byCategory[m.category].push(m);
+            });
+            const categories = Object.keys(byCategory).sort();
+            const selected: typeof allItems = [];
+            const usedIds = new Set<string>();
+            let idx = 0;
+            while (selected.length < 3 && categories.length > 0) {
+              const cat = categories[idx % categories.length];
+              const item = byCategory[cat].find((m) => !usedIds.has(m.id));
+              if (item) {
                 selected.push(item);
-                seen.add(item.category);
+                usedIds.add(item.id);
               }
+              idx++;
             }
-            if (selected.length < 3) {
-              for (const item of shuffled) {
-                if (selected.length >= 3) break;
-                if (!selected.find((s) => s.id === item.id)) {
-                  selected.push(item);
-                }
-              }
+            const fillItems = allItems.filter((m) => !usedIds.has(m.id));
+            for (const item of fillItems) {
+              if (selected.length >= 3) break;
+              selected.push(item);
+              usedIds.add(item.id);
             }
             const big = selected[0];
             const small1 = selected[1];

@@ -18,8 +18,6 @@ import { useRestaurantStore } from '@/store/restaurantStore';
 
 const { width } = Dimensions.get('window');
 
-const CATEGORIES = ['All', 'Popular', 'Appetizers', 'Mains', 'Sides', 'Drinks'];
-
 export default function RestaurantDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = 'light';
@@ -27,6 +25,8 @@ export default function RestaurantDetailsScreen() {
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const addItem = useCartStore((s) => s.addItem);
   const setRestaurantName = useCartStore((s) => s.setRestaurantName);
+  const setDeliveryFee = useCartStore((s) => s.setDeliveryFee);
+  const setServiceFee = useCartStore((s) => s.setServiceFee);
   const cartCount = useCartStore((s) => s.itemCount());
   const cartSubtotal = useCartStore((s) => s.subtotal());
 
@@ -43,15 +43,22 @@ export default function RestaurantDetailsScreen() {
   useEffect(() => {
     if (restaurant) {
       setRestaurantName(restaurant.name);
+      setDeliveryFee(restaurant.deliveryFee);
+      setServiceFee(Math.round(restaurant.deliveryFee * 0.1));
     }
-  }, [restaurant, setRestaurantName]);
+  }, [restaurant, setRestaurantName, setDeliveryFee, setServiceFee]);
+
+  const menuCategories = useMemo(() => {
+    if (!restaurant) return ['All'];
+    const cats = new Set(restaurant.menu.filter((m) => m.isAvailable !== false).map((m) => m.category));
+    return ['All', ...Array.from(cats)];
+  }, [restaurant]);
 
   const filteredItems = useMemo(() => {
     if (!restaurant) return [];
-    if (activeCategory === 'All') return restaurant.menu;
-    if (activeCategory === 'Popular')
-      return restaurant.menu.filter((m) => m.isPopular);
-    return restaurant.menu.filter((m) => m.category === activeCategory);
+    const available = restaurant.menu.filter((m) => m.isAvailable !== false);
+    if (activeCategory === 'All') return available;
+    return available.filter((m) => m.category === activeCategory);
   }, [activeCategory, restaurant]);
 
   if (isLoading) {
@@ -167,7 +174,7 @@ export default function RestaurantDetailsScreen() {
           style={styles.categoryBar}
           contentContainerStyle={styles.categoryContent}
         >
-          {CATEGORIES.map((cat) => (
+          {menuCategories.map((cat) => (
             <TouchableOpacity
               key={cat}
               onPress={() => setActiveCategory(cat)}
