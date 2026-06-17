@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,11 +8,16 @@ import { Restaurant } from '@/types';
 
 export default function DriverSearchScreen() {
   const theme = 'light';
-  const { restaurants, isLoading, loadRestaurants } = useRestaurantStore();
+  const { restaurants, isLoading, error, loadRestaurants, clearError } = useRestaurantStore();
   const [searchQuery, setSearchQuery] = useState('');
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
     loadRestaurants();
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   const filtered = searchQuery.trim()
@@ -86,6 +91,21 @@ export default function DriverSearchScreen() {
 
       {isLoading ? (
         <ActivityIndicator size="large" color={Colors[theme].primary} style={{ marginTop: 40 }} />
+      ) : error ? (
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="cloud-off-outline" size={56} color={Colors[theme].error} />
+            <Text style={[styles.emptyText, { color: Colors[theme].error }]}>Failed to load restaurants</Text>
+            <Text style={[styles.emptySubtext, { color: Colors[theme]['on-surface-variant'] }]}>{error}</Text>
+            <TouchableOpacity
+              style={[styles.retryBtn, { backgroundColor: Colors[theme].primary }]}
+              onPress={() => { clearError(); loadRestaurants(); }}
+            >
+              <MaterialCommunityIcons name="refresh" size={18} color="#ffffff" />
+              <Text style={styles.retryBtnText}>Try Again</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {openRestaurants.length > 0 && (
@@ -100,10 +120,13 @@ export default function DriverSearchScreen() {
               {closedRestaurants.map(renderRestaurant)}
             </>
           )}
-          {filtered.length === 0 && (
+          {filtered.length === 0 && !error && (
             <View style={styles.emptyState}>
               <MaterialCommunityIcons name="store-off" size={56} color={Colors[theme]['surface-variant']} />
               <Text style={[styles.emptyText, { color: Colors[theme]['on-surface-variant'] }]}>No restaurants found</Text>
+              <Text style={[styles.emptySubtext, { color: Colors[theme]['on-surface-variant'] }]}>
+                {searchQuery ? 'Try a different search term' : 'No restaurants are currently available'}
+              </Text>
             </View>
           )}
         </ScrollView>
@@ -147,4 +170,7 @@ const styles = StyleSheet.create({
   metaText: { ...Typography['label-sm'] },
   emptyState: { alignItems: 'center', gap: Spacing.md, marginTop: 60 },
   emptyText: { ...Typography['body-md'] },
+  emptySubtext: { ...Typography['label-sm'], textAlign: 'center', paddingHorizontal: Spacing.lg },
+  retryBtn: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, marginTop: Spacing.sm },
+  retryBtnText: { ...Typography['label-md'], color: '#ffffff', fontWeight: '700' },
 });

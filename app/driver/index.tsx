@@ -23,7 +23,7 @@ export default function DriverDashboardScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const currentLocation = useLocationStore((s) => s.currentLocation);
   const {
-    isOnline, earnings, totalDeliveries, requests,
+    isOnline, earnings, totalDeliveries, requests, activeDelivery,
     toggleOnline, fetchRequests, acceptDelivery, ignoreDelivery, addRequest,
   } = useDriverStore();
   const {
@@ -45,6 +45,12 @@ export default function DriverDashboardScreen() {
     connectSocket();
     return () => disconnectSocket();
   }, [fetchRequests, connectSocket, disconnectSocket]);
+
+  useEffect(() => {
+    if (activeDelivery) {
+      router.push('/driver/active-delivery');
+    }
+  }, [activeDelivery]);
 
   useEffect(() => {
     if (requestQueue.length > 0) {

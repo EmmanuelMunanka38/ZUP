@@ -20,6 +20,7 @@ interface DriverState {
   setRider: (rider: Rider) => void;
   fetchActiveDelivery: () => Promise<void>;
   addRequest: (request: DeliveryRequest) => void;
+  setActiveDelivery: (delivery: DeliveryRequest) => void;
 }
 
 export const useDriverStore = create<DriverState>((set, get) => ({
@@ -89,5 +90,12 @@ export const useDriverStore = create<DriverState>((set, get) => ({
     if (!existing) {
       set({ requests: [...get().requests, request] });
     }
+  },
+
+  setActiveDelivery: (delivery) => {
+    set({
+      activeDelivery: delivery,
+      requests: get().requests.filter((r) => r.id !== delivery.id),
+    });
   },
 }));

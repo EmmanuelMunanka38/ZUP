@@ -6,12 +6,14 @@ import { useLocationStore } from '@/store/locationStore';
 type NewRequestCallback = (request: DeliveryRequest) => void;
 type ConnectionCallback = (connected: boolean) => void;
 type StatusUpdateCallback = (data: { orderId: string; status: string }) => void;
+type AssignedDeliveryCallback = (delivery: DeliveryRequest) => void;
 
 class DriverSocketService {
   private socket: Socket | null = null;
   private newRequestListeners: Set<NewRequestCallback> = new Set();
   private connectionListeners: Set<ConnectionCallback> = new Set();
   private statusListeners: Set<StatusUpdateCallback> = new Set();
+  private assignedDeliveryListeners: Set<AssignedDeliveryCallback> = new Set();
   private _isConnected = false;
   private locationInterval: ReturnType<typeof setInterval> | null = null;
   private _isOnline = false;
@@ -55,6 +57,10 @@ class DriverSocketService {
 
       this.socket.on('delivery:available', (data: any) => {
         this.newRequestListeners.forEach((cb) => cb(data));
+      });
+
+      this.socket.on('delivery:assigned', (data: any) => {
+        this.assignedDeliveryListeners.forEach((cb) => cb(data));
       });
 
       this.socket.on('order:status', (data: { status: string; orderId: string }) => {
@@ -137,11 +143,17 @@ class DriverSocketService {
     return () => this.statusListeners.delete(callback);
   }
 
+  onAssignedDelivery(callback: AssignedDeliveryCallback): () => void {
+    this.assignedDeliveryListeners.add(callback);
+    return () => this.assignedDeliveryListeners.delete(callback);
+  }
+
   cleanup(): void {
     this.disconnect();
     this.newRequestListeners.clear();
     this.connectionListeners.clear();
     this.statusListeners.clear();
+    this.assignedDeliveryListeners.clear();
   }
 }
 

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { DeliveryRequest } from '@/types';
 import { driverSocketService } from '@/services/driver-socket.service';
+import { useDriverStore } from './driverStore';
 
 interface DriverSocketState {
   isConnected: boolean;
@@ -27,6 +28,10 @@ export const useDriverSocketStore = create<DriverSocketState>((set, get) => ({
       if (!queue.find((r) => r.id === request.id)) {
         set({ requestQueue: [...queue, request] });
       }
+    });
+
+    driverSocketService.onAssignedDelivery((delivery) => {
+      useDriverStore.getState().setActiveDelivery(delivery);
     });
 
     driverSocketService.connect();
