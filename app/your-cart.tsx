@@ -19,8 +19,10 @@ export default function CartScreen() {
   const storeUpdateQty = useCartStore((s) => s.updateQty);
   const subtotal = useCartStore((s) => s.subtotal());
   const itemCount = useCartStore((s) => s.itemCount());
-  const deliveryFee = 3500;
-  const total = subtotal + deliveryFee;
+  const deliveryFee = useCartStore((s) => s.deliveryFee);
+  const serviceFee = useCartStore((s) => s.serviceFee);
+  const restaurantName = useCartStore((s) => s.restaurantName);
+  const total = subtotal + deliveryFee + serviceFee;
 
   const updateQty = (id: string, delta: number) => {
     const item = items.find((i) => i.id === id);
@@ -28,6 +30,35 @@ export default function CartScreen() {
       storeUpdateQty(id, item.quantity + delta);
     }
   };
+
+  if (items.length === 0) {
+    return (
+      <View style={[styles.container, { backgroundColor: Colors[theme].background }]}>
+        <View style={[styles.header, { backgroundColor: Colors[theme].surface, borderBottomColor: Colors[theme]['surface-container'] }]}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <MaterialCommunityIcons name="arrow-left" size={28} color={Colors[theme].primary} />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Text style={[styles.headerLabel, { color: Colors[theme]['on-surface-variant'] }]}>Review Order</Text>
+          </View>
+          <View style={{ width: 28 }} />
+        </View>
+        <View style={[styles.emptyState, { backgroundColor: Colors[theme].background }]}>
+          <MaterialCommunityIcons name="cart-outline" size={80} color={Colors[theme]['surface-variant']} />
+          <Text style={[styles.emptyTitle, { color: Colors[theme]['on-surface'] }]}>Your cart is empty</Text>
+          <Text style={[styles.emptySubtitle, { color: Colors[theme]['on-surface-variant'] }]}>
+            Add items from a restaurant to get started
+          </Text>
+          <TouchableOpacity
+            style={[styles.browseBtn, { backgroundColor: Colors[theme].primary }]}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.browseBtnText}>Browse Restaurants</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: Colors[theme].background }]}>
@@ -37,9 +68,11 @@ export default function CartScreen() {
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={[styles.headerLabel, { color: Colors[theme]['on-surface-variant'] }]}>Review Order</Text>
-          <Text style={[styles.restaurantName, { color: Colors[theme].primary }]}>
-            The Terrace Swahili Bistro
-          </Text>
+          {restaurantName && (
+            <Text style={[styles.restaurantName, { color: Colors[theme].primary }]}>
+              {restaurantName}
+            </Text>
+          )}
         </View>
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialCommunityIcons name="cart-outline" size={22} color={Colors[theme].primary} />
@@ -116,7 +149,7 @@ export default function CartScreen() {
           </View>
           <View style={styles.summaryRow}>
             <Text style={[styles.summaryLabel, { color: Colors[theme]['on-surface-variant'] }]}>Service Fee</Text>
-            <Text style={[styles.summaryValue, { color: Colors[theme]['on-surface-variant'] }]}>TSh 1,200</Text>
+            <Text style={[styles.summaryValue, { color: Colors[theme]['on-surface-variant'] }]}>{formatPrice(serviceFee)}</Text>
           </View>
           <View style={[styles.summaryDivider, { borderTopColor: Colors[theme]['outline-variant'] }]} />
           <View style={styles.summaryRow}>
@@ -315,4 +348,9 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xl,
   },
   checkoutBtnText: { ...Typography.h2, color: '#ffffff' },
+  emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.md, paddingHorizontal: Spacing['container-padding'] },
+  emptyTitle: { ...Typography.h1 },
+  emptySubtitle: { ...Typography['body-md'], textAlign: 'center' },
+  browseBtn: { marginTop: Spacing.md, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, borderRadius: BorderRadius.full },
+  browseBtnText: { ...Typography['label-md'], color: '#ffffff', fontWeight: '700' },
 });

@@ -40,7 +40,7 @@ export default function CheckoutScreen() {
   const [selectedPayment, setSelectedPayment] = useState<PaymentOption>('mpesa');
   const [isPlacing, setIsPlacing] = useState(false);
 
-  const { items, restaurantId, restaurantName, subtotal, clearCart } = useCartStore();
+  const { items, restaurantId, restaurantName, subtotal, deliveryFee, serviceFee, clearCart } = useCartStore();
   const { currentAddress, savedAddresses, reverseGeocodeCurrent, currentLocation } = useLocationStore();
 
   const deliveryAddress = currentAddress || savedAddresses.find((a) => a.isDefault);
@@ -51,8 +51,6 @@ export default function CheckoutScreen() {
     }
   }, [currentLocation]);
 
-  const deliveryFee = 2500;
-  const serviceFee = 500;
   const total = subtotal() + deliveryFee + serviceFee;
 
   const handlePlaceOrder = async () => {
