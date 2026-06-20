@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { useRestaurantStore } from '@/store/restaurantStore';
@@ -37,7 +38,7 @@ export default function DriverSearchScreen() {
       style={[styles.restaurantCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
     >
       <View style={styles.cardTop}>
-        <Image source={{ uri: restaurant.image }} style={styles.restaurantImage} />
+        <OptimizedImage uri={restaurant.image} style={styles.restaurantImage} />
         <View style={[styles.openBadge, { backgroundColor: restaurant.isOpen ? Colors[theme].primary : Colors[theme]['on-surface-variant'] }]}>
           <Text style={styles.openBadgeText}>{restaurant.isOpen ? 'Open' : 'Closed'}</Text>
         </View>
