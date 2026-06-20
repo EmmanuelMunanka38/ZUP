@@ -2,7 +2,7 @@
   "expo": {
     "name": "Piki Food",
     "slug": "piki-food",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./logo.png",
     "scheme": "piki-food",
