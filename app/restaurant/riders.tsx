@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Alert, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Modal, FlatList, TextInput } from 'react-native';
 import { router } from 'expo-router';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { formatPrice } from '@/utils/format';
@@ -13,6 +14,7 @@ export default function RidersScreen() {
   const theme = 'light';
   const [drivers, setDrivers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const { orders, loadOrders } = useOrderStore();
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<User | null>(null);
@@ -74,6 +76,15 @@ export default function RidersScreen() {
 
   const availableCount = drivers.length - onDeliveryCount;
 
+  const filteredDrivers = useMemo(() => {
+    if (!searchQuery.trim()) return drivers;
+    const q = searchQuery.toLowerCase();
+    return drivers.filter((d) =>
+      (d.name && d.name.toLowerCase().includes(q)) ||
+      (d.phone && d.phone.includes(q))
+    );
+  }, [drivers, searchQuery]);
+
   return (
     <View style={[styles.container, { backgroundColor: Colors[theme].background }]}>
       <View style={[styles.header, { backgroundColor: Colors[theme].surface }]}>
@@ -106,9 +117,31 @@ export default function RidersScreen() {
           </View>
         </View>
 
+        <View style={[styles.searchBar, { backgroundColor: Colors[theme]['surface-container-lowest'], borderColor: Colors[theme]['surface-container'] }]}>
+          <MaterialCommunityIcons name="magnify" size={20} color={Colors[theme]['on-surface-variant']} />
+          <TextInput
+            style={[styles.searchInput, { color: Colors[theme]['on-surface'] }]}
+            placeholder="Search riders by name or phone..."
+            placeholderTextColor={Colors[theme]['on-surface-variant']}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            clearButtonMode="while-editing"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <MaterialCommunityIcons name="close-circle" size={18} color={Colors[theme]['on-surface-variant']} />
+            </TouchableOpacity>
+          )}
+        </View>
+
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: Colors[theme]['on-surface'] }]}>All Drivers</Text>
-          {unassignedOrders.length > 0 && (
+          {filteredDrivers.length !== drivers.length && (
+            <Text style={[styles.sectionBadge, { color: Colors[theme]['on-surface-variant'] }]}>
+              {filteredDrivers.length} of {drivers.length}
+            </Text>
+          )}
+          {unassignedOrders.length > 0 && searchQuery.length === 0 && (
             <Text style={[styles.sectionBadge, { color: Colors[theme].secondary }]}>
               {unassignedOrders.length} pending
             </Text>
@@ -117,16 +150,18 @@ export default function RidersScreen() {
 
         {isLoading ? (
           <ActivityIndicator size="large" color={Colors[theme].primary} style={{ marginTop: 40 }} />
-        ) : drivers.length === 0 ? (
+        ) : filteredDrivers.length === 0 ? (
           <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="truck" size={56} color={Colors[theme]['surface-variant']} />
-            <Text style={[styles.emptyTitle, { color: Colors[theme]['on-surface-variant'] }]}>No drivers registered</Text>
+            <MaterialCommunityIcons name="account-search" size={56} color={Colors[theme]['surface-variant']} />
+            <Text style={[styles.emptyTitle, { color: Colors[theme]['on-surface-variant'] }]}>
+              {searchQuery ? 'No matching riders' : 'No drivers registered'}
+            </Text>
             <Text style={[styles.emptySubtitle, { color: Colors[theme]['surface-variant'] }]}>
-              Drivers register on the platform and will appear here
+              {searchQuery ? 'Try a different name or phone number' : 'Drivers register on the platform and will appear here'}
             </Text>
           </View>
         ) : (
-          drivers.map((driver) => {
+          filteredDrivers.map((driver) => {
             const isOnDelivery = orders.some((o) =>
               ['driver_assigned', 'picked_up', 'on_the_way', 'arrived'].includes(o.status) && o.rider?.id === driver.id
             );
@@ -134,7 +169,7 @@ export default function RidersScreen() {
               <View key={driver.id} style={[styles.driverCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
                 <View style={[styles.driverAvatar, { backgroundColor: Colors[theme]['surface-container'] }]}>
                   {driver.avatar ? (
-                    <Image source={{ uri: driver.avatar }} style={styles.driverAvatarImage} />
+                    <OptimizedImage uri={driver.avatar} style={styles.driverAvatarImage} />
                   ) : (
                     <MaterialCommunityIcons name="account" size={24} color={Colors[theme]['on-surface-variant']} />
                   )}
@@ -268,6 +303,12 @@ const styles = StyleSheet.create({
   statValue: { ...Typography.h1, fontWeight: '700' },
   statLabel: { ...Typography['label-sm'], marginTop: 2 },
   statDivider: { width: 1, height: 36, marginHorizontal: Spacing.md },
+  searchBar: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
+    paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.xl, borderWidth: 1, marginBottom: Spacing.md,
+  },
+  searchInput: { flex: 1, ...Typography['body-md'], paddingVertical: 0 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
   sectionTitle: { ...Typography.h2 },
   sectionBadge: { ...Typography['label-sm'], fontWeight: '600' },
