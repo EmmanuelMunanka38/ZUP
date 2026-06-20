@@ -9,6 +9,7 @@ import { useDriverStore } from '@/store/driverStore';
 import { useLocationStore } from '@/store/locationStore';
 import { driverService } from '@/services/driver.service';
 import { driverSocketService } from '@/services/driver-socket.service';
+import { ordersService } from '@/services/orders.service';
 import { mapService } from '@/services/map.service';
 import { MapboxMap } from '@/components/map/MapboxMap';
 import { MapControls } from '@/components/map/MapControls';
@@ -29,14 +30,34 @@ export default function ActiveDeliveryScreen() {
   const [routeCoords, setRouteCoords] = useState<[number, number][] | null>(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(true);
   const [hasFittedBounds, setHasFittedBounds] = useState(false);
+  const [orderLocations, setOrderLocations] = useState<{ restaurant?: Coordinate; customer?: Coordinate } | null>(null);
 
-  const restaurantLocation = activeDelivery?.restaurant.location || DAR_CENTER;
-  const customerLocation = activeDelivery?.customer.location || DAR_CENTER;
+  const restaurantLocation = orderLocations?.restaurant || activeDelivery?.restaurant.location || DAR_CENTER;
+  const customerLocation = orderLocations?.customer || activeDelivery?.customer.location || DAR_CENTER;
   const displayLocation = currentLocation || DAR_CENTER;
   const destination = useMemo(() => {
     if (step === 'to_pickup' || step === 'picked_up') return restaurantLocation;
     return customerLocation;
   }, [step, restaurantLocation, customerLocation]);
+
+  useEffect(() => {
+    if (!activeDelivery?.orderId) return;
+    let cancelled = false;
+    ordersService.getById(activeDelivery.orderId).then((order) => {
+      if (cancelled) return;
+      const restLoc = order?.restaurant?.location;
+      const custLoc = typeof order.deliveryAddress === 'object' && 'coordinate' in order.deliveryAddress
+        ? order.deliveryAddress.coordinate
+        : undefined;
+      if (restLoc || custLoc) {
+        setOrderLocations({
+          ...(restLoc ? { restaurant: restLoc } : {}),
+          ...(custLoc ? { customer: custLoc } : {}),
+        });
+      }
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [activeDelivery?.orderId]);
 
   const statusLabel = step === 'to_pickup' ? 'On the way to pickup'
     : step === 'picked_up' ? 'Picked up'
