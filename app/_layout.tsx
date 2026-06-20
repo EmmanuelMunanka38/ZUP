@@ -14,6 +14,7 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import { useLocationStore } from '@/store/locationStore';
 import { useCartStore } from '@/store/cartStore';
+import { setImageCDN } from '@/services/imageOptimizer';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -58,6 +59,11 @@ export default function RootLayout() {
     }
     const unsub = useAuthStore.persist.onFinishHydration(() => setHydrated(true));
     return unsub;
+  }, []);
+
+  useEffect(() => {
+    const cdn = process.env.EXPO_PUBLIC_IMAGE_CDN;
+    if (cdn) setImageCDN(cdn);
   }, []);
 
   useEffect(() => {
