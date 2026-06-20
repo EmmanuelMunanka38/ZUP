@@ -46,6 +46,15 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
 
+    if (error.response?.status === 429 && !originalRequest._retry429) {
+      originalRequest._retry429 = true;
+      const delay = 1000 * Math.pow(2, (originalRequest._retryCount || 0));
+      originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
+      if (originalRequest._retryCount > 3) return Promise.reject(error);
+      await new Promise((r) => setTimeout(r, delay));
+      return api(originalRequest);
+    }
+
     if (error.response?.status !== 401 || originalRequest._retry) {
       return Promise.reject(error);
     }

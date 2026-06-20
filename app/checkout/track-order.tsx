@@ -84,6 +84,7 @@ export default function TrackOrderScreen() {
     driverLocation,
     driverHeading,
     route,
+    currentStatus,
     connect: connectTracking,
     disconnect: disconnectTracking,
   } = useTrackingStore();
@@ -112,6 +113,12 @@ export default function TrackOrderScreen() {
       useNativeDriver: true,
     }).start();
   }, [currentOrder?.status]);
+
+  useEffect(() => {
+    if (currentStatus && id) {
+      loadCurrentOrder(id);
+    }
+  }, [currentStatus]);
 
   const handleCancel = useCallback(() => {
     if (!id) return;

@@ -47,3 +47,4 @@ app-example
 
 # build artifacts
 build-*.apk
+new/*.apk

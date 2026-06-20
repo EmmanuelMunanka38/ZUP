@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
+import * as Location from 'expo-location';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import OptimizedImage from '@/components/ui/OptimizedImage';
@@ -20,7 +21,13 @@ export default function RestaurantProfileScreen() {
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingRestaurantImage, setUploadingRestaurantImage] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [settingLocation, setSettingLocation] = useState(false);
+  const [locationSet, setLocationSet] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [editLat, setEditLat] = useState('');
+  const [editLng, setEditLng] = useState('');
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -57,13 +64,104 @@ export default function RestaurantProfileScreen() {
         const url = await uploadService.uploadImage(result.assets[0].uri);
         await updateProfile({ avatar: url });
         if (myRestaurant) {
-          await updateRestaurant(myRestaurant.id, { image: url });
+          updateRestaurant(myRestaurant.id, { image: url });
         }
       } catch {
         Alert.alert('Error', 'Failed to upload avatar');
       } finally {
         setUploadingAvatar(false);
       }
+    }
+  };
+
+  const pickRestaurantImage = async () => {
+    let ImagePicker: typeof import('expo-image-picker');
+    try {
+      ImagePicker = await import('expo-image-picker');
+    } catch {
+      Alert.alert('Unavailable', 'Image picker is not available');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setUploadingRestaurantImage(true);
+      try {
+        const url = await uploadService.uploadImage(result.assets[0].uri);
+        if (myRestaurant) {
+          updateRestaurant(myRestaurant.id, { image: url });
+        }
+      } catch {
+        Alert.alert('Error', 'Failed to upload restaurant image');
+      } finally {
+        setUploadingRestaurantImage(false);
+      }
+    }
+  };
+
+  const openManualLocation = () => {
+    setEditLat(myRestaurant?.location?.latitude?.toString() || '');
+    setEditLng(myRestaurant?.location?.longitude?.toString() || '');
+    setShowLocationModal(true);
+  };
+
+  const saveManualLocation = async () => {
+    const lat = parseFloat(editLat);
+    const lng = parseFloat(editLng);
+    if (isNaN(lat) || isNaN(lng)) {
+      Alert.alert('Invalid', 'Please enter valid latitude and longitude numbers.');
+      return;
+    }
+    if (lat < -90 || lat > 90) {
+      Alert.alert('Invalid', 'Latitude must be between -90 and 90.');
+      return;
+    }
+    if (lng < -180 || lng > 180) {
+      Alert.alert('Invalid', 'Longitude must be between -180 and 180.');
+      return;
+    }
+    setSettingLocation(true);
+    try {
+      if (myRestaurant) {
+        await updateRestaurant(myRestaurant.id, { latitude: lat, longitude: lng } as any);
+        setLocationSet(true);
+        setTimeout(() => setLocationSet(false), 3000);
+        setShowLocationModal(false);
+      }
+    } catch {
+      Alert.alert('Error', 'Failed to save location.');
+    } finally {
+      setSettingLocation(false);
+    }
+  };
+
+  const setRestaurantLocation = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'Location permission is needed to set your restaurant location.');
+      return;
+    }
+    setSettingLocation(true);
+    try {
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      if (myRestaurant) {
+        await updateRestaurant(myRestaurant.id, {
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        } as any);
+        setLocationSet(true);
+        setTimeout(() => setLocationSet(false), 3000);
+      }
+    } catch {
+      Alert.alert('Error', 'Failed to get your location. Make sure GPS is enabled.');
+    } finally {
+      setSettingLocation(false);
     }
   };
 
@@ -124,6 +222,79 @@ export default function RestaurantProfileScreen() {
           )}
         </View>
 
+        {myRestaurant && (
+          <View style={[styles.menuCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+            <View style={styles.restaurantImageHeader}>
+              <MaterialCommunityIcons name="storefront" size={20} color={Colors[theme].primary} />
+              <Text style={[styles.restaurantImageTitle, { color: Colors[theme]['on-surface'] }]}>Restaurant Image</Text>
+            </View>
+            <TouchableOpacity onPress={pickRestaurantImage} disabled={uploadingRestaurantImage} style={styles.restaurantImageWrap}>
+              {uploadingRestaurantImage ? (
+                <ActivityIndicator size="small" color={Colors[theme].primary} style={{ height: 160 }} />
+              ) : myRestaurant.image ? (
+                <OptimizedImage uri={myRestaurant.image} style={styles.restaurantPreviewImage} />
+              ) : (
+                <View style={[styles.restaurantImagePlaceholder, { backgroundColor: Colors[theme]['surface-container'] }]}>
+                  <MaterialCommunityIcons name="image-plus" size={40} color={Colors[theme]['on-surface-variant']} />
+                  <Text style={[styles.restaurantImageHint, { color: Colors[theme]['on-surface-variant'] }]}>Tap to set restaurant image</Text>
+                  <Text style={[styles.restaurantImageSub, { color: Colors[theme]['surface-variant'] }]}>Customers will see this on the restaurant card</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            {myRestaurant.image && (
+              <TouchableOpacity style={styles.restaurantImageChange} onPress={pickRestaurantImage}>
+                <MaterialCommunityIcons name="camera" size={16} color={Colors[theme].primary} />
+                <Text style={[styles.restaurantImageChangeText, { color: Colors[theme].primary }]}>Change Image</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+          {myRestaurant && (
+          <View style={[styles.menuCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
+            <View style={styles.restaurantImageHeader}>
+              <MaterialCommunityIcons name="map-marker" size={20} color={Colors[theme].primary} />
+              <Text style={[styles.restaurantImageTitle, { color: Colors[theme]['on-surface'] }]}>Restaurant Location</Text>
+            </View>
+            <TouchableOpacity
+              onPress={setRestaurantLocation}
+              disabled={settingLocation}
+              style={[styles.locationBtn, { backgroundColor: Colors[theme]['surface-container'] }]}
+            >
+              {settingLocation ? (
+                <ActivityIndicator size="small" color={Colors[theme].primary} />
+              ) : (
+                <MaterialCommunityIcons name="crosshairs-gps" size={24} color={Colors[theme].primary} />
+              )}
+              <View style={styles.locationBtnTextCol}>
+                <Text style={[styles.locationBtnText, { color: Colors[theme]['on-surface'] }]}>
+                  {settingLocation ? 'Getting location...' : 'Use Current Location'}
+                </Text>
+                <Text style={[styles.locationBtnSub, { color: Colors[theme]['on-surface-variant'] }]}>
+                  Capture your current GPS position
+                </Text>
+              </View>
+              {locationSet && (
+                <MaterialCommunityIcons name="check-circle" size={20} color={Colors[theme].primary} />
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={openManualLocation}
+              style={[styles.locationBtn, { backgroundColor: Colors[theme]['surface-container'] }]}
+            >
+              <MaterialCommunityIcons name="keyboard" size={24} color={Colors[theme].primary} />
+              <View style={styles.locationBtnTextCol}>
+                <Text style={[styles.locationBtnText, { color: Colors[theme]['on-surface'] }]}>
+                  Enter Manually
+                </Text>
+                <Text style={[styles.locationBtnSub, { color: Colors[theme]['on-surface-variant'] }]}>
+                  Type latitude and longitude
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={[styles.menuCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
           <TouchableOpacity style={[styles.menuItem, { borderBottomColor: Colors[theme]['surface-variant'] }]} onPress={() => router.push('/restaurant/menu-management')}>
             <View style={[styles.menuIcon, { backgroundColor: Colors[theme]['surface-container'] }]}>
@@ -167,6 +338,51 @@ export default function RestaurantProfileScreen() {
           <Text style={[styles.logoutText, { color: Colors[theme].error }]}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal visible={showLocationModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: Colors[theme].surface }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: Colors[theme]['on-surface'] }]}>Set Location</Text>
+              <TouchableOpacity onPress={() => setShowLocationModal(false)}>
+                <MaterialCommunityIcons name="close" size={24} color={Colors[theme]['on-surface-variant']} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'] }]}>Latitude</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: Colors[theme]['surface-container-low'], color: Colors[theme]['on-surface'], borderColor: Colors[theme]['outline-variant'] }]}
+              value={editLat}
+              onChangeText={setEditLat}
+              placeholder="-6.7924"
+              placeholderTextColor={Colors[theme]['on-surface-variant']}
+              keyboardType="decimal-pad"
+            />
+
+            <Text style={[styles.inputLabel, { color: Colors[theme]['on-surface-variant'], marginTop: Spacing.md }]}>Longitude</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: Colors[theme]['surface-container-low'], color: Colors[theme]['on-surface'], borderColor: Colors[theme]['outline-variant'] }]}
+              value={editLng}
+              onChangeText={setEditLng}
+              placeholder="39.2083"
+              placeholderTextColor={Colors[theme]['on-surface-variant']}
+              keyboardType="decimal-pad"
+            />
+
+            <TouchableOpacity
+              style={[styles.saveBtn, { backgroundColor: Colors[theme].primary, opacity: settingLocation ? 0.7 : 1 }]}
+              onPress={saveManualLocation}
+              disabled={settingLocation}
+            >
+              {settingLocation ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <Text style={styles.saveBtnText}>Save Location</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <Modal visible={showEditModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
@@ -284,4 +500,30 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xl, alignItems: 'center', ...Shadows.sm,
   },
   saveBtnText: { ...Typography['body-md'], color: '#ffffff', fontWeight: '700' },
+  restaurantImageHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
+    padding: Spacing.md, paddingBottom: 0,
+  },
+  restaurantImageTitle: { ...Typography['label-md'], fontWeight: '600' },
+  restaurantImageWrap: { padding: Spacing.md },
+  restaurantPreviewImage: { width: '100%', height: 160, borderRadius: BorderRadius.lg },
+  restaurantImagePlaceholder: {
+    width: '100%', height: 160, borderRadius: BorderRadius.lg,
+    alignItems: 'center', justifyContent: 'center', gap: Spacing.xs,
+  },
+  restaurantImageHint: { ...Typography['body-sm'] },
+  restaurantImageSub: { ...Typography['label-sm'], textAlign: 'center', paddingHorizontal: Spacing.lg },
+  restaurantImageChange: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs,
+    paddingBottom: Spacing.md,
+  },
+  restaurantImageChangeText: { ...Typography['label-sm'], fontWeight: '600' },
+  locationBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
+    margin: Spacing.md, padding: Spacing.md,
+    borderRadius: BorderRadius.xl,
+  },
+  locationBtnTextCol: { flex: 1 },
+  locationBtnText: { ...Typography['label-md'], fontWeight: '600' },
+  locationBtnSub: { ...Typography['label-sm'], marginTop: 2 },
 });

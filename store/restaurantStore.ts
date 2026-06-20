@@ -18,6 +18,7 @@ interface RestaurantState {
   loadFeatured: () => Promise<void>;
   loadCurrentRestaurant: (id: string) => Promise<void>;
   loadMenu: (restaurantId: string) => Promise<void>;
+  loadAllMenus: () => Promise<void>;
   loadCategories: () => Promise<void>;
   setCurrentRestaurant: (restaurant: Restaurant | null) => void;
   updateRestaurant: (id: string, data: Partial<Restaurant>) => Promise<void>;
@@ -85,11 +86,50 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const menu = await restaurantsService.getMenu(restaurantId, true);
-      set({ currentMenu: menu, isLoading: false });
+      set((state) => ({
+        currentMenu: menu,
+        restaurants: state.restaurants.map((r) =>
+          r.id === restaurantId && !r.menu?.length ? { ...r, menu } : r
+        ),
+        featured: state.featured.map((r) =>
+          r.id === restaurantId && !r.menu?.length ? { ...r, menu } : r
+        ),
+        isLoading: false,
+      }));
     } catch (error) {
       console.error('Failed to load menu:', error);
       set({ isLoading: false, error: 'Failed to load menu.' });
     }
+  },
+
+  loadAllMenus: async () => {
+    const { restaurants } = get();
+    const ids = restaurants.filter((r) => !r.menu?.length).map((r) => r.id);
+    if (ids.length === 0) return;
+    const menuMap = new Map<string, MenuItem[]>();
+    let idx = 0;
+    const next = async () => {
+      if (idx >= ids.length) return;
+      const id = ids[idx++];
+      try {
+        const menu = await restaurantsService.getMenu(id, true);
+        menuMap.set(id, menu);
+      } catch (e) {
+        console.warn(`Failed to load menu for ${id}:`, e);
+      }
+      await new Promise((r) => setTimeout(r, 300));
+      await next();
+    };
+    await Promise.all(Array.from({ length: 2 }, next));
+    if (menuMap.size === 0) return;
+    set((state) => ({
+      restaurants: state.restaurants.map((r) =>
+        menuMap.has(r.id) && !r.menu?.length ? { ...r, menu: menuMap.get(r.id)! } : r
+      ),
+      featured: state.featured.map((r) =>
+        menuMap.has(r.id) && !r.menu?.length ? { ...r, menu: menuMap.get(r.id)! } : r
+      ),
+    }));
   },
 
   loadCategories: async () => {
