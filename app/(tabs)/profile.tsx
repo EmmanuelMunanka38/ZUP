@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, TextInput, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { useAuthStore } from '@/store/authStore';
 import { useOrderStore } from '@/store/orderStore';
 import { formatPrice } from '@/utils/format';
@@ -110,7 +111,7 @@ export default function ProfileScreen() {
               {uploadingAvatar ? (
                 <ActivityIndicator size="small" color={Colors[theme].primary} />
               ) : user?.avatar ? (
-                <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
+                <OptimizedImage uri={user.avatar || ''} style={styles.avatarImage} />
               ) : (
                 <MaterialCommunityIcons name="account" size={36} color={Colors[theme]['on-surface']} />
               )}
@@ -124,6 +125,11 @@ export default function ProfileScreen() {
             <Text style={[styles.profileEmail, { color: Colors[theme]['on-surface-variant'] }]}>
               {user?.email || 'No email'}
             </Text>
+            {/**
+             * This crown icon and the pratinum must be changed 
+             * to normal and only show it to Resturant owners that
+             * pay us since they give money to our SaaS.
+             */}
             <View style={styles.memberBadge}>
               <MaterialCommunityIcons name="crown" size={14} color={Colors[theme].secondary} />
               <Text style={[styles.memberText, { color: Colors[theme].secondary }]}>Platinum Member</Text>
@@ -224,7 +230,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+      </Modal> 
     </View>
   );
 }
