@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
   Modal,
   TextInput,
@@ -15,6 +14,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { formatPrice } from '@/utils/format';
@@ -268,7 +268,7 @@ export default function MenuManagementScreen() {
             >
               <View style={[styles.categoryIcon, { borderColor: isSelected ? Colors[theme].primary : Colors[theme]['surface-container-high'] }]}>
                 {cat?.image ? (
-                  <Image source={{ uri: cat.image }} style={styles.categoryFoodImage} />
+                  <OptimizedImage uri={cat.image} style={styles.categoryFoodImage} />
                 ) : (
                   <MaterialCommunityIcons name="food" size={28} color={Colors[theme]['on-surface-variant']} />
                 )}
@@ -321,10 +321,9 @@ export default function MenuManagementScreen() {
                 ]}
               >
                 {item.image && !imageErrors[item.id] ? (
-                  <Image
-                    source={{ uri: item.image }}
+                  <OptimizedImage
+                    uri={item.image}
                     style={[styles.menuImage, isUnavailable && styles.menuImageUnavailable]}
-                    onError={() => setImageErrors((prev) => ({ ...prev, [item.id]: true }))}
                   />
                 ) : (
                   <View style={[styles.menuImage, { backgroundColor: Colors[theme]['surface-container'], alignItems: 'center', justifyContent: 'center' }]}>
@@ -476,7 +475,7 @@ export default function MenuManagementScreen() {
                 {uploadingImage ? (
                   <ActivityIndicator size="small" color={Colors[theme].primary} />
                 ) : form.image ? (
-                  <Image source={{ uri: form.image }} style={styles.imagePickerPreview} />
+                  <OptimizedImage uri={form.image} style={styles.imagePickerPreview} />
                 ) : (
                   <>
                     <MaterialCommunityIcons name="camera" size={24} color={Colors[theme]['on-surface-variant']} />
