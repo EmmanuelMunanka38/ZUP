@@ -14,11 +14,13 @@ interface RestaurantState {
 
   loadRestaurants: () => Promise<void>;
   loadMyRestaurant: (ownerId: string) => Promise<void>;
+  createRestaurant: (data: Partial<Restaurant>) => Promise<Restaurant>;
   loadFeatured: () => Promise<void>;
   loadCurrentRestaurant: (id: string) => Promise<void>;
   loadMenu: (restaurantId: string) => Promise<void>;
   loadCategories: () => Promise<void>;
   setCurrentRestaurant: (restaurant: Restaurant | null) => void;
+  updateRestaurant: (id: string, data: Partial<Restaurant>) => Promise<void>;
   addMenuItem: (restaurantId: string, item: Partial<MenuItem>) => Promise<MenuItem>;
   updateMenuItem: (menuId: string, updates: Partial<MenuItem>) => Promise<void>;
   removeMenuItem: (menuId: string) => Promise<void>;
@@ -102,6 +104,19 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
 
   setCurrentRestaurant: (restaurant) => set({ currentRestaurant: restaurant }),
   clearError: () => set({ error: null }),
+
+  updateRestaurant: async (id: string, data: Partial<Restaurant>) => {
+    try {
+      const updated = await restaurantsService.update(id, data);
+      set((state) => ({
+        restaurants: state.restaurants.map((r) => (r.id === id ? { ...r, ...updated } : r)),
+        currentRestaurant: state.currentRestaurant?.id === id ? { ...state.currentRestaurant, ...updated } : state.currentRestaurant,
+      }));
+    } catch (error) {
+      console.error('Failed to update restaurant:', error);
+      throw error;
+    }
+  },
 
   createRestaurant: async (data: Partial<Restaurant>): Promise<Restaurant> => {
     const restaurant = await restaurantsService.create(data);
