@@ -5,12 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { formatPrice } from '@/utils/format';
 import { useCartStore } from '@/store/cartStore';
@@ -105,7 +105,7 @@ export default function RestaurantDetailsScreen() {
 
       <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
         <View style={styles.heroSection}>
-          <Image source={{ uri: restaurant.image }} style={styles.heroImage} onError={() => setImageErrors((prev) => ({ ...prev, hero: true }))} />
+          <OptimizedImage uri={restaurant.image} style={styles.heroImage} onError={() => setImageErrors((prev) => ({ ...prev, hero: true }))} />
           <View style={styles.heroGradient} />
           <View style={styles.heroContent}>
             <View style={styles.heroBadges}>
@@ -219,7 +219,7 @@ export default function RestaurantDetailsScreen() {
               <View key={item.id} style={[styles.menuCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
                 <View style={styles.menuImageContainer}>
                   {item.image && !imageErrors[item.id] ? (
-                    <Image source={{ uri: item.image }} style={styles.menuImage} onError={() => setImageErrors((prev) => ({ ...prev, [item.id]: true }))} />
+                    <OptimizedImage uri={item.image} style={styles.menuImage} onError={() => setImageErrors((prev) => ({ ...prev, [item.id]: true }))} />
                   ) : (
                     <View style={[styles.menuImage, { backgroundColor: Colors[theme]['surface-container'], alignItems: 'center', justifyContent: 'center' }]}>
                       <MaterialCommunityIcons name="food" size={40} color={Colors[theme]['on-surface-variant']} />
