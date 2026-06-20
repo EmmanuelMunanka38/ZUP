@@ -17,6 +17,7 @@ class DriverSocketService {
   private _isConnected = false;
   private locationInterval: ReturnType<typeof setInterval> | null = null;
   private _isOnline = false;
+  private _activeOrderId: string | null = null;
 
   get isConnected(): boolean {
     return this._isConnected;
@@ -24,6 +25,10 @@ class DriverSocketService {
 
   get isOnline(): boolean {
     return this._isOnline;
+  }
+
+  setActiveOrder(orderId: string | null): void {
+    this._activeOrderId = orderId;
   }
 
   connect(url?: string): void {
@@ -88,9 +93,10 @@ class DriverSocketService {
     this.locationInterval = setInterval(() => {
       const location = useLocationStore.getState().currentLocation;
       if (location && this.socket?.connected) {
-        this.socket.emit('driver:location', {
+        this.socket.emit('location:update', {
           latitude: location.latitude,
           longitude: location.longitude,
+          orderId: this._activeOrderId || undefined,
           heading: 0,
           speed: 0,
           timestamp: new Date().toISOString(),
@@ -108,9 +114,10 @@ class DriverSocketService {
 
   sendLocation(location: Coordinate): void {
     if (this.socket?.connected && this._isOnline) {
-      this.socket.emit('driver:location', {
+      this.socket.emit('location:update', {
         latitude: location.latitude,
         longitude: location.longitude,
+        orderId: this._activeOrderId || undefined,
         heading: 0,
         speed: 0,
         timestamp: new Date().toISOString(),

@@ -17,7 +17,9 @@ import OptimizedImage from '@/components/ui/OptimizedImage';
 import { useRestaurantStore } from '@/store/restaurantStore';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.82;
+const GRID_GAP = Spacing.md;
+const GRID_PADDING = Spacing['container-padding'] * 2;
+const GRID_CARD_WIDTH = (width - GRID_PADDING - GRID_GAP) / 2;
 
 const popularSearches = ['Pizza', 'Swahili', 'Burgers', 'Juice', 'Pilau', 'Seafood'];
 
@@ -160,17 +162,13 @@ export default function SearchScreen() {
                     </Text>
                   </View>
                 </View>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.restaurantsRow}
-                >
+                <View style={styles.restaurantsGrid}>
                   {results.restaurants.map((r) => (
                     <TouchableOpacity
                       key={r.id}
                       activeOpacity={0.9}
                       onPress={() => router.push(`/restaurant-details?id=${r.id}`)}
-                      style={[styles.restaurantCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }, Shadows.sm]}
+                      style={[styles.restaurantCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
                     >
                       <View style={styles.restaurantImageContainer}>
                         <OptimizedImage uri={r.image} style={styles.restaurantImage} />
@@ -203,7 +201,7 @@ export default function SearchScreen() {
                       </View>
                     </TouchableOpacity>
                   ))}
-                </ScrollView>
+                </View>
               </View>
             )}
 
@@ -237,7 +235,7 @@ export default function SearchScreen() {
                           <Text style={[styles.menuName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
                             {m.name}
                           </Text>
-                          <Text style={[styles.menuDesc, { color: Colors[theme]['on-surface-variant'] }]} numberOfLines={1}>
+                          <Text style={[styles.menuDesc, { color: Colors[theme]['on-surface-variant'] }]} numberOfLines={2}>
                             {m.description}
                           </Text>
                           {restaurant && (
@@ -319,17 +317,20 @@ const styles = StyleSheet.create({
   },
   countText: { ...Typography['label-sm'], fontWeight: '600' },
 
-  restaurantsRow: {
+  restaurantsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     paddingHorizontal: Spacing['container-padding'],
-    gap: Spacing.lg,
+    gap: GRID_GAP,
   },
   restaurantCard: {
-    width: CARD_WIDTH,
+    width: GRID_CARD_WIDTH,
     borderRadius: BorderRadius.xl,
     overflow: 'hidden',
+    ...Shadows.sm,
   },
   restaurantImageContainer: { position: 'relative' },
-  restaurantImage: { width: CARD_WIDTH, height: 180 },
+  restaurantImage: { width: GRID_CARD_WIDTH, height: 130 },
   statusBadge: {
     position: 'absolute',
     top: 12,
@@ -364,17 +365,19 @@ const styles = StyleSheet.create({
   metaDot: { width: 3, height: 3, borderRadius: 1.5, marginHorizontal: 4 },
 
   menuGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     paddingHorizontal: Spacing['container-padding'],
-    gap: Spacing.md,
+    gap: GRID_GAP,
   },
   menuCard: {
-    flexDirection: 'row',
+    width: GRID_CARD_WIDTH,
     borderRadius: BorderRadius.xl,
     overflow: 'hidden',
     ...Shadows.sm,
   },
-  menuImage: { width: 96, height: 96 },
-  menuInfo: { flex: 1, padding: Spacing.md, justifyContent: 'center', gap: 2 },
+  menuImage: { width: '100%', height: GRID_CARD_WIDTH, backgroundColor: Colors.light['surface-container'] },
+  menuInfo: { padding: Spacing.sm, gap: 2 },
   menuName: { ...Typography.h2 },
   menuDesc: { ...Typography['body-sm'] },
   menuRestaurant: { ...Typography['label-sm'], marginTop: 2 },

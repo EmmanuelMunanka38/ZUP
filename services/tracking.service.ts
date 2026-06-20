@@ -104,17 +104,18 @@ class TrackingService {
 
       this.socket.on('order:status', (data: { status: string; orderId: string }) => {
         if (data.orderId === this._orderId) {
-          const existing = this._currentTracking.get(data.orderId);
           const trackingStatus = SOCKET_STATUS_MAP[data.status] || data.status;
-          if (existing) {
-            const updated: TrackingUpdate = {
-              ...existing,
-              status: trackingStatus as OrderTrackingStatus,
-              timestamp: new Date().toISOString(),
-            };
-            this._currentTracking.set(data.orderId, updated);
-            this.listeners.forEach((cb) => cb(updated));
-          }
+          const existing = this._currentTracking.get(data.orderId);
+          const updated: TrackingUpdate = {
+            orderId: data.orderId,
+            status: trackingStatus as OrderTrackingStatus,
+            estimatedMinutes: existing?.estimatedMinutes || 0,
+            estimatedArrival: existing?.estimatedArrival || '',
+            driverLocation: existing?.driverLocation,
+            timestamp: new Date().toISOString(),
+          };
+          this._currentTracking.set(data.orderId, updated);
+          this.listeners.forEach((cb) => cb(updated));
         }
       });
 

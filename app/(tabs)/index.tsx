@@ -20,13 +20,13 @@ import { CategorySkeleton, RestaurantCardSkeleton } from '@/components/ui/Skelet
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.7;
-const DRINK_WIDTH = 144;
+
 
 export default function HomeScreen() {
   const theme = 'light';
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const { restaurants, categories, featured, isLoading, loadRestaurants, loadCategories, loadFeatured } = useRestaurantStore();
+  const { restaurants, categories, featured, isLoading, error, loadRestaurants, loadCategories, loadFeatured, loadAllMenus } = useRestaurantStore();
   const items = useCartStore((s) => s.items);
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
 
@@ -44,17 +44,25 @@ export default function HomeScreen() {
 
   const showFiltered = selectedCategory !== null;
 
+  useEffect(() => {
+    const init = async () => {
+      await loadRestaurants();
+      await Promise.all([loadCategories(), loadFeatured()]);
+    };
+    init();
+  }, [loadRestaurants, loadCategories, loadFeatured]);
+
+  useEffect(() => {
+    if (restaurants.length > 0) {
+      const timer = setTimeout(() => loadAllMenus(), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [restaurants, loadAllMenus]);
+
   const recommendedItems = useMemo(() => {
     const allItems = restaurants.flatMap((r) => (r.menu || []).map((m) => ({ ...m, restaurantId: r.id })));
     allItems.sort(() => 0.5 - Math.random());
-    return {
-      big: allItems[0] || null,
-      small1: allItems[1] || null,
-      small2: allItems[2] || null,
-      small3: allItems[3] || null,
-      small4: allItems[4] || null,
-      small5: allItems[5] || null,
-    };
+    return allItems.slice(0, 4);
   }, [restaurants]);
 
   const handleRefresh = useCallback(async () => {
@@ -105,6 +113,12 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors[theme].primary} />
         }
       >
+        {error && (
+          <View style={[styles.errorBanner, { backgroundColor: Colors[theme]['error-container'] }]}>
+            <MaterialCommunityIcons name="alert-circle" size={20} color={Colors[theme]['on-error-container']} />
+            <Text style={[styles.errorText, { color: Colors[theme]['on-error-container'] }]}>{error}</Text>
+          </View>
+        )}
         <TouchableOpacity
           style={[styles.searchBar, { backgroundColor: Colors[theme]['surface-container-lowest'], borderColor: Colors[theme]['surface-container'] }]}
           onPress={() => router.push('/search')}
@@ -333,42 +347,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: Colors[theme]['on-surface'] }]}>
-            Top Drinks
-          </Text>
-          <TouchableOpacity onPress={() => router.push('/search')}>
-            <Text style={[styles.seeAll, { color: Colors[theme].primary }]}>Explore</Text>
-          </TouchableOpacity>
-        </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.drinksRow}
-        >
-          {restaurants.flatMap((r) => r.menu || []).slice(0, 8).map((item, i) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.drinkItem}
-              onPress={() => router.push(`/restaurant-details?id=${item.restaurantId}`)}
-            >
-              <View style={[styles.drinkImageBg, { backgroundColor: Colors[theme]['surface-container'] }]}>
-                {item.image ? (
-                  <OptimizedImage uri={item.image} style={styles.drinkImageStyle} />
-                ) : (
-                  <MaterialCommunityIcons name="food" size={32} color={Colors[theme]['on-surface-variant']} />
-                )}
-              </View>
-              <Text style={[styles.drinkName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
-                {item.name}
-              </Text>
-              <Text style={[styles.drinkPrice, { color: Colors[theme].primary }]}>
-                {formatPrice(item.price)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
 
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: Colors[theme]['on-surface'] }]}>
@@ -377,79 +356,33 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.recommendedGrid}>
-          {(() => {
-            const { big, small1, small2, small3, small4, small5 } = recommendedItems;
-            if (!big) return null;
-            return (
-              <>
-                <TouchableOpacity
-                  style={[styles.recommendedLarge, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
-                  activeOpacity={0.8}
-                  onPress={() => router.push(`/restaurant-details?id=${big.restaurantId}`)}
-                >
-                  <View style={styles.recommendedLargeContent}>
-                    <View style={styles.recommendedTextCol}>
-                      <View style={[styles.bestSellerBadge, { backgroundColor: 'rgba(15, 169, 88, 0.1)' }]}>
-                        <Text style={[styles.bestSellerText, { color: Colors[theme]['primary-container'] }]}>Best Seller</Text>
-                      </View>
-                      <Text style={[styles.recommendedName, { color: Colors[theme]['on-surface'] }]}>{big.name}</Text>
-                      <Text style={[styles.recommendedDesc, { color: Colors[theme]['on-surface-variant'] }]} numberOfLines={2}>{big.description}</Text>
-                      <Text style={[styles.recommendedPrice, { color: Colors[theme].primary }]}>{formatPrice(big.price)}</Text>
-                    </View>
-                    <OptimizedImage uri={big.image || ''} style={styles.recommendedImageCol} />
-                  </View>
-                </TouchableOpacity>
-
-                <View style={styles.recommendedSmallRow}>
-                  {[small1, small2].filter(Boolean).map((item) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={[styles.recommendedSmall, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
-                      activeOpacity={0.8}
-                      onPress={() => router.push(`/restaurant-details?id=${item.restaurantId}`)}
-                    >
-                      <OptimizedImage
-                        uri={item.image || ''}
-                        style={[styles.recommendedSmallImage, { backgroundColor: Colors[theme]['surface-container'] }]}
-                      />
-                      <View style={styles.recommendedSmallInfo}>
-                        <Text style={[styles.recommendedSmallName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
-                          {item.name}
-                        </Text>
-                        <Text style={[styles.recommendedSmallPrice, { color: Colors[theme].primary }]}>
-                          {formatPrice(item.price)}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
+          {recommendedItems.length > 0 ? (
+            recommendedItems.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={[styles.recommendedCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
+                activeOpacity={0.8}
+                onPress={() => router.push(`/restaurant-details?id=${item.restaurantId}`)}
+              >
+                <OptimizedImage uri={item.image || ''} style={styles.recommendedImage} />
+                <View style={styles.recommendedInfo}>
+                  <Text style={[styles.recommendedName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  <Text style={[styles.recommendedPrice, { color: Colors[theme].primary }]}>
+                    {formatPrice(item.price)}
+                  </Text>
                 </View>
-
-                <View style={styles.recommendedSmallRow}>
-                  {[small3, small4, small5].filter(Boolean).map((item) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={[styles.recommendedSmall, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
-                      activeOpacity={0.8}
-                      onPress={() => router.push(`/restaurant-details?id=${item.restaurantId}`)}
-                    >
-                      <OptimizedImage
-                        uri={item.image || ''}
-                        style={[styles.recommendedSmallImage, { backgroundColor: Colors[theme]['surface-container'] }]}
-                      />
-                      <View style={styles.recommendedSmallInfo}>
-                        <Text style={[styles.recommendedSmallName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
-                          {item.name}
-                        </Text>
-                        <Text style={[styles.recommendedSmallPrice, { color: Colors[theme].primary }]}>
-                          {formatPrice(item.price)}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </>
-            );
-          })()}
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyRecommendation}>
+              <MaterialCommunityIcons name="food" size={40} color={Colors[theme]['surface-variant']} />
+              <Text style={[styles.emptyRecText, { color: Colors[theme]['on-surface-variant'] }]}>
+                No recommendations yet
+              </Text>
+            </View>
+          )}
         </View>
           </>
         )}
@@ -460,6 +393,17 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginHorizontal: Spacing['container-padding'],
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+  },
+  errorText: { flex: 1, ...Typography['body-sm'] },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -598,73 +542,30 @@ const styles = StyleSheet.create({
   dealButtonText: {
     ...Typography['label-md'],
   },
-  drinksRow: {
-    paddingHorizontal: Spacing['container-padding'],
-    gap: Spacing.md,
-  },
-  drinkItem: { width: DRINK_WIDTH },
-  drinkImageBg: {
-    height: DRINK_WIDTH,
-    borderRadius: BorderRadius.xl,
-    overflow: 'hidden',
-    marginBottom: Spacing.sm,
-    ...Shadows.sm,
-  },
-  drinkImageStyle: { width: '100%', height: '100%' },
-  drinkName: { ...Typography['label-md'] },
-  drinkPrice: { ...Typography['label-sm'], marginTop: 2 },
+
   recommendedGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     paddingHorizontal: Spacing['container-padding'],
     gap: Spacing.md,
   },
-  recommendedLarge: {
+  recommendedCard: {
+    width: (width - Spacing['container-padding'] * 2 - Spacing.md) / 2,
     borderRadius: BorderRadius.xl,
     overflow: 'hidden',
     ...Shadows.sm,
   },
-  recommendedLargeContent: {
-    flexDirection: 'row',
-    height: 160,
+  recommendedImage: {
+    width: '100%',
+    height: (width - Spacing['container-padding'] * 2 - Spacing.md) / 2,
   },
-  recommendedTextCol: {
-    flex: 1,
-    padding: Spacing.md,
-    justifyContent: 'space-between',
-  },
-  bestSellerBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  bestSellerText: { ...Typography['label-sm'], fontSize: 10, textTransform: 'uppercase' },
-  recommendedName: { ...Typography.h2, marginTop: Spacing.sm },
-  recommendedDesc: { ...Typography['body-sm'] },
-  recommendedPrice: { ...Typography['label-md'] },
-  recommendedImageCol: {
-    width: '50%',
-    height: 160,
-    borderTopRightRadius: BorderRadius.xl,
-    borderBottomRightRadius: BorderRadius.xl,
-  },
-  recommendedSmallRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  recommendedSmall: {
-    flex: 1,
-    borderRadius: BorderRadius.xl,
-    overflow: 'hidden',
-    ...Shadows.sm,
-  },
-  recommendedSmallImage: {
-    height: 128,
-  },
-  recommendedSmallInfo: {
+  recommendedInfo: {
     padding: Spacing.sm,
   },
-  recommendedSmallName: { ...Typography['label-md'] },
-  recommendedSmallPrice: { ...Typography['label-sm'] },
+  recommendedName: { ...Typography['label-md'] },
+  recommendedPrice: { ...Typography['label-sm'] },
+  emptyRecommendation: { alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.lg, width: '100%' },
+  emptyRecText: { ...Typography['body-md'] },
   filteredSection: {
     paddingTop: Spacing.md,
   },

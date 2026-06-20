@@ -51,7 +51,7 @@ export default function OptimizedImage({
         {fallbackIcon ? (
           <MaterialCommunityIcons name={fallbackIcon as any} size={fallbackSize} color={fallbackColor || Colors.light['on-surface-variant']} />
         ) : (
-          <MaterialCommunityIcons name="store" size={fallbackSize} color={fallbackColor || Colors.light['on-surface-variant']} />
+          <MaterialCommunityIcons name="food" size={fallbackSize} color={fallbackColor || Colors.light['on-surface-variant']} />
         )}
       </View>
     );

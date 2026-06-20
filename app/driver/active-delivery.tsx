@@ -42,6 +42,7 @@ export default function ActiveDeliveryScreen() {
 
   useEffect(() => {
     if (!activeDelivery?.orderId) return;
+    driverSocketService.setActiveOrder(activeDelivery.orderId);
     let cancelled = false;
     ordersService.getById(activeDelivery.orderId).then((order) => {
       if (cancelled) return;
