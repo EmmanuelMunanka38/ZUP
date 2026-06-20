@@ -24,11 +24,15 @@ interface CartState {
   restaurantName: string | null;
   items: CartItem[];
   isSyncing: boolean;
+  deliveryFee: number;
+  serviceFee: number;
 
   addItem: (item: MenuItem, quantity?: number) => Promise<void>;
   removeItem: (id: string) => Promise<void>;
   updateQty: (id: string, quantity: number) => Promise<void>;
   setRestaurantName: (name: string) => void;
+  setDeliveryFee: (fee: number) => void;
+  setServiceFee: (fee: number) => void;
   loadCart: () => Promise<void>;
   clearCart: () => Promise<void>;
   itemCount: () => number;
@@ -40,6 +44,8 @@ export const useCartStore = create<CartState>((set, get) => ({
   restaurantName: null,
   items: [],
   isSyncing: false,
+  deliveryFee: 0,
+  serviceFee: 0,
 
   addItem: async (menuItem, quantity = 1) => {
     const state = get();
@@ -78,6 +84,8 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   setRestaurantName: (name) => set({ restaurantName: name }),
+  setDeliveryFee: (fee) => set({ deliveryFee: fee }),
+  setServiceFee: (fee) => set({ serviceFee: fee }),
 
   removeItem: async (id) => {
     set((state) => ({
@@ -102,7 +110,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   clearCart: async () => {
-    set({ restaurantId: null, restaurantName: null, items: [] });
+    set({ restaurantId: null, restaurantName: null, items: [], deliveryFee: 0, serviceFee: 0 });
     cartService.clearCart().catch(() => {});
   },
 

@@ -6,7 +6,6 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  Image,
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
@@ -14,6 +13,7 @@ import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { formatPrice } from '@/utils/format';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { useRestaurantStore } from '@/store/restaurantStore';
 
 const { width } = Dimensions.get('window');
@@ -173,7 +173,7 @@ export default function SearchScreen() {
                       style={[styles.restaurantCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }, Shadows.sm]}
                     >
                       <View style={styles.restaurantImageContainer}>
-                        <Image source={{ uri: r.image }} style={styles.restaurantImage} />
+                        <OptimizedImage uri={r.image} style={styles.restaurantImage} />
                         <View style={[styles.statusBadge, { backgroundColor: r.isOpen ? Colors[theme].primary : Colors[theme].error }]}>
                           <Text style={styles.statusText}>{r.isOpen ? 'Open' : 'Closed'}</Text>
                         </View>
@@ -232,7 +232,7 @@ export default function SearchScreen() {
                         onPress={() => router.push(`/restaurant-details?id=${m.restaurantId}`)}
                         activeOpacity={0.7}
                       >
-                        <Image source={{ uri: m.image }} style={styles.menuImage} />
+                        <OptimizedImage uri={m.image} style={styles.menuImage} />
                         <View style={styles.menuInfo}>
                           <Text style={[styles.menuName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
                             {m.name}

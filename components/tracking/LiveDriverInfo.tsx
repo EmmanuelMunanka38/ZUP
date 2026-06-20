@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { Colors, Typography, BorderRadius, Spacing, Shadows } from '@/constants/theme';
 import { Rider } from '@/types';
 
@@ -23,7 +24,7 @@ export function LiveDriverInfo({
       <View style={styles.mainRow}>
         <View style={styles.riderSection}>
           <View style={styles.avatarWrap}>
-            <Image source={{ uri: rider.avatar }} style={styles.avatar} />
+            <OptimizedImage uri={rider.avatar} style={styles.avatar} />
             <View style={[styles.ratingBadge, { backgroundColor: Colors[theme]['secondary-container'] }]}>
               <MaterialCommunityIcons name="star" size={12} color={Colors[theme]['on-secondary-container']} />
               <Text style={[styles.ratingText, { color: Colors[theme]['on-secondary-container'] }]}>

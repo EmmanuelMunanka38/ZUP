@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, Modal, Image, ActivityIndicator } from 'react-native';import { router } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, Modal, ActivityIndicator } from 'react-native';
+import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { useAuthStore } from '@/store/authStore';
 import { useDriverStore } from '@/store/driverStore';
 import { formatPrice } from '@/utils/format';
@@ -89,7 +91,7 @@ export default function DriverProfileScreen() {
               {uploadingAvatar ? (
                 <ActivityIndicator size="small" color="#ffffff" />
               ) : user?.avatar ? (
-                <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
+                <OptimizedImage uri={user.avatar || ''} style={styles.avatarImage} />
               ) : (
                 <MaterialCommunityIcons name="bike" size={32} color="#ffffff" />
               )}

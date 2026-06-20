@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, Modal, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { useAuthStore } from '@/store/authStore';
 import { useRestaurantStore } from '@/store/restaurantStore';
 import { uploadService } from '@/services/upload.service';
@@ -12,7 +13,7 @@ export default function RestaurantProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const updateProfile = useAuthStore((s) => s.updateProfile);
-  const { restaurants } = useRestaurantStore();
+  const { restaurants, updateRestaurant } = useRestaurantStore();
   const myRestaurant = restaurants[0];
 
   const [showEditModal, setShowEditModal] = useState(false);
@@ -55,6 +56,9 @@ export default function RestaurantProfileScreen() {
       try {
         const url = await uploadService.uploadImage(result.assets[0].uri);
         await updateProfile({ avatar: url });
+        if (myRestaurant) {
+          await updateRestaurant(myRestaurant.id, { image: url });
+        }
       } catch {
         Alert.alert('Error', 'Failed to upload avatar');
       } finally {
@@ -98,7 +102,7 @@ export default function RestaurantProfileScreen() {
               {uploadingAvatar ? (
                 <ActivityIndicator size="small" color="#ffffff" />
               ) : user?.avatar ? (
-                <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
+                <OptimizedImage uri={user.avatar || ''} style={styles.avatarImage} />
               ) : (
                 <MaterialCommunityIcons name="store" size={36} color="#ffffff" />
               )}

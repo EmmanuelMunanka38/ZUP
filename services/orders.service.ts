@@ -52,4 +52,9 @@ export const ordersService = {
     const { data } = await api.post<ApiResponse<Order>>(`/orders/${orderId}/reorder`);
     return data.data;
   },
+
+  async assignDriver(orderId: string, driverId: string): Promise<Order> {
+    const { data } = await api.put<ApiResponse<Order>>(`/orders/${orderId}/assign-driver`, { driverId });
+    return data.data;
+  },
 };

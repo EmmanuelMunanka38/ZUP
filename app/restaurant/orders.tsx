@@ -1,18 +1,25 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Modal, FlatList } from 'react-native';
 import { router } from 'expo-router';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { formatPrice } from '@/utils/format';
 import { useOrderStore } from '@/store/orderStore';
 import { ordersService } from '@/services/orders.service';
 import { restaurantSocketService } from '@/services/restaurant-socket.service';
+import { restaurantsService } from '@/services/restaurants.service';
+import { User } from '@/types';
 
 export default function RestaurantOrdersScreen() {
   const theme = 'light';
   const { orders, isLoading, loadOrders } = useOrderStore();
   const [activeTab, setActiveTab] = useState<'new' | 'active' | 'history'>('new');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [drivers, setDrivers] = useState<User[]>([]);
+  const [showDriverModal, setShowDriverModal] = useState(false);
+  const [assigningOrderId, setAssigningOrderId] = useState<string | null>(null);
+  const [loadingDrivers, setLoadingDrivers] = useState(false);
 
   useEffect(() => {
     loadOrders();
@@ -69,6 +76,36 @@ export default function RestaurantOrdersScreen() {
       await loadOrders();
     } catch {} finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleOpenAssignDriver = async (orderId: string) => {
+    setAssigningOrderId(orderId);
+    setLoadingDrivers(true);
+    try {
+      const data = await restaurantsService.getDrivers();
+      setDrivers(data);
+      setShowDriverModal(true);
+    } catch {
+      Alert.alert('Error', 'Failed to load available drivers');
+    } finally {
+      setLoadingDrivers(false);
+    }
+  };
+
+  const handleAssignDriver = async (driverId: string) => {
+    if (!assigningOrderId) return;
+    setUpdatingId(assigningOrderId);
+    setShowDriverModal(false);
+    try {
+      await ordersService.assignDriver(assigningOrderId, driverId);
+      await loadOrders();
+      Alert.alert('Driver Assigned', 'A driver has been assigned to this order.');
+    } catch {
+      Alert.alert('Error', 'Failed to assign driver. Please try again.');
+    } finally {
+      setUpdatingId(null);
+      setAssigningOrderId(null);
     }
   };
 
@@ -209,17 +246,23 @@ export default function RestaurantOrdersScreen() {
                     </>
                   )}
                   {order.status === 'restaurant_accepted' && (
-                    <TouchableOpacity
-                      style={[styles.actionBtnFull, { backgroundColor: Colors[theme].secondary }]}
-                      onPress={() => handlePrepare(order.id)}
-                      disabled={isUpdating}
-                    >
-                      {isUpdating ? (
-                        <ActivityIndicator size="small" color="#ffffff" />
-                      ) : (
-                        <Text style={styles.actionBtnTextWhite}>Start Preparing</Text>
-                      )}
-                    </TouchableOpacity>
+                    <>
+                      <View style={[styles.acceptedChip, { backgroundColor: 'rgba(15,169,88,0.1)' }]}>
+                        <MaterialCommunityIcons name="check-circle" size={18} color={Colors[theme].primary} />
+                        <Text style={[styles.acceptedChipText, { color: Colors[theme].primary }]}>Accepted</Text>
+                      </View>
+                      <TouchableOpacity
+                        style={[styles.actionBtn, { backgroundColor: Colors[theme]['error-container'] }]}
+                        onPress={() => handleCancel(order.id)}
+                        disabled={isUpdating}
+                      >
+                        {isUpdating ? (
+                          <ActivityIndicator size="small" color={Colors[theme].error} />
+                        ) : (
+                          <Text style={[styles.actionBtnText, { color: Colors[theme].error }]}>Cancel</Text>
+                        )}
+                      </TouchableOpacity>
+                    </>
                   )}
                   {order.status === 'preparing' && (
                     <TouchableOpacity
@@ -235,15 +278,27 @@ export default function RestaurantOrdersScreen() {
                     </TouchableOpacity>
                   )}
                   {order.status === 'ready_for_pickup' && (
-                    <View style={[styles.statusChip, { backgroundColor: 'rgba(15,169,88,0.1)' }]}>
-                      <MaterialCommunityIcons name="package-variant-closed" size={16} color={Colors[theme].primary} />
-                      <Text style={[styles.statusChipText, { color: Colors[theme].primary }]}>Awaiting driver</Text>
-                    </View>
+                    <TouchableOpacity
+                      style={[styles.actionBtnFull, { backgroundColor: Colors[theme].primary }]}
+                      onPress={() => handleOpenAssignDriver(order.id)}
+                      disabled={isUpdating}
+                    >
+                      {isUpdating ? (
+                        <ActivityIndicator size="small" color="#ffffff" />
+                      ) : (
+                        <>
+                          <MaterialCommunityIcons name="bike" size={16} color="#ffffff" />
+                          <Text style={styles.actionBtnTextWhite}>Assign Driver</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
                   )}
                   {order.status === 'driver_assigned' && (
                     <View style={[styles.statusChip, { backgroundColor: 'rgba(15,169,88,0.1)' }]}>
                       <MaterialCommunityIcons name="bike" size={16} color={Colors[theme].primary} />
-                      <Text style={[styles.statusChipText, { color: Colors[theme].primary }]}>Driver assigned</Text>
+                      <Text style={[styles.statusChipText, { color: Colors[theme].primary }]}>
+                        {order.rider ? order.rider.name : 'Driver assigned'}
+                      </Text>
                     </View>
                   )}
                   {order.status === 'picked_up' && (
@@ -283,6 +338,54 @@ export default function RestaurantOrdersScreen() {
         )}
         <View style={{ height: 40 }} />
       </ScrollView>
+      {/* Driver Assignment Modal */}
+      <Modal visible={showDriverModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: Colors[theme].surface }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: Colors[theme]['on-surface'] }]}>Assign Driver</Text>
+              <TouchableOpacity onPress={() => { setShowDriverModal(false); setAssigningOrderId(null); }}>
+                <MaterialCommunityIcons name="close" size={24} color={Colors[theme]['on-surface-variant']} />
+              </TouchableOpacity>
+            </View>
+
+            {loadingDrivers ? (
+              <ActivityIndicator size="large" color={Colors[theme].primary} style={{ marginVertical: 40 }} />
+            ) : drivers.length === 0 ? (
+              <View style={styles.modalEmpty}>
+                <MaterialCommunityIcons name="truck" size={48} color={Colors[theme]['surface-variant']} />
+                <Text style={[styles.modalEmptyText, { color: Colors[theme]['on-surface-variant'] }]}>No drivers available</Text>
+                <Text style={[styles.modalEmptySubtext, { color: Colors[theme]['surface-variant'] }]}>Drivers need to be registered on the platform</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={drivers}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.driverList}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[styles.driverItem, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
+                    onPress={() => handleAssignDriver(item.id)}
+                  >
+                    <View style={[styles.driverAvatar, { backgroundColor: Colors[theme]['surface-container'] }]}>
+                      {item.avatar ? (
+                        <OptimizedImage uri={item.avatar} style={styles.driverAvatarImage} />
+                      ) : (
+                        <MaterialCommunityIcons name="account" size={24} color={Colors[theme]['on-surface-variant']} />
+                      )}
+                    </View>
+                    <View style={styles.driverInfo}>
+                      <Text style={[styles.driverName, { color: Colors[theme]['on-surface'] }]}>{item.name || 'Driver'}</Text>
+                      <Text style={[styles.driverPhone, { color: Colors[theme]['on-surface-variant'] }]}>{item.phone || 'No phone'}</Text>
+                    </View>
+                    <MaterialCommunityIcons name="chevron-right" size={22} color={Colors[theme]['outline']} />
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -336,4 +439,20 @@ const styles = StyleSheet.create({
   actionBtnFull: { flex: 1, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center', minHeight: 40 },
   statusChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, alignSelf: 'flex-start' },
   statusChipText: { ...Typography['label-md'], fontWeight: '600' },
+  acceptedChip: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, justifyContent: 'center', minHeight: 40 },
+  acceptedChipText: { ...Typography['label-md'], color: '#ffffff', fontWeight: '700' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: Spacing['container-padding'], paddingBottom: 40, maxHeight: '80%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.lg },
+  modalTitle: { ...Typography.h1 },
+  modalEmpty: { alignItems: 'center', gap: Spacing.sm, paddingVertical: 40 },
+  modalEmptyText: { ...Typography['body-md'] },
+  modalEmptySubtext: { ...Typography['label-sm'], textAlign: 'center' },
+  driverList: { gap: Spacing.sm },
+  driverItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, borderRadius: BorderRadius.xl, padding: Spacing.md, borderWidth: 1, borderColor: Colors.light['surface-variant'] },
+  driverAvatar: { width: 48, height: 48, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  driverAvatarImage: { width: '100%', height: '100%' },
+  driverInfo: { flex: 1 },
+  driverName: { ...Typography['label-md'], fontWeight: '600' },
+  driverPhone: { ...Typography['body-sm'], marginTop: 1 },
 });

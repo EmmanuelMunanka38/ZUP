@@ -22,8 +22,9 @@ export const restaurantsService = {
     return data.data;
   },
 
-  async getMenu(restaurantId: string): Promise<MenuItem[]> {
-    const { data } = await api.get<ApiResponse<MenuItem[]>>(`/restaurants/${restaurantId}/menu`);
+  async getMenu(restaurantId: string, includeUnavailable = false): Promise<MenuItem[]> {
+    const params = includeUnavailable ? '?includeUnavailable=true' : '';
+    const { data } = await api.get<ApiResponse<MenuItem[]>>(`/restaurants/${restaurantId}/menu${params}`);
     return data.data;
   },
 
@@ -49,6 +50,11 @@ export const restaurantsService = {
 
   async deleteMenuItem(menuId: string): Promise<void> {
     await api.delete(`/restaurants/menu/${menuId}`);
+  },
+
+  async update(id: string, data: Partial<Restaurant>): Promise<Restaurant> {
+    const { data: res } = await api.put<ApiResponse<Restaurant>>(`/restaurants/${id}`, data);
+    return res.data;
   },
 
   async getDrivers(): Promise<User[]> {
