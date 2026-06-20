@@ -52,6 +52,11 @@ export const restaurantsService = {
     await api.delete(`/restaurants/menu/${menuId}`);
   },
 
+  async update(id: string, data: Partial<Restaurant>): Promise<Restaurant> {
+    const { data: res } = await api.put<ApiResponse<Restaurant>>(`/restaurants/${id}`, data);
+    return res.data;
+  },
+
   async getDrivers(): Promise<User[]> {
     const { data } = await api.get<ApiResponse<User[]>>('/users/drivers');
     return data.data;
