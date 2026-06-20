@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { router } from 'expo-router';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -259,7 +260,7 @@ export default function DriverDashboardScreen() {
                 <View style={styles.requestBody}>
                   <View style={styles.requestRestaurant}>
                     <View style={[styles.requestIcon, { backgroundColor: Colors[theme]['surface-container-high'] }]}>
-                      <Image source={{ uri: request.restaurant.image }} style={styles.requestImage} />
+                      <OptimizedImage uri={request.restaurant.image} style={styles.requestImage} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.requestName, { color: Colors[theme]['on-surface'] }]}>{request.restaurant.name}</Text>
