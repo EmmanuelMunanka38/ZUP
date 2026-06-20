@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Modal, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Modal, FlatList } from 'react-native';
 import { router } from 'expo-router';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { formatPrice } from '@/utils/format';
@@ -246,29 +247,19 @@ export default function RestaurantOrdersScreen() {
                   )}
                   {order.status === 'restaurant_accepted' && (
                     <>
+                      <View style={[styles.acceptedChip, { backgroundColor: 'rgba(15,169,88,0.1)' }]}>
+                        <MaterialCommunityIcons name="check-circle" size={18} color={Colors[theme].primary} />
+                        <Text style={[styles.acceptedChipText, { color: Colors[theme].primary }]}>Accepted</Text>
+                      </View>
                       <TouchableOpacity
-                        style={[styles.actionBtn, { backgroundColor: Colors[theme].secondary }]}
-                        onPress={() => handlePrepare(order.id)}
+                        style={[styles.actionBtn, { backgroundColor: Colors[theme]['error-container'] }]}
+                        onPress={() => handleCancel(order.id)}
                         disabled={isUpdating}
                       >
                         {isUpdating ? (
-                          <ActivityIndicator size="small" color="#ffffff" />
+                          <ActivityIndicator size="small" color={Colors[theme].error} />
                         ) : (
-                          <Text style={styles.actionBtnTextWhite}>Start Preparing</Text>
-                        )}
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.actionBtn, { backgroundColor: Colors[theme].primary }]}
-                        onPress={() => handleOpenAssignDriver(order.id)}
-                        disabled={isUpdating}
-                      >
-                        {isUpdating ? (
-                          <ActivityIndicator size="small" color="#ffffff" />
-                        ) : (
-                          <>
-                            <MaterialCommunityIcons name="bike" size={16} color="#ffffff" />
-                            <Text style={styles.actionBtnTextWhite}>Assign Driver</Text>
-                          </>
+                          <Text style={[styles.actionBtnText, { color: Colors[theme].error }]}>Cancel</Text>
                         )}
                       </TouchableOpacity>
                     </>
@@ -378,7 +369,7 @@ export default function RestaurantOrdersScreen() {
                   >
                     <View style={[styles.driverAvatar, { backgroundColor: Colors[theme]['surface-container'] }]}>
                       {item.avatar ? (
-                        <Image source={{ uri: item.avatar }} style={styles.driverAvatarImage} />
+                        <OptimizedImage uri={item.avatar} style={styles.driverAvatarImage} />
                       ) : (
                         <MaterialCommunityIcons name="account" size={24} color={Colors[theme]['on-surface-variant']} />
                       )}
@@ -448,6 +439,8 @@ const styles = StyleSheet.create({
   actionBtnFull: { flex: 1, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, alignItems: 'center', justifyContent: 'center', minHeight: 40 },
   statusChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, alignSelf: 'flex-start' },
   statusChipText: { ...Typography['label-md'], fontWeight: '600' },
+  acceptedChip: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, justifyContent: 'center', minHeight: 40 },
+  acceptedChipText: { ...Typography['label-md'], color: '#ffffff', fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: Spacing['container-padding'], paddingBottom: 40, maxHeight: '80%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.lg },
