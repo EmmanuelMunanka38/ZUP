@@ -4,9 +4,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { router } from 'expo-router';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { formatPrice } from '@/utils/format';
@@ -89,7 +89,7 @@ export default function CartScreen() {
           {items.map((item) => (
             <View key={item.id} style={[styles.itemCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}>
               <View style={styles.itemRow}>
-                <Image source={{ uri: item.menuItem.image }} style={styles.itemImage} />
+                <OptimizedImage uri={item.menuItem.image} style={styles.itemImage} />
                 <View style={styles.itemInfo}>
                   <Text style={[styles.itemName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
                     {item.menuItem.name}
