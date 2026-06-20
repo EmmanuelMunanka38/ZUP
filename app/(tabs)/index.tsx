@@ -1,17 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   Dimensions,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { formatPrice } from '@/utils/format';
 import { useRestaurantStore } from '@/store/restaurantStore';
@@ -44,6 +44,19 @@ export default function HomeScreen() {
 
   const showFiltered = selectedCategory !== null;
 
+  const recommendedItems = useMemo(() => {
+    const allItems = restaurants.flatMap((r) => (r.menu || []).map((m) => ({ ...m, restaurantId: r.id })));
+    allItems.sort(() => 0.5 - Math.random());
+    return {
+      big: allItems[0] || null,
+      small1: allItems[1] || null,
+      small2: allItems[2] || null,
+      small3: allItems[3] || null,
+      small4: allItems[4] || null,
+      small5: allItems[5] || null,
+    };
+  }, [restaurants]);
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.all([loadRestaurants(), loadCategories(), loadFeatured()]);
@@ -66,7 +79,9 @@ export default function HomeScreen() {
               Deliver to
             </Text>
             <Text style={[styles.locationText, { color: Colors[theme].primary }]}>
-              Current Location
+              Current Location {/**Implementions
+               * Real location to deliver to
+               */}
             </Text>
           </View>
         </View>
@@ -187,7 +202,7 @@ export default function HomeScreen() {
                       style={[styles.restaurantCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
                     >
                       <View style={styles.restaurantImageContainer}>
-                        <Image source={{ uri: r.image }} style={styles.restaurantImage} />
+                        <OptimizedImage uri={r.image} style={styles.restaurantImage} />
                         <View style={[styles.ratingBadge, { backgroundColor: 'rgba(255,255,255,0.9)' }]}>
                           <MaterialCommunityIcons name="star" size={16} color={Colors[theme]['secondary-container']} />
                           <Text style={[styles.ratingText, { color: Colors[theme]['on-surface'] }]}>{r.rating}</Text>
@@ -204,7 +219,7 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
-              </>
+              </> 
             )}
 
             {filteredMenuItems.length > 0 && (
@@ -220,7 +235,7 @@ export default function HomeScreen() {
                       onPress={() => router.push(`/restaurant-details?id=${m.restaurantId}`)}
                       activeOpacity={0.7}
                     >
-                      <Image source={{ uri: m.image }} style={styles.filteredMenuImage} />
+                      <OptimizedImage uri={m.image} style={styles.filteredMenuImage} />
                       <View style={styles.filteredMenuInfo}>
                         <Text style={[styles.filteredMenuName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
                           {m.name}
@@ -279,7 +294,7 @@ export default function HomeScreen() {
               style={[styles.restaurantCard, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
             >
               <View style={styles.restaurantImageContainer}>
-                <Image source={{ uri: restaurant.image }} style={styles.restaurantImage} />
+                <OptimizedImage uri={restaurant.image} style={styles.restaurantImage} />
                 <View style={[styles.ratingBadge, { backgroundColor: 'rgba(255,255,255,0.9)' }]}>
                   <MaterialCommunityIcons name="star" size={16} color={Colors[theme]['secondary-container']} />
                   <Text style={[styles.ratingText, { color: Colors[theme]['on-surface'] }]}>{restaurant.rating}</Text>
@@ -300,7 +315,7 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
         )}
-
+        {/*This is were we will be updating deals for the customers  */}
         <View style={styles.dealSection}>
           <View style={[styles.dealBanner, { backgroundColor: Colors[theme].primary }]}>
             <View style={styles.dealContent}>
@@ -340,7 +355,7 @@ export default function HomeScreen() {
             >
               <View style={[styles.drinkImageBg, { backgroundColor: Colors[theme]['surface-container'] }]}>
                 {item.image ? (
-                  <Image source={{ uri: item.image }} style={styles.drinkImageStyle} />
+                  <OptimizedImage uri={item.image} style={styles.drinkImageStyle} />
                 ) : (
                   <MaterialCommunityIcons name="food" size={32} color={Colors[theme]['on-surface-variant']} />
                 )}
@@ -363,34 +378,7 @@ export default function HomeScreen() {
 
         <View style={styles.recommendedGrid}>
           {(() => {
-            const allItems = restaurants.flatMap((r) => (r.menu || []).map((m) => ({ ...m, restaurantId: r.id })));
-            const byCategory: Record<string, typeof allItems> = {};
-            allItems.forEach((m) => {
-              if (!byCategory[m.category]) byCategory[m.category] = [];
-              byCategory[m.category].push(m);
-            });
-            const categories = Object.keys(byCategory).sort();
-            const selected: typeof allItems = [];
-            const usedIds = new Set<string>();
-            let idx = 0;
-            while (selected.length < 3 && categories.length > 0) {
-              const cat = categories[idx % categories.length];
-              const item = byCategory[cat].find((m) => !usedIds.has(m.id));
-              if (item) {
-                selected.push(item);
-                usedIds.add(item.id);
-              }
-              idx++;
-            }
-            const fillItems = allItems.filter((m) => !usedIds.has(m.id));
-            for (const item of fillItems) {
-              if (selected.length >= 3) break;
-              selected.push(item);
-              usedIds.add(item.id);
-            }
-            const big = selected[0];
-            const small1 = selected[1];
-            const small2 = selected[2];
+            const { big, small1, small2, small3, small4, small5 } = recommendedItems;
             if (!big) return null;
             return (
               <>
@@ -408,20 +396,44 @@ export default function HomeScreen() {
                       <Text style={[styles.recommendedDesc, { color: Colors[theme]['on-surface-variant'] }]} numberOfLines={2}>{big.description}</Text>
                       <Text style={[styles.recommendedPrice, { color: Colors[theme].primary }]}>{formatPrice(big.price)}</Text>
                     </View>
-                    <Image source={{ uri: big.image || undefined }} style={styles.recommendedImageCol} />
+                    <OptimizedImage uri={big.image || ''} style={styles.recommendedImageCol} />
                   </View>
                 </TouchableOpacity>
 
                 <View style={styles.recommendedSmallRow}>
-                  {[small1, small2].filter(Boolean).map((item, i) => (
+                  {[small1, small2].filter(Boolean).map((item) => (
                     <TouchableOpacity
                       key={item.id}
                       style={[styles.recommendedSmall, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
                       activeOpacity={0.8}
                       onPress={() => router.push(`/restaurant-details?id=${item.restaurantId}`)}
                     >
-                      <Image
-                        source={{ uri: item.image || undefined }}
+                      <OptimizedImage
+                        uri={item.image || ''}
+                        style={[styles.recommendedSmallImage, { backgroundColor: Colors[theme]['surface-container'] }]}
+                      />
+                      <View style={styles.recommendedSmallInfo}>
+                        <Text style={[styles.recommendedSmallName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
+                          {item.name}
+                        </Text>
+                        <Text style={[styles.recommendedSmallPrice, { color: Colors[theme].primary }]}>
+                          {formatPrice(item.price)}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <View style={styles.recommendedSmallRow}>
+                  {[small3, small4, small5].filter(Boolean).map((item) => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={[styles.recommendedSmall, { backgroundColor: Colors[theme]['surface-container-lowest'] }]}
+                      activeOpacity={0.8}
+                      onPress={() => router.push(`/restaurant-details?id=${item.restaurantId}`)}
+                    >
+                      <OptimizedImage
+                        uri={item.image || ''}
                         style={[styles.recommendedSmallImage, { backgroundColor: Colors[theme]['surface-container'] }]}
                       />
                       <View style={styles.recommendedSmallInfo}>
