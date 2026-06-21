@@ -12,9 +12,9 @@ import { uploadService } from '@/services/upload.service';
 const menuItems = [
   { icon: 'home-map-marker', label: 'Saved Addresses', route: '/saved-addresses' },
   { icon: 'receipt', label: 'Order History', route: '/(tabs)/orders' },
-  { icon: 'credit-card-outline', label: 'Payment Methods', route: '/saved-addresses' },
-  { icon: 'bell-outline', label: 'Notifications', route: '' },
-  { icon: 'help-circle', label: 'Help Center', route: '' },
+  { icon: 'credit-card-outline', label: 'Payment Methods', route: '/payment-methods' },
+  { icon: 'bell-outline', label: 'Notifications', route: '/notifications' },
+  { icon: 'help-circle', label: 'Help Center', route: '/help-center' },
 ];
 
 export default function ProfileScreen() {

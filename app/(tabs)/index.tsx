@@ -16,6 +16,7 @@ import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/
 import { formatPrice } from '@/utils/format';
 import { useRestaurantStore } from '@/store/restaurantStore';
 import { useCartStore } from '@/store/cartStore';
+import { useAuthStore } from '@/store/authStore';
 import { CategorySkeleton, RestaurantCardSkeleton } from '@/components/ui/SkeletonLoader';
 
 const { width } = Dimensions.get('window');
@@ -29,6 +30,24 @@ export default function HomeScreen() {
   const { restaurants, categories, featured, isLoading, error, loadRestaurants, loadCategories, loadFeatured, loadAllMenus } = useRestaurantStore();
   const items = useCartStore((s) => s.items);
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
+  const user = useAuthStore((s) => s.user);
+  const getGreeting = () => {
+    const h = new Date(Date.now() + 3 * 3600000).getUTCHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const [greetingText, setGreetingText] = useState(getGreeting);
+  useEffect(() => {
+    const msToNextMinute = (60 - new Date().getSeconds()) * 1000;
+    const tick = () => setGreetingText(getGreeting());
+    const timer = setTimeout(() => {
+      tick();
+      setInterval(tick, 60000);
+    }, msToNextMinute);
+    return () => clearTimeout(timer);
+  }, []);
 
   const filteredRestaurants = selectedCategory
     ? restaurants.filter((r) =>
@@ -80,16 +99,13 @@ export default function HomeScreen() {
   return (
     <View style={[styles.container, { backgroundColor: Colors[theme].background }]}>
       <View style={[styles.header, { backgroundColor: Colors[theme].surface, borderBottomColor: Colors[theme]['surface-container'] }]}>
-        <View style={styles.locationRow}>
-          <MaterialCommunityIcons name="map-marker" size={24} color={Colors[theme].primary} />
-          <View>
-            <Text style={[styles.locationLabel, { color: Colors[theme]['on-surface-variant'] }]}>
-              Deliver to
+        <View style={styles.greetingRow}>
+          <View style={styles.greetingTextCol}>
+            <Text style={[styles.greeting, { color: Colors[theme]['on-surface-variant'] }]}>
+              {greetingText},
             </Text>
-            <Text style={[styles.locationText, { color: Colors[theme].primary }]}>
-              Current Location {/**Implementions
-               * Real location to deliver to
-               */}
+            <Text style={[styles.greetingName, { color: Colors[theme]['on-surface'] }]} numberOfLines={1}>
+              {user?.name || 'Guest'}
             </Text>
           </View>
         </View>
@@ -413,9 +429,10 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
   },
-  locationRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  locationLabel: { ...Typography['label-sm'] },
-  locationText: { ...Typography.h2 },
+  greetingRow: { flexDirection: 'row', alignItems: 'center' },
+  greetingTextCol: { flex: 1 },
+  greeting: { ...Typography['label-md'] },
+  greetingName: { ...Typography.h2 },
   cartButton: {
     width: 44,
     height: 44,
